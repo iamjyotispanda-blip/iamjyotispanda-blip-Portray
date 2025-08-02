@@ -16,7 +16,6 @@ export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [leftPanelHidden, setLeftPanelHidden] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -185,57 +184,40 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 ${leftPanelHidden ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-          <div className={`${leftPanelHidden ? 'hidden' : 'block'}`}>
-            <PortrayLogo size="sm" />
-          </div>
-          <div className="flex items-center space-x-1">
-            {/* Desktop Panel Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hidden lg:flex"
-              onClick={() => setLeftPanelHidden(!leftPanelHidden)}
-              title={leftPanelHidden ? 'Show Panel' : 'Hide Panel'}
-            >
-              {leftPanelHidden ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </Button>
-            {/* Mobile Close Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <PortrayLogo size="sm" />
+          {/* Mobile Close Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
         
-        <nav className={`mt-5 px-2 ${leftPanelHidden ? 'hidden' : 'block'}`}>
-          {/* Toggle Button */}
-          <div className="mb-4 px-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hidden lg:flex items-center w-full justify-start text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            >
-              <Menu className="mr-2 h-4 w-4" />
-              <span className="text-sm">
-                {sidebarCollapsed ? 'Show Menu' : 'Hide Menu'}
-              </span>
-              {sidebarCollapsed ? (
-                <ChevronDown className="ml-auto h-4 w-4" />
-              ) : (
-                <ChevronUp className="ml-auto h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          
-          {/* Navigation Menu - Collapsible */}
-          <div className={`space-y-1 transition-all duration-300 ${sidebarCollapsed ? 'max-h-0 overflow-hidden opacity-0' : 'max-h-screen opacity-100'}`}>
+        <nav className="mt-5 px-2">
+          <div className="space-y-1">
+            {/* Toggle Button - Before Dashboard */}
+            <div className="px-2 mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex items-center w-full justify-start text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
+                {sidebarCollapsed ? (
+                  <PanelLeftOpen className="h-4 w-4 mx-auto" />
+                ) : (
+                  <>
+                    <PanelLeftClose className="mr-2 h-4 w-4" />
+                    <span className="text-sm">Collapse Sidebar</span>
+                  </>
+                )}
+              </Button>
+            </div>
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
@@ -245,14 +227,15 @@ export default function DashboardPage() {
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
+                  title={sidebarCollapsed ? item.label : ''}
                 >
-                  <item.icon className={`mr-3 h-5 w-5 ${
+                  <item.icon className={`${sidebarCollapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
                     activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
                   }`} />
-                  {item.label}
+                  {!sidebarCollapsed && item.label}
                 </button>
                 
-                {item.children && (
+                {item.children && !sidebarCollapsed && (
                   <div className="ml-8 mt-1 space-y-1">
                     {item.children.map((child) => (
                       <button
@@ -279,8 +262,8 @@ export default function DashboardPage() {
         
         {/* User Profile & Logout */}
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-slate-700">
-          <div className={`flex items-center ${leftPanelHidden ? 'justify-center' : ''}`}>
-            {!leftPanelHidden && (
+          <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            {!sidebarCollapsed && (
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {user?.firstName} {user?.lastName}
@@ -294,8 +277,8 @@ export default function DashboardPage() {
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className={leftPanelHidden ? '' : 'ml-2'}
-              title={leftPanelHidden ? 'Logout' : ''}
+              className={sidebarCollapsed ? '' : 'ml-2'}
+              title={sidebarCollapsed ? 'Logout' : ''}
             >
               <LogOut className="h-4 w-4" />
             </Button>
