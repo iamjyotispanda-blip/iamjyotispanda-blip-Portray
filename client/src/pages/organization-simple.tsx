@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { type Organization } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ObjectUploader } from "@/components/ObjectUploader";
 
 // Flag component with fallback
 const CountryFlag = ({ country }: { country: { code: string; name: string; flag: string } }) => {
@@ -617,57 +618,12 @@ export default function OrganizationPage() {
               {/* Logo Upload Section */}
               <div>
                 <Label htmlFor="logo">Organization Logo</Label>
-                <div className="space-y-3">
-                  {formData.logoUrl && (
-                    <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
-                      <img 
-                        src={formData.logoUrl} 
-                        alt="Organization logo" 
-                        className="w-12 h-12 object-cover rounded border"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Logo uploaded</p>
-                        <p className="text-xs text-gray-500">Click to change or upload a new logo</p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleInputChange('logoUrl', '')}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="logoUrl"
-                      type="url"
-                      placeholder="https://example.com/logo.png"
-                      value={formData.logoUrl}
-                      onChange={(e) => handleInputChange('logoUrl', e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        // For now, we'll use URL input. In the future, this could trigger a file upload dialog
-                        const logoUrl = prompt('Enter logo URL:');
-                        if (logoUrl) {
-                          handleInputChange('logoUrl', logoUrl);
-                        }
-                      }}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Upload a logo image (PNG, JPG) or provide a URL. Recommended size: 200x200px
-                  </p>
-                </div>
+                <ObjectUploader
+                  value={formData.logoUrl}
+                  onChange={(value) => handleInputChange('logoUrl', value)}
+                  accept="image/*"
+                  maxSize={5}
+                />
               </div>
 
               <div className="space-y-4">
