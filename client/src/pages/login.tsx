@@ -103,8 +103,7 @@ export default function LoginPage() {
             <PortrayLogo size="lg" className="text-white" />
           </div>
           
-          <h1 className="text-4xl font-bold mb-4">Welcome to PortRay</h1>
-          <p className="text-xl mb-6 text-blue-100">Advanced Port Management System</p>
+          <h1 className="text-4xl font-bold mb-4">Steering Port Operations into the Future</h1>
           <p className="text-lg text-blue-100 leading-relaxed mb-12">
             Streamline your port operations with our comprehensive management platform. 
             Monitor vessel traffic, manage cargo operations, and optimize port efficiency 
