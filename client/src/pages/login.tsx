@@ -30,22 +30,22 @@ export default function LoginPage() {
     {
       title: "Vessel & Berth Management",
       description: "Smart scheduling based on vessel size, ETA, and berth availability",
-      icon: <Ship className="h-12 w-12 text-white" />,
+      icon: <Ship className="h-16 w-16 text-white" />,
     },
     {
       title: "Cargo & Yard Management", 
       description: "Track dwell times, turnaround rates, and handling performance",
-      icon: <Package className="h-12 w-12 text-white" />,
+      icon: <Package className="h-16 w-16 text-white" />,
     },
     {
       title: "Rail & Road Logistics",
       description: "Plan and track road and rail movements in sync with vessel operations", 
-      icon: <Truck className="h-12 w-12 text-white" />,
+      icon: <Truck className="h-16 w-16 text-white" />,
     },
     {
       title: "Auto-Invoice & Financial Analysis",
       description: "Generate invoices instantly from vessel berthing, cargo handling, storage, and logistics events",
-      icon: <FileText className="h-12 w-12 text-white" />,
+      icon: <FileText className="h-16 w-16 text-white" />,
     },
   ];
 
@@ -131,7 +131,7 @@ export default function LoginPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/90 via-blue-600/80 to-orange-500/70" />
         
-        <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full max-w-lg">
+        <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full">
           {/* Logo and tagline in same line */}
           <div className="mb-8">
             <HeroLogo />
