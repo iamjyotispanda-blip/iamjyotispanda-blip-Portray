@@ -13,29 +13,29 @@ export class AuthService {
   private static USER_KEY = "portray_user";
 
   static getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return localStorage.getItem(AuthService.TOKEN_KEY);
   }
 
   static setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    localStorage.setItem(AuthService.TOKEN_KEY, token);
   }
 
   static removeToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(AuthService.TOKEN_KEY);
+    localStorage.removeItem(AuthService.USER_KEY);
   }
 
   static getUser(): User | null {
-    const userStr = localStorage.getItem(this.USER_KEY);
+    const userStr = localStorage.getItem(AuthService.USER_KEY);
     return userStr ? JSON.parse(userStr) : null;
   }
 
   static setUser(user: User): void {
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    localStorage.setItem(AuthService.USER_KEY, JSON.stringify(user));
   }
 
   static isAuthenticated(): boolean {
-    return !!this.getToken();
+    return !!AuthService.getToken();
   }
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -49,8 +49,8 @@ export class AuthService {
       
       const data: AuthResponse = await response.json();
       
-      this.setToken(data.token);
-      this.setUser(data.user);
+      AuthService.setToken(data.token);
+      AuthService.setUser(data.user);
       
       return data;
     } catch (error) {
@@ -60,14 +60,14 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      const token = this.getToken();
+      const token = AuthService.getToken();
       if (token) {
         await apiRequest("POST", "/api/auth/logout", undefined);
       }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      this.removeToken();
+      AuthService.removeToken();
       queryClient.clear();
     }
   }
@@ -75,12 +75,12 @@ export class AuthService {
   static async getCurrentUser(): Promise<User> {
     const response = await apiRequest("GET", "/api/auth/me");
     const data = await response.json();
-    this.setUser(data.user);
+    AuthService.setUser(data.user);
     return data.user;
   }
 
   static getAuthHeaders(): Record<string, string> {
-    const token = this.getToken();
+    const token = AuthService.getToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 }
