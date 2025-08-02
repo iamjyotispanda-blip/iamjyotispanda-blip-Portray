@@ -26,6 +26,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      // Check for admin token first
+      if (token.length > 30) { // Admin session tokens are longer
+        const session = await storage.getSessionByToken(token);
+        if (session && session.userId === "admin-001") {
+          req.user = {
+            id: "admin-001",
+            email: "superadmin@Portray.com",
+            firstName: "System",
+            lastName: "Administrator",
+            role: "SystemAdmin",
+            isVerified: true,
+            isActive: true
+          };
+          return next();
+        }
+      }
+
       const session = await storage.getSessionByToken(token);
       if (!session) {
         return res.status(401).json({ message: "Invalid or expired token" });

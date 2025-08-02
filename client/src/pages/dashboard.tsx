@@ -267,19 +267,53 @@ export default function DashboardPage() {
         <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
+              <div className="flex items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden mr-3"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <div className="hidden lg:block">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {activeSection === "organization" ? "Organization Configuration" : 
+                     activeSection === "dashboard" ? "Dashboard" : 
+                     activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+                  </h2>
+                </div>
+              </div>
               
-              <div className="flex items-center space-x-4 ml-auto">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Welcome back, {user?.firstName}
-                </span>
+              {/* User Profile Section */}
+              <div className="flex items-center space-x-4">
+                <div className="hidden sm:flex sm:items-center sm:space-x-3">
+                  <div className="flex flex-col text-right">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {user?.firstName} {user?.lastName}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {user?.role} | {user?.email}
+                    </span>
+                  </div>
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

@@ -33,12 +33,11 @@ Preferred communication style: Simple, everyday language.
 - **Schema**: C# models with Entity Framework annotations and data seeding
 
 ## Authentication System
-- **Strategy**: ASP.NET Core Identity with JWT Bearer tokens
-- **Email Verification**: Required email confirmation before login with HTML email templates
-- **Password Reset**: Secure token-based password reset via email
-- **Session Management**: JWT tokens with 7-day expiration and claims-based authorization
-- **Route Protection**: JWT Bearer authentication with [Authorize] attributes
-- **Password Security**: ASP.NET Core Identity password hashing with configurable policies
+- **Strategy**: Session-based authentication with JWT-like tokens
+- **Admin Access**: Predefined system admin (superadmin@Portray.com / Csmpl@123)
+- **Session Management**: Token-based sessions with proper authorization headers
+- **Route Protection**: Middleware authentication for protected routes
+- **User Profile**: Enhanced header displaying user info, role, email, and logout
 
 ## Development Setup
 - **Build Process**: Vite for frontend bundling, .NET Core SDK for backend compilation
