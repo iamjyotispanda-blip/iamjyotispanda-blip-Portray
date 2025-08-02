@@ -42,10 +42,13 @@ export const organizations = pgTable("organizations", {
 export const ports = pgTable("ports", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   portName: text("port_name").notNull(),
-  portCode: text("port_code").unique().notNull(),
+  displayName: varchar("display_name", { length: 6 }).notNull(),
   organizationId: integer("organization_id").notNull().references(() => organizations.id),
-  location: text("location"),
+  address: text("address").notNull(),
   country: text("country").notNull(),
+  state: text("state").notNull(),
+  pan: varchar("pan", { length: 10 }).notNull().unique(),
+  gstn: varchar("gstn", { length: 15 }).notNull().unique(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
@@ -79,14 +82,12 @@ export const loginSchema = z.object({
 
 export const insertOrganizationSchema = createInsertSchema(organizations).omit({
   id: true,
-  isActive: true,
   createdAt: true,
   updatedAt: true,
 });
 
 export const insertPortSchema = createInsertSchema(ports).omit({
   id: true,
-  isActive: true,
   createdAt: true,
   updatedAt: true,
 });

@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
 import PortalWelcome from "@/pages/portal-welcome";
+import PortsPage from "@/pages/ports";
 import { AuthService } from "@/lib/auth";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {

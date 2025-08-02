@@ -328,6 +328,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Port endpoints
+  app.get("/api/ports", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const ports = await storage.getAllPorts();
+      res.json(ports);
+    } catch (error) {
+      console.error("Get ports error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/ports/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const port = await storage.getPortById(id);
+      
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json(port);
+    } catch (error) {
+      console.error("Get port error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/ports", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const result = insertPortSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: result.error.errors
+        });
+      }
+      
+      const port = await storage.createPort(result.data);
+      res.status(201).json(port);
+    } catch (error) {
+      console.error("Create port error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/ports/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const port = await storage.updatePort(id, req.body);
+      
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json(port);
+    } catch (error) {
+      console.error("Update port error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/ports/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const port = await storage.togglePortStatus(id);
+      
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json(port);
+    } catch (error) {
+      console.error("Toggle port status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

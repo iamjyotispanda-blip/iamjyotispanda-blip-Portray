@@ -11,6 +11,7 @@ import {
 import { useLocation } from "wouter";
 import { useState } from "react";
 import OrganizationPage from "./organization-simple";
+import PortsPage from "./ports";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
@@ -36,6 +37,7 @@ export default function DashboardPage() {
       icon: Settings,
       children: [
         { id: "organization", label: "Organization", icon: Building2 },
+        { id: "ports", label: "Ports", icon: Ship },
         { id: "security", label: "Security", icon: Shield },
         { id: "users", label: "Users", icon: Users },
       ]
@@ -51,6 +53,8 @@ export default function DashboardPage() {
     switch (activeSection) {
       case "organization":
         return <OrganizationPage />;
+      case "ports":
+        return <PortsPage />;
       default:
         return (
           <div className="space-y-6">

@@ -26,9 +26,12 @@ export interface IStorage {
   toggleOrganizationStatus(id: number): Promise<Organization | undefined>;
 
   // Port operations
+  getAllPorts(): Promise<Port[]>;
+  getPortById(id: number): Promise<Port | undefined>;
   getPortsByOrganizationId(organizationId: number): Promise<Port[]>;
   createPort(port: InsertPort): Promise<Port>;
   updatePort(id: number, updates: Partial<Port>): Promise<Port | undefined>;
+  togglePortStatus(id: number): Promise<Port | undefined>;
   deletePort(id: number): Promise<void>;
 }
 
@@ -89,10 +92,13 @@ export class MemStorage implements IStorage {
     const paradeepPort: Port = {
       id: 1,
       portName: "JSW Paradeep Port",
-      portCode: "JSW-PARADEEP",
+      displayName: "JSWPP",
       organizationId: 1,
-      location: "Paradeep, Odisha",
+      address: "Paradeep, Odisha",
       country: "India",
+      state: "Odisha",
+      pan: "AAACJ1234P",
+      gstn: "21AAACJ1234P1ZA",
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -103,10 +109,13 @@ export class MemStorage implements IStorage {
     const dharamtarPort: Port = {
       id: 2,
       portName: "JSW Dharamtar Port",
-      portCode: "JSW-DHARAMTAR",
+      displayName: "JSWDP",
       organizationId: 1,
-      location: "Dharamtar, Maharashtra",
+      address: "Dharamtar, Maharashtra",
       country: "India",
+      state: "Maharashtra",
+      pan: "AAACJ5678Q",
+      gstn: "27AAACJ5678Q1ZB",
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -256,6 +265,14 @@ export class MemStorage implements IStorage {
   }
 
   // Port methods
+  async getAllPorts(): Promise<Port[]> {
+    return Array.from(this.ports.values());
+  }
+
+  async getPortById(id: number): Promise<Port | undefined> {
+    return this.ports.get(id);
+  }
+
   async getPortsByOrganizationId(organizationId: number): Promise<Port[]> {
     return Array.from(this.ports.values()).filter(
       (port) => port.organizationId === organizationId
@@ -283,6 +300,19 @@ export class MemStorage implements IStorage {
       ...port,
       ...updates,
       id,
+      updatedAt: new Date(),
+    };
+    this.ports.set(id, updatedPort);
+    return updatedPort;
+  }
+
+  async togglePortStatus(id: number): Promise<Port | undefined> {
+    const port = this.ports.get(id);
+    if (!port) return undefined;
+
+    const updatedPort: Port = {
+      ...port,
+      isActive: !port.isActive,
       updatedAt: new Date(),
     };
     this.ports.set(id, updatedPort);
