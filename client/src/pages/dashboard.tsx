@@ -201,20 +201,18 @@ export default function DashboardPage() {
         <nav className="mt-5 px-2">
           <div className="space-y-1">
             {/* Toggle Button - Before Dashboard */}
-            <div className="px-2 mb-2">
+            <div className="px-2 mb-2 flex justify-end">
               <Button
                 variant="ghost"
                 size="sm"
-                className="hidden lg:flex items-center w-full justify-start text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+                className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
               >
                 {sidebarCollapsed ? (
-                  <PanelLeftOpen className="h-4 w-4 mx-auto" />
+                  <PanelLeftOpen className="h-4 w-4" />
                 ) : (
-                  <>
-                    <PanelLeftClose className="mr-2 h-4 w-4" />
-                    <span className="text-sm">Collapse Sidebar</span>
-                  </>
+                  <PanelLeftClose className="h-4 w-4" />
                 )}
               </Button>
             </div>
