@@ -26,9 +26,11 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with automatic migrations and connection string handling
 
 ## Database Design
-- **Users Table**: Stores user credentials, profile information, roles, and account status
-- **Sessions Table**: Manages authentication tokens with expiration tracking
-- **Schema**: Shared TypeScript schema definitions using Drizzle and Zod for validation
+- **ApplicationUser Table**: Entity Framework Identity table with custom fields:
+  - `Id`, `Name`, `Email`, `PasswordHash`, `Role`, `IsVerified`, `VerificationToken`
+  - Includes predefined SystemAdmin user (superadmin@Portray.com / Csmpl@123)
+- **Identity Tables**: Standard ASP.NET Core Identity tables for roles, claims, tokens
+- **Schema**: C# models with Entity Framework annotations and data seeding
 
 ## Authentication System
 - **Strategy**: ASP.NET Core Identity with JWT Bearer tokens

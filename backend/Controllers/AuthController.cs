@@ -167,18 +167,27 @@ public class AuthController : ControllerBase
             }
 
             var token = _jwtService.GenerateToken(user);
+            
+            // Determine redirect path based on role
+            var redirectPath = user.Role switch
+            {
+                "SystemAdmin" => "/portal/welcome",
+                "Admin" => "/dashboard",
+                _ => "/dashboard"
+            };
 
             return Ok(new AuthResponse
             {
                 Success = true,
                 Message = "Login successful",
                 Token = token,
+                RedirectPath = redirectPath,
                 User = new UserInfo
                 {
                     Id = user.Id,
                     Email = user.Email!,
-                    FirstName = user.FirstName!,
-                    LastName = user.LastName!,
+                    FirstName = user.FirstName ?? "",
+                    LastName = user.LastName ?? "",
                     Role = user.Role!,
                     EmailConfirmed = user.EmailConfirmed
                 }

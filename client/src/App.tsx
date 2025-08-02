@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
+import PortalWelcome from "@/pages/portal-welcome";
 import { AuthService } from "@/lib/auth";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -20,6 +21,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
+      <Route path="/portal/welcome">
+        {() => <ProtectedRoute component={PortalWelcome} />}
+      </Route>
       <Route path="/dashboard">
         {() => <ProtectedRoute component={DashboardPage} />}
       </Route>
