@@ -194,9 +194,7 @@ export default function DashboardPage() {
           {sidebarCollapsed && !sidebarHovered ? (
             /* Small Logo when collapsed */
             <div className="hidden lg:flex items-center justify-center w-full">
-              <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P</span>
-              </div>
+              <PortrayLogo size="xs" />
             </div>
           ) : (
             /* Full layout when expanded */

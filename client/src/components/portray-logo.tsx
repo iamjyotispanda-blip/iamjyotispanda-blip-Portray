@@ -4,7 +4,7 @@ import portrayLogoWhite from "@assets/Portray_logo_white_1754125058490.png";
 
 interface PortrayLogoProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 }
 
 export function PortrayLogo({ className = "", size = "md" }: PortrayLogoProps) {
@@ -15,6 +15,7 @@ export function PortrayLogo({ className = "", size = "md" }: PortrayLogoProps) {
     (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   
   const sizeClasses = {
+    xs: "h-6",
     sm: "h-8",
     md: "h-12",
     lg: "h-16"
