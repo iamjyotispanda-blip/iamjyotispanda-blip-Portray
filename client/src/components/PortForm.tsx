@@ -6,7 +6,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -41,12 +40,17 @@ const indianStates = [
   "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
 ];
 
-const formSchema = insertPortSchema.extend({
-  organizationId: z.coerce.number().min(1, "Please select an organization"),
+// Use the insertPortSchema directly and add additional validation
+const formSchema = z.object({
+  portName: z.string().min(1, "Port name is required"),
   displayName: z.string()
     .min(2, "Display name must be at least 2 characters")
     .max(6, "Display name must be at most 6 characters")
     .regex(/^[A-Z0-9]+$/, "Display name must contain only uppercase letters and numbers"),
+  organizationId: z.coerce.number().min(1, "Please select an organization"),
+  address: z.string().min(1, "Address is required"),
+  country: z.string().min(1, "Country is required"),
+  state: z.string().min(1, "State is required"),
   pan: z.string()
     .length(10, "PAN must be exactly 10 characters")
     .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format (e.g., AAACJ1234P)"),
