@@ -74,9 +74,8 @@ export default function LoginPage() {
         title: "Welcome to PortRay",
         description: "Successfully signed in to your account.",
       });
-      // Use redirect path from backend response or default to dashboard
-      const redirectPath = response.redirectPath || "/dashboard";
-      setLocation(redirectPath);
+      // Always redirect to dashboard for now
+      setLocation("/dashboard");
     },
     onError: (error: any) => {
       const message = error.message || "Login failed. Please try again.";

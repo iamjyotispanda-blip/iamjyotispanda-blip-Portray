@@ -64,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           token: adminSession.token,
           expiresAt: adminSession.expiresAt,
-          redirectPath: "/portal/welcome"
+          redirectPath: "/dashboard"
         });
       }
       
