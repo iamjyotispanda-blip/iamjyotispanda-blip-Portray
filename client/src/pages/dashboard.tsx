@@ -182,7 +182,27 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex relative">
+      {/* Toggle Button - Outside Panel */}
+      <div className={`fixed z-50 transition-all duration-300 ease-in-out hidden lg:block`} style={{
+        left: sidebarCollapsed ? '5rem' : '16rem',
+        top: '6rem'
+      }}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-8 h-8 p-0 bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 shadow-md hover:shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          {sidebarCollapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
@@ -200,22 +220,6 @@ export default function DashboardPage() {
         
         <nav className="mt-5 px-2">
           <div className="space-y-1">
-            {/* Toggle Button - Before Dashboard */}
-            <div className="px-2 mb-2 flex justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-              >
-                {sidebarCollapsed ? (
-                  <PanelLeftOpen className="h-4 w-4" />
-                ) : (
-                  <PanelLeftClose className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
