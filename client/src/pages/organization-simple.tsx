@@ -39,13 +39,28 @@ import { cn } from "@/lib/utils";
 const CountryFlag = ({ country }: { country: { code: string; name: string; flag: string } }) => {
   return (
     <div className="flex items-center space-x-2 min-w-0">
-      <span 
-        className="flag-emoji text-lg inline-block min-w-[1.2em]" 
-        title={country.name}
-        style={{ fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif' }}
+      <img 
+        src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
+        alt={`${country.name} flag`}
+        className="w-6 h-4 rounded-sm border border-gray-200 object-cover"
+        title={`${country.name} (${country.code})`}
+        onError={(e) => {
+          // Fallback to code badge if image fails to load
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+          const fallback = target.nextElementSibling as HTMLElement;
+          if (fallback && fallback.classList.contains('flag-fallback')) {
+            fallback.style.display = 'flex';
+          }
+        }}
+      />
+      <div 
+        className="flag-fallback w-6 h-4 rounded-sm border border-gray-200 items-center justify-center text-xs font-bold bg-gradient-to-br from-blue-500 to-green-500 text-white shadow-sm"
+        style={{ display: 'none' }}
+        title={`${country.name} (${country.code})`}
       >
-        {country.flag}
-      </span>
+        {country.code}
+      </div>
       <span className="truncate">{country.name}</span>
     </div>
   );
