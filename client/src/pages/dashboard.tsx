@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PortrayLogo } from "@/components/portray-logo";
 import { 
   Ship, Package, TrendingUp, Users, LogOut, Menu, Settings, 
-  Building2, Shield, BarChart3, FileText, Home, X 
+  Building2, Shield, BarChart3, FileText, Home, X, ChevronLeft, ChevronRight 
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -182,17 +183,31 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-          <PortrayLogo size="sm" />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className={`${sidebarCollapsed ? 'hidden' : 'block'}`}>
+            <PortrayLogo size="sm" />
+          </div>
+          <div className="flex items-center space-x-1">
+            {/* Desktop Toggle Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden lg:flex"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+            {/* Mobile Close Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         <nav className="mt-5 px-2">
@@ -206,14 +221,15 @@ export default function DashboardPage() {
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
+                  title={sidebarCollapsed ? item.label : ''}
                 >
-                  <item.icon className={`mr-3 h-5 w-5 ${
+                  <item.icon className={`${sidebarCollapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
                     activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
                   }`} />
-                  {item.label}
+                  {!sidebarCollapsed && item.label}
                 </button>
                 
-                {item.children && (
+                {item.children && !sidebarCollapsed && (
                   <div className="ml-8 mt-1 space-y-1">
                     {item.children.map((child) => (
                       <button
@@ -240,20 +256,23 @@ export default function DashboardPage() {
         
         {/* User Profile & Logout */}
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-slate-700">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {user?.role}
-              </p>
-            </div>
+          <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            {!sidebarCollapsed && (
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {user?.role}
+                </p>
+              </div>
+            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="ml-2"
+              className={sidebarCollapsed ? '' : 'ml-2'}
+              title={sidebarCollapsed ? 'Logout' : ''}
             >
               <LogOut className="h-4 w-4" />
             </Button>
@@ -262,7 +281,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'} lg:ml-0`}>
         {/* Header */}
         <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
           <div className="px-4 sm:px-6 lg:px-8">
