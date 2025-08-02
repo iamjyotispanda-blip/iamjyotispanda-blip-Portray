@@ -25,14 +25,15 @@ export const sessions = pgTable("sessions", {
 
 export const organizations = pgTable("organizations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  organizationName: text("organization_name").notNull(),
-  displayName: text("display_name").notNull(),
+  organizationName: text("organization_name").notNull().unique(),
+  displayName: text("display_name").notNull().unique(),
   organizationCode: text("organization_code").unique().notNull(),
   registerOffice: text("register_office").notNull(),
   country: text("country").notNull(),
   telephone: text("telephone"),
   fax: text("fax"),
   website: text("website"),
+  logoUrl: text("logo_url"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
@@ -78,12 +79,14 @@ export const loginSchema = z.object({
 
 export const insertOrganizationSchema = createInsertSchema(organizations).omit({
   id: true,
+  isActive: true,
   createdAt: true,
   updatedAt: true,
 });
 
 export const insertPortSchema = createInsertSchema(ports).omit({
   id: true,
+  isActive: true,
   createdAt: true,
   updatedAt: true,
 });

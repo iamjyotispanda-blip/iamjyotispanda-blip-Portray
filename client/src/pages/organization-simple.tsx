@@ -32,8 +32,11 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { Plus, Edit2, Power, Building2, MapPin, Phone, Globe } from "lucide-react";
+import { Plus, Edit2, Power, Building2, MapPin, Phone, Globe, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { type Organization } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Flag component with fallback
 const CountryFlag = ({ country }: { country: { code: string; name: string; flag: string } }) => {
@@ -65,9 +68,6 @@ const CountryFlag = ({ country }: { country: { code: string; name: string; flag:
     </div>
   );
 };
-import { type Organization } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
 interface OrganizationFormData {
   organizationName: string;
@@ -78,6 +78,7 @@ interface OrganizationFormData {
   telephone: string;
   fax: string;
   website: string;
+  logoUrl: string;
   isActive: boolean;
 }
 
@@ -289,6 +290,7 @@ export default function OrganizationPage() {
     telephone: "",
     fax: "",
     website: "",
+    logoUrl: "",
     isActive: true,
   });
   
@@ -382,6 +384,7 @@ export default function OrganizationPage() {
       telephone: "",
       fax: "",
       website: "",
+      logoUrl: "",
       isActive: true,
     });
     setSelectedOrganization(null);
@@ -401,6 +404,34 @@ export default function OrganizationPage() {
         variant: "destructive",
       });
       return;
+    }
+
+    // Check for unique constraints
+    if (organizations) {
+      const existingOrg = organizations.find(org => 
+        (isEditMode && selectedOrganization ? org.id !== selectedOrganization.id : true) &&
+        (org.organizationName.toLowerCase() === formData.organizationName.toLowerCase() ||
+         org.displayName.toLowerCase() === formData.displayName.toLowerCase() ||
+         org.organizationCode.toLowerCase() === formData.organizationCode.toLowerCase())
+      );
+
+      if (existingOrg) {
+        let duplicateField = "";
+        if (existingOrg.organizationName.toLowerCase() === formData.organizationName.toLowerCase()) {
+          duplicateField = "Organization Name";
+        } else if (existingOrg.displayName.toLowerCase() === formData.displayName.toLowerCase()) {
+          duplicateField = "Display Name";
+        } else if (existingOrg.organizationCode.toLowerCase() === formData.organizationCode.toLowerCase()) {
+          duplicateField = "Organization Code";
+        }
+
+        toast({
+          title: "Duplicate Entry",
+          description: `${duplicateField} already exists. Please choose a different ${duplicateField.toLowerCase()}.`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
     if (isEditMode && selectedOrganization) {
@@ -424,6 +455,7 @@ export default function OrganizationPage() {
       telephone: organization.telephone || "",
       fax: organization.fax || "",
       website: organization.website || "",
+      logoUrl: organization.logoUrl || "",
       isActive: organization.isActive,
     });
     setIsFormOpen(true);
@@ -582,6 +614,62 @@ export default function OrganizationPage() {
                 />
               </div>
 
+              {/* Logo Upload Section */}
+              <div>
+                <Label htmlFor="logo">Organization Logo</Label>
+                <div className="space-y-3">
+                  {formData.logoUrl && (
+                    <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <img 
+                        src={formData.logoUrl} 
+                        alt="Organization logo" 
+                        className="w-12 h-12 object-cover rounded border"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Logo uploaded</p>
+                        <p className="text-xs text-gray-500">Click to change or upload a new logo</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleInputChange('logoUrl', '')}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="logoUrl"
+                      type="url"
+                      placeholder="https://example.com/logo.png"
+                      value={formData.logoUrl}
+                      onChange={(e) => handleInputChange('logoUrl', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        // For now, we'll use URL input. In the future, this could trigger a file upload dialog
+                        const logoUrl = prompt('Enter logo URL:');
+                        if (logoUrl) {
+                          handleInputChange('logoUrl', logoUrl);
+                        }
+                      }}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Upload a logo image (PNG, JPG) or provide a URL. Recommended size: 200x200px
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="telephone">Telephone</Label>
@@ -661,10 +749,23 @@ export default function OrganizationPage() {
                   {organizations.map((org) => (
                     <TableRow key={org.id}>
                       <TableCell>
-                        <div>
-                          <div className="font-medium">{org.displayName}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {org.organizationName}
+                        <div className="flex items-center space-x-3">
+                          {org.logoUrl ? (
+                            <img 
+                              src={org.logoUrl} 
+                              alt={`${org.displayName} logo`}
+                              className="w-10 h-10 object-cover rounded border"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded border flex items-center justify-center">
+                              <Building2 className="w-5 h-5 text-gray-400" />
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-medium">{org.displayName}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              {org.organizationName}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
