@@ -311,11 +311,12 @@ export default function DashboardPage() {
                   <Menu className="h-5 w-5" />
                 </Button>
                 <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {activeSection === "organization" ? "Organization Configuration" : 
-                     activeSection === "dashboard" ? "Dashboard" : 
-                     activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 dark:from-blue-400 dark:via-purple-400 dark:to-blue-600 bg-clip-text text-transparent animate-pulse tracking-wide">
+                    Steering Port Operations into the Future
                   </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium italic">
+                    Advanced Maritime Management System
+                  </p>
                 </div>
               </div>
               
