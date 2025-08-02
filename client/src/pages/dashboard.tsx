@@ -190,7 +190,7 @@ export default function DashboardPage() {
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
       >
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+        <div className="px-4 py-4 border-b border-gray-200 dark:border-slate-700">
           {sidebarCollapsed && !sidebarHovered ? (
             /* Small Logo when collapsed */
             <div className="hidden lg:flex items-center justify-center w-full">
@@ -198,7 +198,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             /* Full layout when expanded */
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <PortrayLogo size="sm" />
                 <div className="flex items-center space-x-1">
@@ -223,8 +223,8 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               </div>
-              <div className="text-center">
-                <p className="text-xs font-medium bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 dark:from-blue-400 dark:via-purple-400 dark:to-blue-600 bg-clip-text text-transparent">
+              <div className="text-center px-2">
+                <p className="text-[10px] font-medium leading-tight bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 dark:from-blue-400 dark:via-purple-400 dark:to-blue-600 bg-clip-text text-transparent">
                   Steering Port Operations into the Future
                 </p>
               </div>
