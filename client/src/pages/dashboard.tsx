@@ -191,34 +191,40 @@ export default function DashboardPage() {
         onMouseLeave={() => setSidebarHovered(false)}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-          <div className={`${sidebarCollapsed && !sidebarHovered ? 'hidden' : 'block'}`}>
-            <PortrayLogo size="sm" />
-          </div>
-          <div className="flex items-center space-x-1">
-            {/* Desktop Toggle Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            >
-              {sidebarCollapsed ? (
-                <PanelLeftOpen className="h-4 w-4" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" />
-              )}
-            </Button>
-            {/* Mobile Close Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          {sidebarCollapsed && !sidebarHovered ? (
+            /* Small Logo when collapsed */
+            <div className="hidden lg:flex items-center justify-center w-full">
+              <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
+                <span className="text-white font-bold text-sm">P</span>
+              </div>
+            </div>
+          ) : (
+            /* Full layout when expanded */
+            <>
+              <PortrayLogo size="sm" />
+              <div className="flex items-center space-x-1">
+                {/* Desktop Toggle Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  title="Collapse Sidebar"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+                {/* Mobile Close Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </>
+          )}
         </div>
         
         <nav className="mt-5 px-2">
