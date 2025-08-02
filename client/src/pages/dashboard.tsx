@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { PortrayLogo } from "@/components/portray-logo";
 import { 
   Ship, Package, TrendingUp, Users, LogOut, Menu, Settings, 
-  Building2, Shield, BarChart3, FileText, Home, X, ChevronUp, ChevronDown 
+  Building2, Shield, BarChart3, FileText, Home, X, ChevronUp, ChevronDown,
+  PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
@@ -15,6 +16,7 @@ export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [leftPanelHidden, setLeftPanelHidden] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -183,21 +185,35 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 ${leftPanelHidden ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-          <PortrayLogo size="sm" />
-          {/* Mobile Close Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className={`${leftPanelHidden ? 'hidden' : 'block'}`}>
+            <PortrayLogo size="sm" />
+          </div>
+          <div className="flex items-center space-x-1">
+            {/* Desktop Panel Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden lg:flex"
+              onClick={() => setLeftPanelHidden(!leftPanelHidden)}
+              title={leftPanelHidden ? 'Show Panel' : 'Hide Panel'}
+            >
+              {leftPanelHidden ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </Button>
+            {/* Mobile Close Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
-        <nav className="mt-5 px-2">
+        <nav className={`mt-5 px-2 ${leftPanelHidden ? 'hidden' : 'block'}`}>
           {/* Toggle Button */}
           <div className="mb-4 px-2">
             <Button
@@ -263,20 +279,23 @@ export default function DashboardPage() {
         
         {/* User Profile & Logout */}
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-slate-700">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {user?.role}
-              </p>
-            </div>
+          <div className={`flex items-center ${leftPanelHidden ? 'justify-center' : ''}`}>
+            {!leftPanelHidden && (
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {user?.role}
+                </p>
+              </div>
+            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="ml-2"
+              className={leftPanelHidden ? '' : 'ml-2'}
+              title={leftPanelHidden ? 'Logout' : ''}
             >
               <LogOut className="h-4 w-4" />
             </Button>
