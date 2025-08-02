@@ -353,16 +353,7 @@ export default function OrganizationPage() {
 
       {/* Organizations List */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Building2 className="w-5 h-5 mr-2" />
-            Organizations ({organizations.length})
-          </CardTitle>
-          <CardDescription>
-            Organization records and details
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {organizations.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
