@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "4U8NnFYRYFXxI3B7jguEfd51ChmSSuoCHfbwSgb1zOg=",
+  "Source": "PortRayAPI",
+  "BasePath": "_content/PortRayAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

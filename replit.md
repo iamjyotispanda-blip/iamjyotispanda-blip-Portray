@@ -1,6 +1,6 @@
 # Overview
 
-This is a full-stack web application called "PortRay" - a Customer Success Management (CSM) platform built with React frontend and Express.js backend. The application provides user authentication and a dashboard interface for managing customer success operations. It uses modern web technologies including TypeScript, Tailwind CSS, shadcn/ui components, and Drizzle ORM for database operations.
+This is a full-stack web application called "PortRay" - a Port Management System built with React frontend and .NET Core C# backend. The application provides user authentication with email verification and a dashboard interface for managing port operations. It uses modern web technologies including TypeScript, Tailwind CSS, shadcn/ui components on the frontend, and ASP.NET Core Identity with Entity Framework and PostgreSQL on the backend.
 
 # User Preferences
 
@@ -17,12 +17,13 @@ Preferred communication style: Simple, everyday language.
 - **Forms**: React Hook Form with Zod validation for type-safe form handling
 
 ## Backend Architecture
-- **Framework**: Express.js with TypeScript
-- **Database ORM**: Drizzle ORM configured for PostgreSQL
-- **Authentication**: JWT token-based authentication with session management
-- **Password Security**: bcrypt for password hashing
-- **API Structure**: RESTful API endpoints under `/api` prefix
-- **Development**: Hot reloading with Vite integration in development mode
+- **Framework**: ASP.NET Core 8.0 with C#
+- **Database ORM**: Entity Framework Core with PostgreSQL (Npgsql provider)
+- **Authentication**: ASP.NET Core Identity with JWT Bearer tokens
+- **Email Service**: MailKit/MimeKit for email verification and password reset
+- **API Structure**: RESTful API endpoints under `/api` prefix with controllers
+- **Security**: BCrypt password hashing, JWT tokens, CORS configured for frontend
+- **Database**: PostgreSQL with automatic migrations and connection string handling
 
 ## Database Design
 - **Users Table**: Stores user credentials, profile information, roles, and account status
@@ -30,23 +31,27 @@ Preferred communication style: Simple, everyday language.
 - **Schema**: Shared TypeScript schema definitions using Drizzle and Zod for validation
 
 ## Authentication System
-- **Strategy**: JWT token-based authentication stored in localStorage
-- **Session Management**: Server-side session tracking with token validation
-- **Route Protection**: Client-side route guards that redirect unauthenticated users to login
-- **Password Security**: Salted and hashed passwords using bcrypt
+- **Strategy**: ASP.NET Core Identity with JWT Bearer tokens
+- **Email Verification**: Required email confirmation before login with HTML email templates
+- **Password Reset**: Secure token-based password reset via email
+- **Session Management**: JWT tokens with 7-day expiration and claims-based authorization
+- **Route Protection**: JWT Bearer authentication with [Authorize] attributes
+- **Password Security**: ASP.NET Core Identity password hashing with configurable policies
 
 ## Development Setup
-- **Build Process**: Vite for frontend bundling, esbuild for backend compilation
-- **Type Safety**: Full TypeScript coverage across frontend, backend, and shared schemas
-- **Path Aliases**: Configured aliases for clean imports (@, @shared, @assets)
-- **Environment**: Supports both development and production environments
+- **Build Process**: Vite for frontend bundling, .NET Core SDK for backend compilation
+- **Type Safety**: Full TypeScript coverage on frontend, C# with nullable reference types on backend
+- **Path Aliases**: Configured aliases for clean imports (@, @shared, @assets) on frontend
+- **Environment**: Supports both development and production with separate configuration files
+- **Dual Stack**: Frontend runs on port 5000, .NET Core API runs on port 5001
 
 # External Dependencies
 
 ## Database
 - **PostgreSQL**: Primary database using Neon serverless PostgreSQL
-- **Drizzle ORM**: Type-safe database operations and schema management
-- **Connection**: Environment-based DATABASE_URL configuration
+- **Entity Framework Core**: Object-relational mapping with migrations and Identity integration
+- **Npgsql**: PostgreSQL provider for .NET with SSL/TLS support
+- **Connection**: Environment-based DATABASE_URL with automatic SSL configuration
 
 ## UI and Styling
 - **Radix UI**: Headless UI primitives for accessibility and functionality
@@ -55,9 +60,10 @@ Preferred communication style: Simple, everyday language.
 - **shadcn/ui**: Pre-built component library for rapid development
 
 ## Authentication and Security
-- **bcrypt**: Password hashing and verification
-- **JWT**: JSON Web Tokens for session management (implementation in progress)
-- **Zod**: Runtime type validation for forms and API requests
+- **ASP.NET Core Identity**: Complete authentication and user management system
+- **JWT Bearer Tokens**: Secure token-based authentication with configurable expiration
+- **MailKit/MimeKit**: Professional email services for verification and password reset
+- **BCrypt.NET**: Secure password hashing compatible with ASP.NET Core Identity
 
 ## Development Tools
 - **Vite**: Frontend build tool and development server
@@ -68,5 +74,6 @@ Preferred communication style: Simple, everyday language.
 
 ## Hosting and Deployment
 - **Replit**: Development environment with integrated deployment
-- **Node.js**: Runtime environment for the Express.js backend
+- **.NET Core Runtime**: Cross-platform runtime for the ASP.NET Core backend
 - **Static Assets**: Frontend built and served as static files in production
+- **Environment Variables**: Secure configuration for database, JWT secrets, and email credentials
