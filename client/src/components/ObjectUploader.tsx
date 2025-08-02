@@ -129,7 +129,7 @@ export function ObjectUploader({
       }
 
       // Get auth token from localStorage
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('portray_auth_token');
       
       // Get presigned URL
       const response = await fetch("/api/objects/upload", {
