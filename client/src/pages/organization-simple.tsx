@@ -29,7 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Plus, Edit2, Power, Building2, MapPin, Phone, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { type Organization } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -244,6 +248,7 @@ const COUNTRIES = [
 export default function OrganizationPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
+  const [countryOpen, setCountryOpen] = useState(false);
   const [formData, setFormData] = useState<OrganizationFormData>({
     organizationName: "",
     displayName: "",
@@ -349,6 +354,7 @@ export default function OrganizationPage() {
       isActive: true,
     });
     setSelectedOrganization(null);
+    setCountryOpen(false);
   };
 
   const handleInputChange = (field: keyof OrganizationFormData, value: string | boolean) => {
@@ -431,7 +437,10 @@ export default function OrganizationPage() {
       {/* Unified Form Sheet */}
       <Sheet open={isFormOpen} onOpenChange={(open) => {
         setIsFormOpen(open);
-        if (!open) resetForm();
+        if (!open) {
+          resetForm();
+          setCountryOpen(false);
+        }
       }}>
         <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto">
           <SheetHeader>
@@ -480,24 +489,59 @@ export default function OrganizationPage() {
                 
                 <div>
                   <Label htmlFor="country">Country *</Label>
-                  <Select 
-                    value={formData.country} 
-                    onValueChange={(value) => handleInputChange('country', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a country" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px] overflow-y-auto">
-                      {COUNTRIES.map((country) => (
-                        <SelectItem key={country.code} value={country.name}>
+                  <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={countryOpen}
+                        className="w-full justify-between h-10 px-3"
+                      >
+                        {formData.country ? (
                           <div className="flex items-center space-x-2">
-                            <span className="text-lg">{country.flag}</span>
-                            <span>{country.name}</span>
+                            <span className="text-lg">
+                              {COUNTRIES.find((country) => country.name === formData.country)?.flag}
+                            </span>
+                            <span>{formData.country}</span>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        ) : (
+                          "Select a country..."
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search countries..." />
+                        <CommandList>
+                          <CommandEmpty>No country found.</CommandEmpty>
+                          <CommandGroup className="max-h-[200px] overflow-y-auto">
+                            {COUNTRIES.map((country) => (
+                              <CommandItem
+                                key={country.code}
+                                value={country.name}
+                                onSelect={(currentValue) => {
+                                  handleInputChange('country', currentValue === formData.country ? "" : currentValue);
+                                  setCountryOpen(false);
+                                }}
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-lg">{country.flag}</span>
+                                  <span>{country.name}</span>
+                                </div>
+                                <Check
+                                  className={cn(
+                                    "ml-auto h-4 w-4",
+                                    formData.country === country.name ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
