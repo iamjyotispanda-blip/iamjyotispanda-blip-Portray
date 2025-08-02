@@ -60,6 +60,9 @@ function Router() {
       <Route path="/dashboard">
         {() => <ProtectedRoute component={DashboardPage} />}
       </Route>
+      <Route path="/ports">
+        {() => <ProtectedRoute component={PortsPage} />}
+      </Route>
       <Route path="/">
         {() => <ProtectedRoute component={DashboardPage} />}
       </Route>
