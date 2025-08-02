@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Ship, Package, TrendingUp, Moon, Sun, Monitor } from "lucide-react";
+import { Eye, EyeOff, Ship, Package, TrendingUp, Moon, Sun, Monitor, Truck, FileText } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,41 @@ import { AuthService } from "@/lib/auth";
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  const [currentFeature, setCurrentFeature] = useState(0);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+
+  const features = [
+    {
+      title: "Vessel & Berth Management",
+      description: "Smart scheduling based on vessel size, ETA, and berth availability",
+      icon: <Ship className="h-12 w-12 text-white" />,
+    },
+    {
+      title: "Cargo & Yard Management", 
+      description: "Track dwell times, turnaround rates, and handling performance",
+      icon: <Package className="h-12 w-12 text-white" />,
+    },
+    {
+      title: "Rail & Road Logistics",
+      description: "Plan and track road and rail movements in sync with vessel operations", 
+      icon: <Truck className="h-12 w-12 text-white" />,
+    },
+    {
+      title: "Auto-Invoice & Financial Analysis",
+      description: "Generate invoices instantly from vessel berthing, cargo handling, storage, and logistics events",
+      icon: <FileText className="h-12 w-12 text-white" />,
+    },
+  ];
+
+  // Auto-scroll through features
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentFeature((prev) => (prev + 1) % features.length);
+    }, 4000); // Change every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [features.length]);
 
   const form = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
@@ -105,8 +138,8 @@ export default function LoginPage() {
             <p className="text-sm text-blue-100 mt-2 font-medium">Steering Port Operations into the Future</p>
           </div>
           
-          {/* Live Port Status */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+          {/* Live Port Status - Keep this */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 mb-6">
             <div className="flex items-center space-x-2 mb-3">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-white text-sm font-medium">Live Port Status</span>
@@ -123,6 +156,40 @@ export default function LoginPage() {
               <div className="flex justify-between">
                 <span className="text-blue-200">Tanker Gamma</span>
                 <span className="text-blue-400">Departing 16:45</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature Carousel */}
+          <div className="relative">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 min-h-[200px]">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  {features[currentFeature].icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-lime-300 mb-3">
+                    {features[currentFeature].title}
+                  </h3>
+                  <p className="text-white text-sm leading-relaxed">
+                    {features[currentFeature].description}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Dots indicator */}
+              <div className="flex justify-center space-x-2 mt-4">
+                {features.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentFeature 
+                        ? 'bg-lime-300 w-6' 
+                        : 'bg-white/30 hover:bg-white/50'
+                    }`}
+                    onClick={() => setCurrentFeature(index)}
+                  />
+                ))}
               </div>
             </div>
           </div>
