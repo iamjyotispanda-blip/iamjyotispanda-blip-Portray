@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
 import { PortrayLogo } from "@/components/portray-logo";
+import { HeroLogo } from "@/components/hero-logo";
 
 import { loginSchema, type LoginCredentials } from "@shared/schema";
 import { AuthService } from "@/lib/auth";
@@ -98,9 +99,9 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/90 via-blue-600/80 to-orange-500/70" />
         
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
-          {/* Logo */}
+          {/* Logo - White version for hero section */}
           <div className="mb-8">
-            <PortrayLogo size="lg" className="text-white" />
+            <HeroLogo />
           </div>
           
           <h1 className="text-4xl font-bold mb-4">Steering Port Operations into the Future</h1>
