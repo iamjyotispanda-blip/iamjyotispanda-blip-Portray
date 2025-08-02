@@ -190,7 +190,7 @@ export default function DashboardPage() {
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-slate-700">
           {sidebarCollapsed && !sidebarHovered ? (
             /* Small Logo when collapsed */
             <div className="hidden lg:flex items-center justify-center w-full">
@@ -198,30 +198,37 @@ export default function DashboardPage() {
             </div>
           ) : (
             /* Full layout when expanded */
-            <>
-              <PortrayLogo size="sm" />
-              <div className="flex items-center space-x-1">
-                {/* Desktop Toggle Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  title="Collapse Sidebar"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
-                {/* Mobile Close Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="lg:hidden"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <PortrayLogo size="sm" />
+                <div className="flex items-center space-x-1">
+                  {/* Desktop Toggle Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    title="Collapse Sidebar"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </Button>
+                  {/* Mobile Close Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </>
+              <div className="text-center">
+                <p className="text-xs font-medium bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 dark:from-blue-400 dark:via-purple-400 dark:to-blue-600 bg-clip-text text-transparent">
+                  Steering Port Operations into the Future
+                </p>
+              </div>
+            </div>
           )}
         </div>
         
@@ -311,8 +318,10 @@ export default function DashboardPage() {
                   <Menu className="h-5 w-5" />
                 </Button>
                 <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 dark:from-blue-400 dark:via-purple-400 dark:to-blue-600 bg-clip-text text-transparent animate-pulse tracking-wide">
-                    Steering Port Operations into the Future
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {activeSection === "organization" ? "Organization Configuration" : 
+                     activeSection === "dashboard" ? "Dashboard" : 
+                     activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
                   </h2>
                 </div>
               </div>
