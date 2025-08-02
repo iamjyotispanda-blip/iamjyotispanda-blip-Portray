@@ -40,8 +40,7 @@ interface OrganizationFormData {
 }
 
 export default function OrganizationPage() {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [formData, setFormData] = useState<OrganizationFormData>({
     organizationName: "",
@@ -54,6 +53,8 @@ export default function OrganizationPage() {
     website: "",
     isActive: true,
   });
+  
+  const isEditMode = selectedOrganization !== null;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -70,7 +71,7 @@ export default function OrganizationPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/organizations"] });
-      setIsAddDialogOpen(false);
+      setIsFormOpen(false);
       resetForm();
       toast({
         title: "Success",
@@ -94,7 +95,7 @@ export default function OrganizationPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/organizations"] });
-      setIsEditDialogOpen(false);
+      setIsFormOpen(false);
       setSelectedOrganization(null);
       resetForm();
       toast({
@@ -145,13 +146,14 @@ export default function OrganizationPage() {
       website: "",
       isActive: true,
     });
+    setSelectedOrganization(null);
   };
 
   const handleInputChange = (field: keyof OrganizationFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.organizationName || !formData.displayName || !formData.organizationCode || !formData.registerOffice || !formData.country) {
       toast({
@@ -161,24 +163,15 @@ export default function OrganizationPage() {
       });
       return;
     }
-    addOrganizationMutation.mutate(formData);
-  };
-
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedOrganization) return;
-    if (!formData.organizationName || !formData.displayName || !formData.organizationCode || !formData.registerOffice || !formData.country) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
+    
+    if (isEditMode && selectedOrganization) {
+      updateOrganizationMutation.mutate({
+        id: selectedOrganization.id,
+        data: formData,
       });
-      return;
+    } else {
+      addOrganizationMutation.mutate(formData);
     }
-    updateOrganizationMutation.mutate({
-      id: selectedOrganization.id,
-      data: formData,
-    });
   };
 
   const handleEdit = (organization: Organization) => {
@@ -194,7 +187,12 @@ export default function OrganizationPage() {
       website: organization.website || "",
       isActive: organization.isActive,
     });
-    setIsEditDialogOpen(true);
+    setIsFormOpen(true);
+  };
+
+  const handleAdd = () => {
+    resetForm();
+    setIsFormOpen(true);
   };
 
   const handleToggleStatus = (id: number) => {
@@ -222,25 +220,26 @@ export default function OrganizationPage() {
           </h1>
         </div>
         
-        <Sheet open={isAddDialogOpen} onOpenChange={(open) => {
-          setIsAddDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <SheetTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Organization
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Add New Organization</SheetTitle>
-              <SheetDescription>
-                Create a new port operator organization with complete details.
-              </SheetDescription>
-            </SheetHeader>
-            
-            <form onSubmit={handleAddSubmit} className="space-y-6 mt-6">
+        <Button onClick={handleAdd}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Organization
+        </Button>
+      </div>
+
+      {/* Unified Form Sheet */}
+      <Sheet open={isFormOpen} onOpenChange={(open) => {
+        setIsFormOpen(open);
+        if (!open) resetForm();
+      }}>
+        <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{isEditMode ? "Edit Organization" : "Add New Organization"}</SheetTitle>
+            <SheetDescription>
+              {isEditMode ? "Update organization details and information." : "Create a new port operator organization with complete details."}
+            </SheetDescription>
+          </SheetHeader>
+          
+          <form onSubmit={handleFormSubmit} className="space-y-6 mt-6">
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="organizationName">Organization Name *</Label>
@@ -332,25 +331,27 @@ export default function OrganizationPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-6 border-t">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsAddDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={addOrganizationMutation.isPending}
-                >
-                  {addOrganizationMutation.isPending ? "Adding..." : "Add Organization"}
-                </Button>
-              </div>
-            </form>
-          </SheetContent>
-        </Sheet>
-      </div>
+            <div className="flex justify-end space-x-2 pt-6 border-t">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsFormOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={addOrganizationMutation.isPending || updateOrganizationMutation.isPending}
+              >
+                {isEditMode 
+                  ? (updateOrganizationMutation.isPending ? "Updating..." : "Update Organization")
+                  : (addOrganizationMutation.isPending ? "Adding..." : "Add Organization")
+                }
+              </Button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
 
       {/* Organizations List */}
       <Card>
@@ -454,128 +455,6 @@ export default function OrganizationPage() {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
-        setIsEditDialogOpen(open);
-        if (!open) {
-          setSelectedOrganization(null);
-          resetForm();
-        }
-      }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Organization</DialogTitle>
-            <DialogDescription>
-              Update organization details and information.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-organizationName">Organization Name *</Label>
-                <Input
-                  id="edit-organizationName"
-                  value={formData.organizationName}
-                  onChange={(e) => handleInputChange('organizationName', e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="edit-displayName">Display Name *</Label>
-                <Input
-                  id="edit-displayName"
-                  value={formData.displayName}
-                  onChange={(e) => handleInputChange('displayName', e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-organizationCode">Organization Code *</Label>
-                <Input
-                  id="edit-organizationCode"
-                  value={formData.organizationCode}
-                  onChange={(e) => handleInputChange('organizationCode', e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="edit-country">Country *</Label>
-                <Input
-                  id="edit-country"
-                  value={formData.country}
-                  onChange={(e) => handleInputChange('country', e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="edit-registerOffice">Registered Office *</Label>
-              <Input
-                id="edit-registerOffice"
-                value={formData.registerOffice}
-                onChange={(e) => handleInputChange('registerOffice', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="edit-telephone">Telephone</Label>
-                <Input
-                  id="edit-telephone"
-                  value={formData.telephone}
-                  onChange={(e) => handleInputChange('telephone', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="edit-fax">FAX</Label>
-                <Input
-                  id="edit-fax"
-                  value={formData.fax}
-                  onChange={(e) => handleInputChange('fax', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="edit-website">Website</Label>
-                <Input
-                  id="edit-website"
-                  value={formData.website}
-                  onChange={(e) => handleInputChange('website', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsEditDialogOpen(false);
-                  setSelectedOrganization(null);
-                  resetForm();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={updateOrganizationMutation.isPending}
-              >
-                {updateOrganizationMutation.isPending ? "Updating..." : "Update Organization"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
