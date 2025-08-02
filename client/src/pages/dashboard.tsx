@@ -186,7 +186,7 @@ export default function DashboardPage() {
       {/* Toggle Button - Outside Panel */}
       <div className={`fixed z-50 transition-all duration-300 ease-in-out hidden lg:block`} style={{
         left: sidebarCollapsed ? '5rem' : '16rem',
-        top: '7.5rem'
+        top: '5.5rem'
       }}>
         <Button
           variant="outline"
