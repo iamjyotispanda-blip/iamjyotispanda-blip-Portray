@@ -105,67 +105,24 @@ export default function LoginPage() {
             <p className="text-sm text-blue-100 mt-2 font-medium">Steering Port Operations into the Future</p>
           </div>
           
-          {/* Vessel Infographic */}
-          <div className="space-y-6">
-            {/* Port Statistics */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Ship className="text-orange-400 h-5 w-5" />
-                  <span className="text-white text-sm font-medium">Active Vessels</span>
-                </div>
-                <div className="text-2xl font-bold text-white">24</div>
-                <div className="text-xs text-blue-200">Currently docked</div>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Package className="text-orange-400 h-5 w-5" />
-                  <span className="text-white text-sm font-medium">Cargo TEU</span>
-                </div>
-                <div className="text-2xl font-bold text-white">1,247</div>
-                <div className="text-xs text-blue-200">Processed today</div>
-              </div>
+          {/* Live Port Status */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+            <div className="flex items-center space-x-2 mb-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-white text-sm font-medium">Live Port Status</span>
             </div>
-            
-            {/* Port Activity Indicators */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-blue-100 text-sm">Port Efficiency</span>
-                <span className="text-white font-semibold">94.2%</span>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-blue-200">Container Ship Alpha</span>
+                <span className="text-green-400">Arriving 14:30</span>
               </div>
-              <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-400 to-yellow-400 h-2 rounded-full" style={{width: '94.2%'}}></div>
+              <div className="flex justify-between">
+                <span className="text-blue-200">Bulk Carrier Beta</span>
+                <span className="text-yellow-400">Loading 67%</span>
               </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-blue-100 text-sm">Berth Utilization</span>
-                <span className="text-white font-semibold">87%</span>
-              </div>
-              <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-400 to-cyan-400 h-2 rounded-full" style={{width: '87%'}}></div>
-              </div>
-            </div>
-            
-            {/* Live Port Status */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <div className="flex items-center space-x-2 mb-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-white text-sm font-medium">Live Port Status</span>
-              </div>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-blue-200">Container Ship Alpha</span>
-                  <span className="text-green-400">Arriving 14:30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-200">Bulk Carrier Beta</span>
-                  <span className="text-yellow-400">Loading 67%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-200">Tanker Gamma</span>
-                  <span className="text-blue-400">Departing 16:45</span>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-blue-200">Tanker Gamma</span>
+                <span className="text-blue-400">Departing 16:45</span>
               </div>
             </div>
           </div>
