@@ -331,7 +331,7 @@ export default function OrganizationPage() {
                 </div>
               </div>
 
-            <div className="flex justify-end space-x-2 pt-6 border-t">
+              <div className="flex justify-end space-x-2 pt-6 border-t">
               <Button 
                 type="button" 
                 variant="outline" 
