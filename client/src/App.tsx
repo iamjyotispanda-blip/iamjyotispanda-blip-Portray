@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -11,9 +12,40 @@ import PortalWelcome from "@/pages/portal-welcome";
 import { AuthService } from "@/lib/auth";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  if (!AuthService.isAuthenticated()) {
+  const [isChecking, setIsChecking] = useState(true);
+  const [isValid, setIsValid] = useState(false);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!AuthService.isAuthenticated()) {
+        setIsValid(false);
+        setIsChecking(false);
+        return;
+      }
+
+      const sessionValid = await AuthService.validateSession();
+      setIsValid(sessionValid);
+      setIsChecking(false);
+    };
+
+    checkSession();
+  }, []);
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Validating session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isValid) {
     return <LoginPage />;
   }
+
   return <Component />;
 }
 

@@ -2,6 +2,15 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // Handle 401 Unauthorized responses globally
+    if (res.status === 401) {
+      // Clear tokens and redirect to login
+      localStorage.removeItem("portray_auth_token");
+      localStorage.removeItem("portray_auth_user");
+      window.location.href = "/login";
+      throw new Error("Session expired. Please login again.");
+    }
+    
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }

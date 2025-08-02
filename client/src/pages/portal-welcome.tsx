@@ -13,7 +13,9 @@ export default function PortalWelcome() {
 
   useEffect(() => {
     const loadUser = async () => {
-      if (!AuthService.isAuthenticated()) {
+      // Validate session first
+      const sessionValid = await AuthService.validateSession();
+      if (!sessionValid) {
         setLocation("/login");
         return;
       }
@@ -27,6 +29,7 @@ export default function PortalWelcome() {
         setUser(currentUser);
       } catch (error) {
         console.error("Failed to load user:", error);
+        AuthService.removeToken(); // Clear invalid session
         setLocation("/login");
       } finally {
         setLoading(false);

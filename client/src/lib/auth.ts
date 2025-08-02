@@ -38,6 +38,35 @@ export class AuthService {
     return !!AuthService.getToken();
   }
 
+  static async validateSession(): Promise<boolean> {
+    const token = AuthService.getToken();
+    if (!token) {
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/auth/me", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        AuthService.setUser(data.user);
+        return true;
+      } else {
+        // Token is invalid, remove it
+        AuthService.removeToken();
+        return false;
+      }
+    } catch (error) {
+      // Network error or other issues, assume invalid session
+      AuthService.removeToken();
+      return false;
+    }
+  }
+
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await apiRequest("POST", "/api/auth/login", credentials);
