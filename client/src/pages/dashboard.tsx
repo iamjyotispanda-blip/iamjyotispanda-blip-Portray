@@ -198,35 +198,34 @@ export default function DashboardPage() {
             </div>
           ) : (
             /* Full layout when expanded */
-            <>
+            <div className="flex items-center justify-between w-full">
               <PortrayLogo size="sm" />
-              {/* Mobile Close Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </>
+              <div className="flex items-center space-x-1">
+                {/* Desktop Toggle Button - Right aligned within logo section */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden lg:flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm rounded-lg transition-all duration-200"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  title="Collapse Sidebar"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+                {/* Mobile Close Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </div>
         
-        {/* Desktop Toggle Button - Right aligned to panel */}
-        <div className="hidden lg:flex justify-end px-4 py-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-9 h-9 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm rounded-lg transition-all duration-200"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            title="Collapse Sidebar"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <nav className="mt-3 px-2">
+        <nav className="mt-5 px-2">
           <div className="space-y-1">
             {navigationItems.map((item) => (
               <div key={item.id}>
