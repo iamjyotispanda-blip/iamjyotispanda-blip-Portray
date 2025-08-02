@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
+import OrganizationPage from "./organization-simple";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
@@ -29,11 +30,6 @@ export default function DashboardPage() {
   };
 
   const navigationItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "vessels", label: "Vessels", icon: Ship },
-    { id: "cargo", label: "Cargo", icon: Package },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "reports", label: "Reports", icon: FileText },
     { 
       id: "configuration", 
       label: "Configuration", 
@@ -44,81 +40,17 @@ export default function DashboardPage() {
         { id: "users", label: "Users", icon: Users },
       ]
     },
+    { id: "dashboard", label: "Dashboard", icon: Home },
+    { id: "vessels", label: "Vessels", icon: Ship },
+    { id: "cargo", label: "Cargo", icon: Package },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "reports", label: "Reports", icon: FileText },
   ];
 
   const renderContent = () => {
     switch (activeSection) {
       case "organization":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Organization Configuration
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Manage your organization settings and details
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Organization Information</CardTitle>
-                  <CardDescription>Update your organization details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Organization Name</label>
-                    <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded border">
-                      PortRay Maritime Solutions
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Port Authority ID</label>
-                    <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded border">
-                      PRT-2025-001
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Contact Email</label>
-                    <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded border">
-                      admin@portray.com
-                    </div>
-                  </div>
-                  <Button>Update Organization</Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>System Settings</CardTitle>
-                  <CardDescription>Configure system-wide preferences</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Time Zone</label>
-                    <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded border">
-                      UTC-5 (Eastern Standard Time)
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Default Currency</label>
-                    <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded border">
-                      USD ($)
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Language</label>
-                    <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded border">
-                      English (US)
-                    </div>
-                  </div>
-                  <Button>Save Settings</Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
+        return <OrganizationPage />;
       default:
         return (
           <div className="space-y-6">

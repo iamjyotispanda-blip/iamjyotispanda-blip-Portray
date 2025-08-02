@@ -1,5 +1,5 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean } from "drizzle-orm/pg-core";
+import { sql, relations } from "drizzle-orm";
+import { pgTable, text, varchar, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -23,6 +23,45 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
+export const organizations = pgTable("organizations", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  organizationName: text("organization_name").notNull(),
+  displayName: text("display_name").notNull(),
+  organizationCode: text("organization_code").unique().notNull(),
+  registerOffice: text("register_office").notNull(),
+  country: text("country").notNull(),
+  telephone: text("telephone"),
+  fax: text("fax"),
+  website: text("website"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const ports = pgTable("ports", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  portName: text("port_name").notNull(),
+  portCode: text("port_code").unique().notNull(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
+  location: text("location"),
+  country: text("country").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// Relations
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  ports: many(ports),
+}));
+
+export const portsRelations = relations(ports, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [ports.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
@@ -37,7 +76,25 @@ export const loginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
+export const insertOrganizationSchema = createInsertSchema(organizations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPortSchema = createInsertSchema(ports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type LoginCredentials = z.infer<typeof loginSchema>;
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+
+export type Port = typeof ports.$inferSelect;
+export type InsertPort = z.infer<typeof insertPortSchema>;

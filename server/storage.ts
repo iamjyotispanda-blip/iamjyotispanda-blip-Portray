@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Session, type LoginCredentials } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -17,34 +17,104 @@ export interface IStorage {
   getSessionByToken(token: string): Promise<Session | undefined>;
   deleteSession(token: string): Promise<void>;
   deleteUserSessions(userId: string): Promise<void>;
+
+  // Organization operations
+  getAllOrganizations(): Promise<Organization[]>;
+  getOrganizationById(id: number): Promise<Organization | undefined>;
+  createOrganization(organization: InsertOrganization): Promise<Organization>;
+  updateOrganization(id: number, updates: Partial<Organization>): Promise<Organization | undefined>;
+  toggleOrganizationStatus(id: number): Promise<Organization | undefined>;
+
+  // Port operations
+  getPortsByOrganizationId(organizationId: number): Promise<Port[]>;
+  createPort(port: InsertPort): Promise<Port>;
+  updatePort(id: number, updates: Partial<Port>): Promise<Port | undefined>;
+  deletePort(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private sessions: Map<string, Session>;
+  private organizations: Map<number, Organization>;
+  private ports: Map<number, Port>;
+  private nextOrgId: number = 1;
+  private nextPortId: number = 1;
 
   constructor() {
     this.users = new Map();
     this.sessions = new Map();
+    this.organizations = new Map();
+    this.ports = new Map();
     
     // Create a default admin user for testing
     this.initializeDefaultUser();
+    this.initializeDefaultData();
   }
 
   private async initializeDefaultUser() {
-    const hashedPassword = await bcrypt.hash("admin123", 10);
+    const hashedPassword = await bcrypt.hash("Csmpl@123", 10);
     const adminUser: User = {
-      id: randomUUID(),
-      email: "admin@portray.com",
+      id: "admin-001",
+      email: "superadmin@Portray.com",
       password: hashedPassword,
-      firstName: "Admin",
-      lastName: "User",
-      role: "admin",
+      firstName: "System",
+      lastName: "Administrator",
+      role: "SystemAdmin",
       isActive: true,
       lastLogin: null,
       createdAt: new Date(),
     };
     this.users.set(adminUser.id, adminUser);
+  }
+
+  private initializeDefaultData() {
+    // Create JSW Infrastructure organization
+    const jswOrg: Organization = {
+      id: 1,
+      organizationName: "JSW Infrastructure Limited",
+      displayName: "JSW Infrastructure",
+      organizationCode: "JSW-INFRA-001",
+      registerOffice: "JSW Centre, Bandra Kurla Complex, Bandra (East), Mumbai - 400051",
+      country: "India",
+      telephone: "+91-22-4286-1000",
+      fax: "+91-22-4286-3000",
+      website: "https://www.jsw.in",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.organizations.set(1, jswOrg);
+
+    // Create JSW Paradeep Port
+    const paradeepPort: Port = {
+      id: 1,
+      portName: "JSW Paradeep Port",
+      portCode: "JSW-PARADEEP",
+      organizationId: 1,
+      location: "Paradeep, Odisha",
+      country: "India",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.ports.set(1, paradeepPort);
+
+    // Create JSW Dharamtar Port
+    const dharamtarPort: Port = {
+      id: 2,
+      portName: "JSW Dharamtar Port",
+      portCode: "JSW-DHARAMTAR",
+      organizationId: 1,
+      location: "Dharamtar, Maharashtra",
+      country: "India",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.ports.set(2, dharamtarPort);
+
+    this.nextOrgId = 2;
+    this.nextPortId = 3;
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -134,6 +204,93 @@ export class MemStorage implements IStorage {
         this.sessions.delete(token);
       }
     }
+  }
+
+  // Organization methods
+  async getAllOrganizations(): Promise<Organization[]> {
+    return Array.from(this.organizations.values());
+  }
+
+  async getOrganizationById(id: number): Promise<Organization | undefined> {
+    return this.organizations.get(id);
+  }
+
+  async createOrganization(insertOrganization: InsertOrganization): Promise<Organization> {
+    const id = this.nextOrgId++;
+    const organization: Organization = {
+      ...insertOrganization,
+      id,
+      isActive: insertOrganization.isActive ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.organizations.set(id, organization);
+    return organization;
+  }
+
+  async updateOrganization(id: number, updates: Partial<Organization>): Promise<Organization | undefined> {
+    const organization = this.organizations.get(id);
+    if (!organization) return undefined;
+
+    const updatedOrganization: Organization = {
+      ...organization,
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+    this.organizations.set(id, updatedOrganization);
+    return updatedOrganization;
+  }
+
+  async toggleOrganizationStatus(id: number): Promise<Organization | undefined> {
+    const organization = this.organizations.get(id);
+    if (!organization) return undefined;
+
+    const updatedOrganization: Organization = {
+      ...organization,
+      isActive: !organization.isActive,
+      updatedAt: new Date(),
+    };
+    this.organizations.set(id, updatedOrganization);
+    return updatedOrganization;
+  }
+
+  // Port methods
+  async getPortsByOrganizationId(organizationId: number): Promise<Port[]> {
+    return Array.from(this.ports.values()).filter(
+      (port) => port.organizationId === organizationId
+    );
+  }
+
+  async createPort(insertPort: InsertPort): Promise<Port> {
+    const id = this.nextPortId++;
+    const port: Port = {
+      ...insertPort,
+      id,
+      isActive: insertPort.isActive ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.ports.set(id, port);
+    return port;
+  }
+
+  async updatePort(id: number, updates: Partial<Port>): Promise<Port | undefined> {
+    const port = this.ports.get(id);
+    if (!port) return undefined;
+
+    const updatedPort: Port = {
+      ...port,
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+    this.ports.set(id, updatedPort);
+    return updatedPort;
+  }
+
+  async deletePort(id: number): Promise<void> {
+    this.ports.delete(id);
   }
 }
 

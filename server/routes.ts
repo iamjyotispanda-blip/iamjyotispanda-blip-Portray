@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Extend Express Request to include user session
@@ -169,6 +169,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Token refresh error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Organization endpoints
+  app.get("/api/organizations", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const organizations = await storage.getAllOrganizations();
+      res.json(organizations);
+    } catch (error) {
+      console.error("Get organizations error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/organizations/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const organization = await storage.getOrganizationById(id);
+      
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      
+      res.json(organization);
+    } catch (error) {
+      console.error("Get organization error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/organizations", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const organizationData = insertOrganizationSchema.parse(req.body);
+      const organization = await storage.createOrganization(organizationData);
+      res.status(201).json(organization);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create organization error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/organizations/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertOrganizationSchema.partial().parse(req.body);
+      
+      const organization = await storage.updateOrganization(id, updates);
+      
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      
+      res.json(organization);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Update organization error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/organizations/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const organization = await storage.toggleOrganizationStatus(id);
+      
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      
+      res.json(organization);
+    } catch (error) {
+      console.error("Toggle organization status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Port endpoints
+  app.get("/api/organizations/:id/ports", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const organizationId = parseInt(req.params.id);
+      const ports = await storage.getPortsByOrganizationId(organizationId);
+      res.json(ports);
+    } catch (error) {
+      console.error("Get ports error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/ports", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const portData = insertPortSchema.parse(req.body);
+      const port = await storage.createPort(portData);
+      res.status(201).json(port);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create port error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
