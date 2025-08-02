@@ -34,6 +34,22 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Plus, Edit2, Power, Building2, MapPin, Phone, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Flag component with fallback
+const CountryFlag = ({ country }: { country: { code: string; name: string; flag: string } }) => {
+  return (
+    <div className="flex items-center space-x-2 min-w-0">
+      <span 
+        className="flag-emoji text-lg inline-block min-w-[1.2em]" 
+        title={country.name}
+        style={{ fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif' }}
+      >
+        {country.flag}
+      </span>
+      <span className="truncate">{country.name}</span>
+    </div>
+  );
+};
 import { type Organization } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -498,12 +514,10 @@ export default function OrganizationPage() {
                         className="w-full justify-between h-10 px-3"
                       >
                         {formData.country ? (
-                          <div className="flex items-center space-x-2">
-                            <span className="text-lg">
-                              {COUNTRIES.find((country) => country.name === formData.country)?.flag}
-                            </span>
-                            <span>{formData.country}</span>
-                          </div>
+                          (() => {
+                            const country = COUNTRIES.find((c) => c.name === formData.country);
+                            return country ? <CountryFlag country={country} /> : formData.country;
+                          })()
                         ) : (
                           "Select a country..."
                         )}
@@ -525,10 +539,7 @@ export default function OrganizationPage() {
                                   setCountryOpen(false);
                                 }}
                               >
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-lg">{country.flag}</span>
-                                  <span>{country.name}</span>
-                                </div>
+                                <CountryFlag country={country} />
                                 <Check
                                   className={cn(
                                     "ml-auto h-4 w-4",
@@ -652,10 +663,7 @@ export default function OrganizationPage() {
                           {(() => {
                             const country = COUNTRIES.find(c => c.name === org.country);
                             return country ? (
-                              <div className="flex items-center space-x-2">
-                                <span className="text-base">{country.flag}</span>
-                                <span>{org.country}</span>
-                              </div>
+                              <CountryFlag country={country} />
                             ) : (
                               <div className="flex items-center">
                                 <MapPin className="w-4 h-4 mr-1" />
