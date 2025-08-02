@@ -201,11 +201,11 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <PortrayLogo size="sm" />
               <div className="flex items-center space-x-1">
-                {/* Desktop Toggle Button */}
+                {/* Desktop Toggle Button - Right aligned, colored and clear */}
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
+                  className="hidden lg:flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm rounded-lg transition-all duration-200"
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   title="Collapse Sidebar"
                 >
@@ -215,7 +215,7 @@ export default function DashboardPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="lg:hidden"
+                  className="lg:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700"
                   onClick={() => setSidebarOpen(false)}
                 >
                   <X className="h-4 w-4" />
