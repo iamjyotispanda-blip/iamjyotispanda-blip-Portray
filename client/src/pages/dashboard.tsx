@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -182,31 +183,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex relative">
-      {/* Toggle Button - Outside Panel */}
-      <div className={`fixed z-50 transition-all duration-300 ease-in-out hidden lg:block`} style={{
-        left: sidebarCollapsed ? '5rem' : '16rem',
-        top: '5.5rem'
-      }}>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-8 h-8 p-0 bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 shadow-md hover:shadow-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-        >
-          {sidebarCollapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div 
+        className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed && !sidebarHovered ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+        onMouseEnter={() => setSidebarHovered(true)}
+        onMouseLeave={() => setSidebarHovered(false)}
+      >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-slate-700">
-          <PortrayLogo size="sm" />
+          <div className={`${sidebarCollapsed && !sidebarHovered ? 'hidden' : 'block'}`}>
+            <PortrayLogo size="sm" />
+          </div>
           {/* Mobile Close Button */}
           <Button
             variant="ghost"
@@ -220,6 +207,22 @@ export default function DashboardPage() {
         
         <nav className="mt-5 px-2">
           <div className="space-y-1">
+            {/* Toggle Button - In Menu Section */}
+            <div className="px-2 mb-2 flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              >
+                {sidebarCollapsed ? (
+                  <PanelLeftOpen className="h-4 w-4" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
@@ -229,15 +232,15 @@ export default function DashboardPage() {
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
-                  title={sidebarCollapsed ? item.label : ''}
+                  title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
                 >
-                  <item.icon className={`${sidebarCollapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
+                  <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
                     activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
                   }`} />
-                  {!sidebarCollapsed && item.label}
+                  {(!sidebarCollapsed || sidebarHovered) && item.label}
                 </button>
                 
-                {item.children && !sidebarCollapsed && (
+                {item.children && (!sidebarCollapsed || sidebarHovered) && (
                   <div className="ml-8 mt-1 space-y-1">
                     {item.children.map((child) => (
                       <button
@@ -264,8 +267,8 @@ export default function DashboardPage() {
         
         {/* User Profile & Logout */}
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-slate-700">
-          <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : ''}`}>
-            {!sidebarCollapsed && (
+          <div className={`flex items-center ${sidebarCollapsed && !sidebarHovered ? 'justify-center' : ''}`}>
+            {(!sidebarCollapsed || sidebarHovered) && (
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {user?.firstName} {user?.lastName}
@@ -279,8 +282,8 @@ export default function DashboardPage() {
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className={sidebarCollapsed ? '' : 'ml-2'}
-              title={sidebarCollapsed ? 'Logout' : ''}
+              className={sidebarCollapsed && !sidebarHovered ? '' : 'ml-2'}
+              title={sidebarCollapsed && !sidebarHovered ? 'Logout' : ''}
             >
               <LogOut className="h-4 w-4" />
             </Button>
