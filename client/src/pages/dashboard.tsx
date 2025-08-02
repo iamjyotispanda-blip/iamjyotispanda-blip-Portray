@@ -194,35 +194,35 @@ export default function DashboardPage() {
           <div className={`${sidebarCollapsed && !sidebarHovered ? 'hidden' : 'block'}`}>
             <PortrayLogo size="sm" />
           </div>
-          {/* Mobile Close Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center space-x-1">
+            {/* Desktop Toggle Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </Button>
+            {/* Mobile Close Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         <nav className="mt-5 px-2">
           <div className="space-y-1">
-            {/* Toggle Button - In Menu Section */}
-            <div className="px-2 mb-2 flex justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-              >
-                {sidebarCollapsed ? (
-                  <PanelLeftOpen className="h-4 w-4" />
-                ) : (
-                  <PanelLeftClose className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
