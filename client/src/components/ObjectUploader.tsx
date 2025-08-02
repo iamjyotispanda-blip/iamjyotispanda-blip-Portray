@@ -40,7 +40,7 @@ export function ObjectUploader({
           unit: '%',
           width: 80,
         },
-        1, // aspect ratio 1:1 for square logos
+        80/50, // aspect ratio 80:50 for logo dimensions
         width,
         height,
       ),
@@ -85,8 +85,9 @@ export function ObjectUploader({
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = crop.width * scaleX;
-    canvas.height = crop.height * scaleY;
+    // Set canvas to exact logo dimensions: 80x50 pixels
+    canvas.width = 80;
+    canvas.height = 50;
 
     ctx.drawImage(
       image,
@@ -96,8 +97,8 @@ export function ObjectUploader({
       crop.height * scaleY,
       0,
       0,
-      canvas.width,
-      canvas.height
+      80, // Always resize to 80px width
+      50  // Always resize to 50px height
     );
 
     return new Promise((resolve) => {
@@ -114,17 +115,58 @@ export function ObjectUploader({
     });
   };
 
+  const getResizedFile = async (): Promise<File | null> => {
+    if (!selectedFile) return null;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Create an image element to load the selected file
+    const image = new Image();
+    
+    return new Promise((resolve) => {
+      image.onload = () => {
+        // Set canvas to exact logo dimensions: 80x50 pixels
+        canvas.width = 80;
+        canvas.height = 50;
+
+        // Draw the entire image resized to 80x50
+        ctx.drawImage(image, 0, 0, 80, 50);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            resolve(null);
+            return;
+          }
+          const resizedFile = new File([blob], selectedFile.name, {
+            type: selectedFile.type,
+          });
+          resolve(resizedFile);
+        }, selectedFile.type, 0.95);
+      };
+      
+      image.src = URL.createObjectURL(selectedFile);
+    });
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
     setIsUploading(true);
     try {
-      // Get cropped file if cropping was used
+      // Get cropped file if cropping was used, otherwise resize the original
       let fileToUpload = selectedFile;
       if (showCrop && crop) {
         const croppedFile = await getCroppedFile();
         if (croppedFile) {
           fileToUpload = croppedFile;
+        }
+      } else {
+        // If no cropping, still resize to 80x50
+        const resizedFile = await getResizedFile();
+        if (resizedFile) {
+          fileToUpload = resizedFile;
         }
       }
 
@@ -251,7 +293,7 @@ export function ObjectUploader({
         </div>
         
         <p className="text-xs text-gray-500">
-          Upload an image file (PNG, JPG). Maximum size: {maxSize}MB
+          Upload an image file (PNG, JPG). Final logo size: 80x50 pixels. Maximum file size: {maxSize}MB
         </p>
       </div>
 
@@ -285,7 +327,7 @@ export function ObjectUploader({
                 <ReactCrop
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}
-                  aspect={1} // Square aspect ratio for logos
+                  aspect={80/50} // 80:50 aspect ratio for logo dimensions
                   className="max-w-full"
                 >
                   <img
