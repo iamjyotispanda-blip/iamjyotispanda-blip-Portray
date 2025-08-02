@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, X, Crop, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Crop as CropIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ReactCrop, { Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 interface ObjectUploaderProps {
   value?: string;
@@ -25,8 +26,28 @@ export function ObjectUploader({
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [crop, setCrop] = useState<Crop>();
+  const [showCrop, setShowCrop] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    setCrop(centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 80,
+        },
+        1, // aspect ratio 1:1 for square logos
+        width,
+        height,
+      ),
+      width,
+      height,
+    ));
+  }, []);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -45,7 +66,52 @@ export function ObjectUploader({
     setSelectedFile(file);
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    setShowCrop(false); // Start with preview, then show crop
     setIsDialogOpen(true);
+  };
+
+  const handleShowCrop = () => {
+    setShowCrop(true);
+  };
+
+  const getCroppedFile = async (): Promise<File | null> => {
+    if (!imgRef.current || !crop || !selectedFile) return null;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    const image = imgRef.current;
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    canvas.width = crop.width * scaleX;
+    canvas.height = crop.height * scaleY;
+
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(null);
+          return;
+        }
+        const croppedFile = new File([blob], selectedFile.name, {
+          type: selectedFile.type,
+        });
+        resolve(croppedFile);
+      }, selectedFile.type, 0.95);
+    });
   };
 
   const handleUpload = async () => {
@@ -53,11 +119,24 @@ export function ObjectUploader({
 
     setIsUploading(true);
     try {
+      // Get cropped file if cropping was used
+      let fileToUpload = selectedFile;
+      if (showCrop && crop) {
+        const croppedFile = await getCroppedFile();
+        if (croppedFile) {
+          fileToUpload = croppedFile;
+        }
+      }
+
+      // Get auth token from localStorage
+      const token = localStorage.getItem('auth_token');
+      
       // Get presigned URL
       const response = await fetch("/api/objects/upload", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
       });
 
@@ -70,9 +149,9 @@ export function ObjectUploader({
       // Upload file to object storage
       const uploadResponse = await fetch(uploadURL, {
         method: "PUT",
-        body: selectedFile,
+        body: fileToUpload,
         headers: {
-          "Content-Type": selectedFile.type,
+          "Content-Type": fileToUpload.type,
         },
       });
 
@@ -87,6 +166,7 @@ export function ObjectUploader({
       setIsDialogOpen(false);
       setSelectedFile(null);
       setPreviewUrl("");
+      setShowCrop(false);
 
       toast({
         title: "Upload successful",
@@ -113,6 +193,16 @@ export function ObjectUploader({
 
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setSelectedFile(null);
+    setPreviewUrl("");
+    setShowCrop(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -173,20 +263,39 @@ export function ObjectUploader({
         className="hidden"
       />
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>Upload File</DialogTitle>
+            <DialogTitle>{showCrop ? "Crop Image" : "Upload File"}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
-            {previewUrl && (
+            {previewUrl && !showCrop && (
               <div className="flex justify-center">
                 <img
                   src={previewUrl}
                   alt="Preview"
                   className="max-w-full max-h-64 object-contain rounded border"
                 />
+              </div>
+            )}
+
+            {previewUrl && showCrop && (
+              <div className="flex justify-center">
+                <ReactCrop
+                  crop={crop}
+                  onChange={(_, percentCrop) => setCrop(percentCrop)}
+                  aspect={1} // Square aspect ratio for logos
+                  className="max-w-full"
+                >
+                  <img
+                    ref={imgRef}
+                    src={previewUrl}
+                    alt="Crop preview"
+                    onLoad={onImageLoad}
+                    className="max-w-full max-h-96 object-contain"
+                  />
+                </ReactCrop>
               </div>
             )}
             
@@ -198,22 +307,48 @@ export function ObjectUploader({
               </div>
             )}
             
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-                disabled={isUploading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleUpload}
-                disabled={isUploading || !selectedFile}
-              >
-                {isUploading ? "Uploading..." : "Upload"}
-              </Button>
+            <div className="flex justify-between">
+              <div className="flex space-x-2">
+                {!showCrop && selectedFile && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleShowCrop}
+                    disabled={isUploading}
+                  >
+                    <CropIcon className="w-4 h-4 mr-2" />
+                    Crop Image
+                  </Button>
+                )}
+                {showCrop && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCrop(false)}
+                    disabled={isUploading}
+                  >
+                    Back to Preview
+                  </Button>
+                )}
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDialogClose}
+                  disabled={isUploading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleUpload}
+                  disabled={isUploading || !selectedFile}
+                >
+                  {isUploading ? "Uploading..." : "Upload"}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
