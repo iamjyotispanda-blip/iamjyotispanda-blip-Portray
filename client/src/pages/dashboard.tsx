@@ -188,29 +188,37 @@ export default function DashboardPage() {
           <div className={`${sidebarCollapsed ? 'hidden' : 'block'}`}>
             <PortrayLogo size="sm" />
           </div>
-          <div className="flex items-center space-x-1">
-            {/* Desktop Toggle Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hidden lg:flex"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            >
-              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-            {/* Mobile Close Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          {/* Mobile Close Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
         
         <nav className="mt-5 px-2">
+          {/* Toggle Button */}
+          <div className="mb-4 px-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden lg:flex items-center w-full justify-start text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="h-4 w-4 mx-auto" />
+              ) : (
+                <>
+                  <Menu className="mr-2 h-4 w-4" />
+                  <span className="text-sm">Collapse Menu</span>
+                  <ChevronLeft className="ml-auto h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
           <div className="space-y-1">
             {navigationItems.map((item) => (
               <div key={item.id}>
@@ -281,7 +289,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'} lg:ml-0`}>
+      <div className="flex-1 lg:ml-0">
         {/* Header */}
         <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -295,7 +303,7 @@ export default function DashboardPage() {
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
-                <div className="hidden lg:block">
+                <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {activeSection === "organization" ? "Organization Configuration" : 
                      activeSection === "dashboard" ? "Dashboard" : 
