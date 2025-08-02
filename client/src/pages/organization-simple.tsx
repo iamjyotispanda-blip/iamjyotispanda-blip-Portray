@@ -204,12 +204,9 @@ export default function OrganizationPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             Organization Management
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Loading organizations...
-          </p>
         </div>
       </div>
     );
@@ -219,12 +216,9 @@ export default function OrganizationPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             Organization Management
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage port operators and their facilities
-          </p>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
@@ -365,7 +359,7 @@ export default function OrganizationPage() {
             Organizations ({organizations.length})
           </CardTitle>
           <CardDescription>
-            Port operators and their management details
+            Organization records and details
           </CardDescription>
         </CardHeader>
         <CardContent>

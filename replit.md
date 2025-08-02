@@ -5,6 +5,7 @@ This is a full-stack web application called "PortRay" - a Port Management System
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+UI Header Styling: Remove navigation details in header sections, use smaller titles (text-xl instead of text-3xl) for page headers, remove descriptive subtitles like "Manage port operators and their facilities".
 
 # System Architecture
 
