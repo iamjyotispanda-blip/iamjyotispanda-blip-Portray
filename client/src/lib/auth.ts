@@ -5,6 +5,7 @@ interface AuthResponse {
   user: User;
   token: string;
   expiresAt: string;
+  redirectPath?: string;
 }
 
 export class AuthService {
@@ -40,6 +41,12 @@ export class AuthService {
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await apiRequest("POST", "/api/auth/login", credentials);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+      
       const data: AuthResponse = await response.json();
       
       this.setToken(data.token);
