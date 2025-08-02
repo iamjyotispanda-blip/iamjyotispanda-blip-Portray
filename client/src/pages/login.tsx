@@ -74,8 +74,10 @@ export default function LoginPage() {
         title: "Welcome to PortRay",
         description: "Successfully signed in to your account.",
       });
-      // Always redirect to dashboard for now
-      setLocation("/dashboard");
+      // Wait a moment for token to be properly set, then redirect
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 100);
     },
     onError: (error: any) => {
       const message = error.message || "Login failed. Please try again.";

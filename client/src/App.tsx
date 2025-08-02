@@ -18,13 +18,19 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
   useEffect(() => {
     const checkSession = async () => {
+      // Give a small delay to ensure token is set after login
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       if (!AuthService.isAuthenticated()) {
+        console.log("No authentication token found");
         setIsValid(false);
         setIsChecking(false);
         return;
       }
 
+      console.log("Token found, validating session...");
       const sessionValid = await AuthService.validateSession();
+      console.log("Session validation result:", sessionValid);
       setIsValid(sessionValid);
       setIsChecking(false);
     };
@@ -44,9 +50,11 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   }
 
   if (!isValid) {
+    console.log("Session invalid, redirecting to login");
     return <LoginPage />;
   }
 
+  console.log("Session valid, rendering protected component");
   return <Component />;
 }
 
