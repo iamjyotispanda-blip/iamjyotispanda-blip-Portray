@@ -13,6 +13,7 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   Table, 
   TableBody, 
@@ -221,26 +222,26 @@ export default function OrganizationPage() {
           </h1>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+        <Sheet open={isAddDialogOpen} onOpenChange={(open) => {
           setIsAddDialogOpen(open);
           if (!open) resetForm();
         }}>
-          <DialogTrigger asChild>
+          <SheetTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Add Organization
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add New Organization</DialogTitle>
-              <DialogDescription>
+          </SheetTrigger>
+          <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Add New Organization</SheetTitle>
+              <SheetDescription>
                 Create a new port operator organization with complete details.
-              </DialogDescription>
-            </DialogHeader>
+              </SheetDescription>
+            </SheetHeader>
             
-            <form onSubmit={handleAddSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleAddSubmit} className="space-y-6 mt-6">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="organizationName">Organization Name *</Label>
                   <Input
@@ -264,7 +265,7 @@ export default function OrganizationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="organizationCode">Organization Code *</Label>
                   <Input
@@ -299,7 +300,7 @@ export default function OrganizationPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="telephone">Telephone</Label>
                   <Input
@@ -331,7 +332,7 @@ export default function OrganizationPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <div className="flex justify-end space-x-2 pt-6 border-t">
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -347,8 +348,8 @@ export default function OrganizationPage() {
                 </Button>
               </div>
             </form>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Organizations List */}
