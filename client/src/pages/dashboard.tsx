@@ -240,12 +240,7 @@ export default function DashboardPage() {
                   <Menu className="h-5 w-5" />
                 </Button>
                 <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
-                  {activeSection !== "dashboard" && (
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {activeSection === "organization" ? "Organization Configuration" : 
-                       activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
-                    </h2>
-                  )}
+                  {/* Clean header without page configuration details */}
                 </div>
               </div>
               
