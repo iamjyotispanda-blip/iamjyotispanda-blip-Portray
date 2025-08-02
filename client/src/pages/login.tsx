@@ -98,7 +98,7 @@ export default function LoginPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/90 via-blue-600/80 to-orange-500/70" />
         
-        <div className="relative z-10 flex flex-col justify-center px-12 text-white w-full max-w-lg">
+        <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full max-w-lg">
           {/* Logo and tagline in same line */}
           <div className="mb-8">
             <HeroLogo />
