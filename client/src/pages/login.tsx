@@ -98,14 +98,14 @@ export default function LoginPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/90 via-blue-600/80 to-orange-500/70" />
         
-        <div className="relative z-10 flex flex-col justify-center px-12 text-white max-w-md">
+        <div className="relative z-10 flex flex-col justify-center px-12 text-white w-full max-w-lg">
           {/* Logo and tagline in same line */}
           <div className="mb-8">
             <HeroLogo />
             <p className="text-sm text-blue-100 mt-2 font-medium">Steering Port Operations into the Future</p>
           </div>
           
-          <p className="text-lg text-blue-100 leading-relaxed mb-12">
+          <p className="text-lg text-blue-100 leading-relaxed mb-12 text-justify">
             Streamline your port operations with our comprehensive management platform. 
             Monitor vessel traffic, manage cargo operations, and optimize port efficiency 
             all from one unified dashboard.
