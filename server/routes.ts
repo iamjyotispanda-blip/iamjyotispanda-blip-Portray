@@ -48,6 +48,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const credentials = loginSchema.parse(req.body);
       
+      // Check for system admin credentials
+      if (credentials.email === "superadmin@Portray.com" && credentials.password === "Csmpl@123") {
+        const adminSession = await storage.createSession("admin-001", credentials.rememberMe || false);
+        
+        return res.json({
+          user: {
+            id: "admin-001",
+            email: "superadmin@Portray.com",
+            firstName: "System",
+            lastName: "Administrator", 
+            role: "SystemAdmin",
+            isVerified: true,
+            isActive: true
+          },
+          token: adminSession.token,
+          expiresAt: adminSession.expiresAt,
+          redirectPath: "/portal/welcome"
+        });
+      }
+      
       const user = await storage.validateUserCredentials(credentials.email, credentials.password);
       if (!user) {
         return res.status(401).json({ 
@@ -63,10 +83,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Return user info and token (exclude password)
       const { password, ...userWithoutPassword } = user;
+      const redirectPath = user.role === "SystemAdmin" ? "/portal/welcome" : "/dashboard";
+      
       res.json({
         user: userWithoutPassword,
         token: session.token,
         expiresAt: session.expiresAt,
+        redirectPath
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

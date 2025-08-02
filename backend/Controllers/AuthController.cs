@@ -131,11 +131,44 @@ public class AuthController : ControllerBase
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                return Unauthorized(new AuthResponse
+                // For development: Create the admin user if it doesn't exist and this is the admin email
+                if (request.Email.Equals("superadmin@Portray.com", StringComparison.OrdinalIgnoreCase))
                 {
-                    Success = false,
-                    Message = "Invalid email or password"
-                });
+                    var adminUser = new ApplicationUser
+                    {
+                        UserName = "superadmin@Portray.com",
+                        Email = "superadmin@Portray.com",
+                        Name = "System Administrator",
+                        Role = "SystemAdmin",
+                        IsVerified = true,
+                        EmailConfirmed = true,
+                        IsActive = true
+                    };
+                    
+                    var createResult = await _userManager.CreateAsync(adminUser, "Csmpl@123");
+                    if (createResult.Succeeded)
+                    {
+                        user = adminUser;
+                        _logger.LogInformation("Created system admin user");
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                        return Unauthorized(new AuthResponse
+                        {
+                            Success = false,
+                            Message = "Authentication system error"
+                        });
+                    }
+                }
+                else
+                {
+                    return Unauthorized(new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Invalid email or password"
+                    });
+                }
             }
 
             if (!user.EmailConfirmed)

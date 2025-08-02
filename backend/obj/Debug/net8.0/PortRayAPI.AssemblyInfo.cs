@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PortRayAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+10c4c7a0afbb041d6b79e72841743963e9827d71")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6416f67cfc61e501bb9f4d8b4d7e34a602b02932")]
 [assembly: System.Reflection.AssemblyProductAttribute("PortRayAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PortRayAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
