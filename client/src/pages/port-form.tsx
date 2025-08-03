@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { AppLayout } from "@/components/layout/AppLayout";
+
 import type { Port, Organization } from "@shared/schema";
 
 interface PortFormPageProps {
@@ -129,34 +129,33 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
   if (isEdit && portLoading) {
     return (
-      <AppLayout title="Loading...">
-        <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Loading...</span>
-          </div>
-          <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading port...</p>
-            </div>
-          </main>
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Loading...</span>
         </div>
-      </AppLayout>
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading port...</p>
+          </div>
+        </main>
+      </div>
     );
   }
 
   return (
-    <AppLayout title={isEdit ? "Edit Port" : "New Port"}>
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">
-            {isEdit ? "Edit Port" : "New Port"}
-          </span>
-        </div>
-        
-        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
-          <div className="space-y-2">
-            <Card>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Breadcrumb Bar */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">
+          {isEdit ? "Edit Port" : "New Port"}
+        </span>
+      </div>
+      
+      {/* Main Content Area - Updated padding */}
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <div className="space-y-2">
+          <Card>
             <CardContent className="pt-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Port Information */}
@@ -292,9 +291,8 @@ export default function PortFormPage({ params }: PortFormPageProps) {
               </form>
             </CardContent>
           </Card>
-          </div>
-        </main>
-      </div>
-    </AppLayout>
+        </div>
+      </main>
+    </div>
   );
 }
