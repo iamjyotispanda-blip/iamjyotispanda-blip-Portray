@@ -140,15 +140,14 @@ export default function PortalWelcome() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Breadcrumb Bar */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Welcome</span>
+      </div>
+      
+      <main className="px-4 sm:px-6 lg:px-2 py-2 max-w-7xl mx-auto">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Welcome to PortRay Admin Portal
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Manage your port operations and system configuration from this central dashboard.
-          </p>
         </div>
 
         {/* Quick Stats */}
@@ -223,7 +222,7 @@ export default function PortalWelcome() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 }

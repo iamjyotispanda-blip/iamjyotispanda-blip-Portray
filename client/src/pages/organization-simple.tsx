@@ -473,24 +473,26 @@ export default function OrganizationPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Organization Management
-          </h1>
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Organizations</span>
         </div>
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+          <p className="text-gray-600 dark:text-gray-400">Loading organizations...</p>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Organization Management
-          </h1>
-        </div>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Organizations</span>
+      </div>
+      
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <div className="space-y-6">
+          <div className="flex justify-end">
         
         <Button onClick={handleAdd}>
           <Plus className="w-4 h-4 mr-2" />
@@ -803,7 +805,8 @@ export default function OrganizationPage() {
           )}
         </CardContent>
       </Card>
-
+        </div>
+      </main>
     </div>
   );
 }

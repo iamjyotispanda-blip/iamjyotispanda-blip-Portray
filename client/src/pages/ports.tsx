@@ -132,7 +132,7 @@ export default function PortsPage() {
       </div>
 
       {/* Main Content Area - Updated padding */}
-      <main className="px-4 sm:px-6 lg:px-2 py-4 flex-1">
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
         {/* Action Bar */}
         <div className="flex justify-between items-center mb-3">
           <div className="relative w-80">
