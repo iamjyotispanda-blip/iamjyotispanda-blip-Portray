@@ -72,7 +72,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed && !sidebarHovered ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+        className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed && !sidebarHovered ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col`}
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
       >
@@ -103,7 +103,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             if (item.children) {
@@ -156,22 +156,27 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         </nav>
 
         {/* User Info */}
-        <div className={`absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 ${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>
+        <div className={`mt-auto p-4 border-t border-gray-200 dark:border-slate-700 ${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>
           {user && (
-            <div className="space-y-2">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <div className="font-medium text-gray-900 dark:text-white">{user.firstName} {user.lastName}</div>
-                <div>{user.email}</div>
-                <div className="text-xs text-blue-600 dark:text-blue-400">{user.role}</div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+            <div className="flex items-center">
+              {(!sidebarCollapsed || sidebarHovered) && (
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {user.role}
+                  </p>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleLogout}
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                className={sidebarCollapsed && !sidebarHovered ? '' : 'ml-2'}
+                title={sidebarCollapsed && !sidebarHovered ? 'Logout' : ''}
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           )}

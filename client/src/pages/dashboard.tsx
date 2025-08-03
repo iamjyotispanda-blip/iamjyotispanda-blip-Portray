@@ -197,7 +197,7 @@ export default function DashboardPage() {
         </nav>
         
         {/* User Profile & Logout */}
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-slate-700">
+        <div className="mt-auto p-4 border-t border-gray-200 dark:border-slate-700">
           <div className={`flex items-center ${sidebarCollapsed && !sidebarHovered ? 'justify-center' : ''}`}>
             {(!sidebarCollapsed || sidebarHovered) && (
               <div className="flex-1">
