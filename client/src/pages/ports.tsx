@@ -127,12 +127,12 @@ export default function PortsPage() {
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Breadcrumb Bar */}
-      <div className="bg-white dark:bg-gray-800 py-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Ports</span>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 p-4">
+      <main className="px-3 sm:px-2 lg:px-2 py-3 flex-1">
         {/* Action Bar */}
         <div className="flex justify-between items-center mb-3">
           <div className="relative w-80">
@@ -263,7 +263,7 @@ export default function PortsPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 }
