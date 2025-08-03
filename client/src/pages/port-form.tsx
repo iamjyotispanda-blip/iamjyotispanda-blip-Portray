@@ -159,30 +159,32 @@ export default function PortFormPage({ params }: PortFormPageProps) {
   }
 
   return (
-    <AppLayout title="" activeSection="ports">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Breadcrumb Bar */}
-      <div className="border-b border-gray-200 dark:border-gray-700 -m-4 mb-4 p-4">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">
           {isEdit ? "Edit Port" : "New Port"}
         </span>
       </div>
-      
-      <div className="space-y-2">
-        {/* Back Button */}
-        <div className="flex justify-start">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            className="h-8"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Ports
-          </Button>
-        </div>
 
-        {/* Form Card */}
-        <Card>
-          <CardContent className="pt-6">
+      {/* Main Content Area */}
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <div className="space-y-2">
+          {/* Back Button */}
+          <div className="flex justify-start">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="h-8"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Ports
+            </Button>
+          </div>
+
+          {/* Form Card */}
+          <Card>
+            <CardContent className="pt-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -310,7 +312,8 @@ export default function PortFormPage({ params }: PortFormPageProps) {
               </form>
             </CardContent>
           </Card>
-      </div>
-    </AppLayout>
+        </div>
+      </main>
+    </div>
   );
 }
