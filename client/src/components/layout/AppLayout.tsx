@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, Package, Users, LogOut, Menu, Settings, Building2, Shield, 
-  BarChart3, FileText, Home, PanelLeftClose, PanelLeftOpen 
+  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PortrayLogo } from "@/components/portray-logo";
@@ -40,15 +39,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       children: [
         { id: "organization", label: "Organization", icon: Building2 },
         { id: "ports", label: "Ports", icon: Ship },
-        { id: "security", label: "Security", icon: Shield },
-        { id: "users", label: "Users", icon: Users },
       ]
     },
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "vessels", label: "Vessels", icon: Ship },
-    { id: "cargo", label: "Cargo", icon: Package },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "reports", label: "Reports", icon: FileText },
   ];
 
   const handleNavigation = (itemId: string) => {
