@@ -132,7 +132,7 @@ export default function PortsPage() {
       </div>
 
       {/* Main Content Area */}
-      <main className="px-3 sm:px-2 lg:px-2 py-3 flex-1">
+      <main className="px-2 sm:px-2 lg:px-2 py-2 flex-1">
         {/* Action Bar */}
         <div className="flex justify-between items-center mb-3">
           <div className="relative w-80">
