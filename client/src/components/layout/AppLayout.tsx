@@ -187,58 +187,61 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'} transition-all duration-300`}>
-        {/* Top Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
-          
-          {/* Desktop user profile - always visible */}
-          <div className="hidden lg:flex items-center space-x-4">
-            {user && (
-              <div className="flex items-center space-x-3 text-sm">
-                <div className="text-right">
-                  <div className="font-medium text-gray-900 dark:text-white">{user.firstName} {user.lastName}</div>
-                  <div className="text-gray-600 dark:text-gray-400">{user.email}</div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400">{user.role}</div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleLogout}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+      <div className="flex-1 lg:ml-0">
+        {/* Header */}
+        <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden mr-3"
+                  onClick={() => setSidebarOpen(true)}
                 >
-                  <LogOut className="h-4 w-4" />
+                  <Menu className="h-5 w-5" />
                 </Button>
+                <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
+                  {/* Clean header without page configuration details */}
+                </div>
               </div>
-            )}
-          </div>
-          
-          {/* Mobile user menu */}
-          <div className="lg:hidden">
-            {user && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-red-600 hover:text-red-700"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            )}
+              
+              {/* User Profile Section */}
+              <div className="flex items-center space-x-4">
+                <div className="hidden sm:flex sm:items-center sm:space-x-3">
+                  <div className="flex flex-col text-right">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {user?.firstName} {user?.lastName}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {user?.role} | {user?.email}
+                    </span>
+                  </div>
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 h-8"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-4">
+        {/* Main Content */}
+        <main className="px-4 sm:px-6 lg:px-2 py-2">
           {children}
         </main>
       </div>
