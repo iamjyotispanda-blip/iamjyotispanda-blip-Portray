@@ -72,27 +72,34 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Sidebar */}
       <div 
-        className={`
-          fixed inset-y-0 left-0 z-50 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300
-          ${sidebarOpen ? 'w-64' : sidebarCollapsed ? 'w-16' : 'w-64'} 
-          ${sidebarOpen ? 'block' : 'hidden lg:block'}
-        `}
+        className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed && !sidebarHovered ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className={`flex items-center space-x-3 ${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>
-            <PortrayLogo className="h-8 w-8" />
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden lg:flex"
-          >
-            {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </Button>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+          {sidebarCollapsed && !sidebarHovered ? (
+            /* Small Logo when collapsed */
+            <div className="hidden lg:flex items-center justify-center w-full">
+              <PortrayLogo size="xs" />
+            </div>
+          ) : (
+            /* Full layout when expanded */
+            <div className="flex items-center justify-between w-full">
+              <PortrayLogo size="sm" />
+              <div className="flex items-center space-x-1">
+                {/* Desktop Toggle Button - Right aligned within logo section */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden lg:flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm rounded-lg transition-all duration-200"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  title="Collapse Sidebar"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Navigation */}
