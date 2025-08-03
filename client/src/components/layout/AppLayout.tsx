@@ -103,56 +103,48 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2 flex-1">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            if (item.children) {
-              return (
-                <div key={item.id} className="space-y-1">
-                  <div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300 py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                    <Icon className="h-5 w-5" />
-                    <span className={`${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>{item.label}</span>
+        <nav className="mt-5 px-2 flex-1">
+          <div className="space-y-1">
+            {navigationItems.map((item) => (
+              <div key={item.id}>
+                <button
+                  onClick={() => handleNavigation(item.id)}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
+                    activeSection === item.id
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
+                >
+                  <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
+                    activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
+                  }`} />
+                  {(!sidebarCollapsed || sidebarHovered) && item.label}
+                </button>
+                
+                {item.children && (!sidebarCollapsed || sidebarHovered) && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {item.children.map((child) => (
+                      <button
+                        key={child.id}
+                        onClick={() => handleNavigation(child.id)}
+                        className={`group flex items-center px-2 py-1 text-sm rounded-md w-full text-left ${
+                          activeSection === child.id
+                            ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <child.icon className={`mr-2 h-4 w-4 ${
+                          activeSection === child.id ? 'text-blue-500' : 'text-gray-400'
+                        }`} />
+                        {child.label}
+                      </button>
+                    ))}
                   </div>
-                  <div className={`ml-6 space-y-1 ${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>
-                    {item.children.map((child) => {
-                      const ChildIcon = child.icon;
-                      const isActive = activeSection === child.id;
-                      return (
-                        <div
-                          key={child.id}
-                          onClick={() => handleNavigation(child.id)}
-                          className={`flex items-center space-x-3 text-sm py-2 px-3 rounded-lg cursor-pointer ${
-                            isActive
-                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' 
-                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                          }`}
-                        >
-                          <ChildIcon className="h-4 w-4" />
-                          <span>{child.label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            }
-            
-            const isActive = activeSection === item.id;
-            return (
-              <div
-                key={item.id}
-                onClick={() => handleNavigation(item.id)}
-                className={`flex items-center space-x-3 py-2 px-3 rounded-lg cursor-pointer ${
-                  isActive
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                <span className={`${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>{item.label}</span>
+                )}
               </div>
-            );
-          })}
+            ))}
+          </div>
         </nav>
 
         {/* User Info */}
