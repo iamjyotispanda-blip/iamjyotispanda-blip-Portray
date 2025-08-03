@@ -10,6 +10,7 @@ import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
 import PortalWelcome from "@/pages/portal-welcome";
 import PortsPage from "@/pages/ports";
+import PortFormPage from "@/pages/port-form";
 import { AuthService } from "@/lib/auth";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -67,6 +68,12 @@ function Router() {
       </Route>
       <Route path="/dashboard">
         {() => <ProtectedRoute component={DashboardPage} />}
+      </Route>
+      <Route path="/ports/new">
+        {() => <ProtectedRoute component={PortFormPage} />}
+      </Route>
+      <Route path="/ports/edit/:id">
+        {(params) => <ProtectedRoute component={() => <PortFormPage params={params} />} />}
       </Route>
       <Route path="/ports">
         {() => <ProtectedRoute component={PortsPage} />}

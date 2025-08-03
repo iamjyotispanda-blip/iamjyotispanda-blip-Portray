@@ -4,22 +4,17 @@ import { useLocation } from "wouter";
 import { Plus, Eye, Edit, ToggleLeft, ToggleRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { AuthService } from "@/lib/auth";
 import type { Port, Organization } from "@shared/schema";
-import { PortForm } from "@/components/PortForm";
 
 export default function PortsPage() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPort, setSelectedPort] = useState<Port | null>(null);
-  const [formMode, setFormMode] = useState<"create" | "edit" | "view">("create");
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -78,21 +73,11 @@ export default function PortsPage() {
   );
 
   const handleNewPort = () => {
-    setSelectedPort(null);
-    setFormMode("create");
-    setIsSheetOpen(true);
-  };
-
-  const handleViewPort = (port: Port) => {
-    setSelectedPort(port);
-    setFormMode("view");
-    setIsSheetOpen(true);
+    setLocation("/ports/new");
   };
 
   const handleEditPort = (port: Port) => {
-    setSelectedPort(port);
-    setFormMode("edit");
-    setIsSheetOpen(true);
+    setLocation(`/ports/edit/${port.id}`);
   };
 
   const handleToggleStatus = (id: number) => {
@@ -104,14 +89,7 @@ export default function PortsPage() {
     return org?.organizationName || "Unknown Organization";
   };
 
-  const getSheetTitle = () => {
-    switch (formMode) {
-      case "create": return "New Port";
-      case "edit": return "Edit Port";
-      case "view": return "Port Details";
-      default: return "Port";
-    }
-  };
+
 
   if (portsLoading) {
     return (
@@ -144,35 +122,10 @@ export default function PortsPage() {
               className="pl-10"
             />
           </div>
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-              <Button onClick={handleNewPort} className="flex items-center gap-2 h-8">
-                <Plus className="h-4 w-4" />
-                New Port
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md">
-              <SheetHeader>
-                <SheetTitle>{getSheetTitle()}</SheetTitle>
-                <SheetDescription>
-                  {formMode === "create" && "Add a new port to the system"}
-                  {formMode === "edit" && "Update port information"}
-                  {formMode === "view" && "View port details"}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-6">
-                <PortForm
-                  port={selectedPort}
-                  organizations={organizations}
-                  mode={formMode}
-                  onSuccess={() => {
-                    setIsSheetOpen(false);
-                    queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
-                  }}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
+          <Button onClick={handleNewPort} className="flex items-center gap-2 h-8">
+            <Plus className="h-4 w-4" />
+            New Port
+          </Button>
         </div>
 
         {/* Ports List */}
@@ -235,14 +188,7 @@ export default function PortsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleViewPort(port)}
-                              className="h-8"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
+
                             <Button
                               size="sm"
                               variant="outline"

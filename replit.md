@@ -5,17 +5,22 @@ This is a full-stack web application called "PortRay" - a Port Management System
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
-UI Header Styling: Remove navigation details in header sections, use smaller titles (text-xl instead of text-3xl) for page headers, remove descriptive subtitles like "Manage port operators and their facilities". Remove all page configuration details and breadcrumbs from the top header bar - keep headers completely clean without showing current page context. Remove card section headers and descriptions (like "Organizations (1)" and "Organization records and details") from all pages. Use slider/sheet forms instead of popup dialogs for add/create operations.
+UI Header Styling: Remove navigation details in header sections, use smaller titles (text-xl instead of text-3xl) for page headers, remove descriptive subtitles like "Manage port operators and their facilities". Remove all page configuration details and breadcrumbs from the top header bar - keep headers completely clean without showing current page context. Remove card section headers and descriptions (like "Organizations (1)" and "Organization records and details") from all pages.
+Form Handling: Port add and edit forms should be separate pages with navigation (not slider/sheet forms). Organization forms use slider/sheet forms.
+Button Heights: Login page buttons use h-10 height, all other buttons use h-8 height consistently.
+Search Functionality: Organization and port pages require search functionality with real-time filtering.
+Layout Spacing: Minimal gaps between buttons and cards throughout application (space-y-2).
 
 # System Architecture
 
 ## Frontend Architecture
 - **Framework**: React 18 with TypeScript and Vite as the build tool
-- **Routing**: Uses Wouter for client-side routing with protected routes
+- **Routing**: Uses Wouter for client-side routing with protected routes including dedicated port form pages
 - **State Management**: TanStack Query (React Query) for server state management
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
 - **Styling**: Tailwind CSS with custom design system and dark/light theme support
 - **Forms**: React Hook Form with Zod validation for type-safe form handling
+- **Navigation**: Port forms use dedicated pages (/ports/new, /ports/edit/:id) instead of modal forms
 
 ## Backend Architecture
 - **Framework**: ASP.NET Core 8.0 with C#
