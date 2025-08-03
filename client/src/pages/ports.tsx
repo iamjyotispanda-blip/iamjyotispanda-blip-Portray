@@ -125,58 +125,59 @@ export default function PortsPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-2">
-      {/* Header at the top */}
-      <div className="flex items-start justify-between mb-6">
-        <h1 className="text-xl font-semibold">Ports</h1>
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
-            <Button onClick={handleNewPort} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              New Port
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="w-full sm:max-w-md">
-            <SheetHeader>
-              <SheetTitle>{getSheetTitle()}</SheetTitle>
-              <SheetDescription>
-                {formMode === "create" && "Add a new port to the system"}
-                {formMode === "edit" && "Update port information"}
-                {formMode === "view" && "View port details"}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-6">
-              <PortForm
-                port={selectedPort}
-                organizations={organizations}
-                mode={formMode}
-                onSuccess={() => {
-                  setIsSheetOpen(false);
-                  queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
-                }}
-              />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      {/* Search bar */}
-      <div className="flex items-center gap-4 mb-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search ports..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-6 pt-4 pb-6">
+        {/* Header at the top with proper alignment */}
+        <div className="flex items-start justify-between mb-4">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Ports</h1>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetTrigger asChild>
+              <Button onClick={handleNewPort} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                New Port
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-md">
+              <SheetHeader>
+                <SheetTitle>{getSheetTitle()}</SheetTitle>
+                <SheetDescription>
+                  {formMode === "create" && "Add a new port to the system"}
+                  {formMode === "edit" && "Update port information"}
+                  {formMode === "view" && "View port details"}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-6">
+                <PortForm
+                  port={selectedPort}
+                  organizations={organizations}
+                  mode={formMode}
+                  onSuccess={() => {
+                    setIsSheetOpen(false);
+                    queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
+                  }}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
-      </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="rounded-md border">
-            <Table>
+        {/* Search bar */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search ports..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-0">
+            <div className="rounded-md border">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Port Name & Display Name</TableHead>
@@ -256,10 +257,11 @@ export default function PortsPage() {
                   ))
                 )}
               </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
