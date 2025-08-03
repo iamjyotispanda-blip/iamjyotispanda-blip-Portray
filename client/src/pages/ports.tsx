@@ -127,7 +127,7 @@ export default function PortsPage() {
   return (
     <div className="container mx-auto p-6">
       {/* Header outside the panel */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start justify-between mb-6">
         <h1 className="text-xl font-semibold">Ports</h1>
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
