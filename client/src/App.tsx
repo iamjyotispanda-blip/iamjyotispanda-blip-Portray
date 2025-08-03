@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AppLayout } from "@/components/layout/AppLayout";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
@@ -12,6 +13,15 @@ import PortalWelcome from "@/pages/portal-welcome";
 import PortsPage from "@/pages/ports";
 import PortFormPage from "@/pages/port-form";
 import { AuthService } from "@/lib/auth";
+
+// Wrapper component for AppLayout
+function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <AppLayout title="Port Management" activeSection="ports">
+      {children}
+    </AppLayout>
+  );
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const [isChecking, setIsChecking] = useState(true);
@@ -70,13 +80,13 @@ function Router() {
         {() => <ProtectedRoute component={DashboardPage} />}
       </Route>
       <Route path="/ports/new">
-        {() => <ProtectedRoute component={PortFormPage} />}
+        {() => <ProtectedRoute component={() => <AppLayoutWrapper><PortFormPage /></AppLayoutWrapper>} />}
       </Route>
       <Route path="/ports/edit/:id">
-        {(params) => <ProtectedRoute component={() => <PortFormPage params={params} />} />}
+        {(params) => <ProtectedRoute component={() => <AppLayoutWrapper><PortFormPage params={params} /></AppLayoutWrapper>} />}
       </Route>
       <Route path="/ports">
-        {() => <ProtectedRoute component={PortsPage} />}
+        {() => <ProtectedRoute component={() => <AppLayoutWrapper><PortsPage /></AppLayoutWrapper>} />}
       </Route>
       <Route path="/">
         {() => <ProtectedRoute component={DashboardPage} />}
