@@ -46,51 +46,23 @@ export default function PortalWelcome() {
 
   const adminFeatures = [
     {
-      icon: <Users className="h-8 w-8 text-blue-600" />,
-      title: "User Management",
-      description: "Manage system users, roles, and permissions",
-      path: "/portal/users"
-    },
-    {
-      icon: <Shield className="h-8 w-8 text-green-600" />,
-      title: "Security & Access",
-      description: "Configure security settings and access controls",
-      path: "/portal/security"
-    },
-    {
       icon: <Settings className="h-8 w-8 text-gray-600" />,
       title: "System Configuration",
       description: "Configure system-wide settings and parameters",
       path: "/portal/settings"
-    },
-    {
-      icon: <BarChart3 className="h-8 w-8 text-purple-600" />,
-      title: "Analytics & Reports",
-      description: "View system analytics and generate reports",
-      path: "/portal/analytics"
     }
   ];
 
   const portOperations = [
     {
-      icon: <Ship className="h-6 w-6 text-blue-500" />,
-      title: "Vessel Operations",
-      description: "15 active vessels"
+      icon: <Building2 className="h-6 w-6 text-blue-500" />,
+      title: "Organizations",
+      description: "Manage port organizations"
     },
     {
-      icon: <Package className="h-6 w-6 text-green-500" />,
-      title: "Cargo Management",
-      description: "2,340 containers processed"
-    },
-    {
-      icon: <Truck className="h-6 w-6 text-orange-500" />,
-      title: "Logistics",
-      description: "89% efficiency rate"
-    },
-    {
-      icon: <FileText className="h-6 w-6 text-purple-500" />,
-      title: "Financial",
-      description: "$2.4M revenue this month"
+      icon: <Ship className="h-6 w-6 text-green-500" />,
+      title: "Port Management",
+      description: "Configure port operations"
     }
   ];
 

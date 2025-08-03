@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PortrayLogo } from "@/components/portray-logo";
 import { 
   Ship, Package, TrendingUp, Users, LogOut, Menu, Settings, 
-  Building2, Shield, BarChart3, FileText, Home, X, ChevronUp, ChevronDown,
+  Building2, Home, X, ChevronUp, ChevronDown,
   PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import { useLocation } from "wouter";
@@ -38,15 +38,9 @@ export default function DashboardPage() {
       children: [
         { id: "organization", label: "Organization", icon: Building2 },
         { id: "ports", label: "Ports", icon: Ship },
-        { id: "security", label: "Security", icon: Shield },
-        { id: "users", label: "Users", icon: Users },
       ]
     },
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "vessels", label: "Vessels", icon: Ship },
-    { id: "cargo", label: "Cargo", icon: Package },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "reports", label: "Reports", icon: FileText },
   ];
 
   const renderContent = () => {
