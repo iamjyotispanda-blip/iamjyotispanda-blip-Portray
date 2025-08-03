@@ -159,18 +159,18 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
+      {/* Breadcrumb Bar */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">
           {isEdit ? "Edit Port" : "New Port"}
         </span>
       </div>
 
-      {/* Main Content */}
-      <main className="px-4 sm:px-6 lg:px-2 py-4 flex-1">
-        <div className="max-w-2xl mx-auto">
+      {/* Main Content Area */}
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <div className="space-y-2">
           {/* Back Button */}
-          <div className="mb-4">
+          <div className="flex justify-start">
             <Button
               variant="outline"
               onClick={handleBack}
@@ -183,14 +183,9 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
           {/* Form Card */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">
-                {isEdit ? "Edit Port" : "Create New Port"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="portName">Port Name *</Label>
                     <Input
@@ -292,7 +287,7 @@ export default function PortFormPage({ params }: PortFormPageProps) {
                 </div>
 
                 {/* Submit Buttons */}
-                <div className="flex justify-end space-x-2 pt-6 border-t">
+                <div className="flex justify-end space-x-2 pt-4 border-t">
                   <Button 
                     type="button" 
                     variant="outline" 
