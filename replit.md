@@ -10,6 +10,7 @@ Form Handling: Port add and edit forms should be separate pages with navigation 
 Button Heights: Login page buttons use h-10 height, all other buttons use h-8 height consistently.
 Search Functionality: Organization and port pages require search functionality with real-time filtering.
 Layout Spacing: Minimal gaps between buttons and cards throughout application (space-y-2).
+Consistent Layout: All form pages and view pages should have identical header, left panel, and styling structure. Port form pages should match port view page styling exactly, with breadcrumb bar and main content container. Remove "Back to Port" option from new port page.
 
 # System Architecture
 

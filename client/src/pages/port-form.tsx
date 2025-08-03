@@ -170,18 +170,6 @@ export default function PortFormPage({ params }: PortFormPageProps) {
       {/* Main Content Area */}
       <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
         <div className="space-y-2">
-          {/* Back Button */}
-          <div className="flex justify-start">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              className="h-8"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Ports
-            </Button>
-          </div>
-
           {/* Form Card */}
           <Card>
             <CardContent className="pt-6">
