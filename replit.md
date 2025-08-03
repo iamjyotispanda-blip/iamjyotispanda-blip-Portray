@@ -16,12 +16,12 @@ Consistent Layout: All form pages and view pages should have identical header, l
 
 ## Frontend Architecture
 - **Framework**: React 18 with TypeScript and Vite as the build tool
-- **Routing**: Uses Wouter for client-side routing with protected routes including dedicated port form pages
+- **Routing**: Uses Wouter for client-side routing with protected routes
 - **State Management**: TanStack Query (React Query) for server state management
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
 - **Styling**: Tailwind CSS with custom design system and dark/light theme support
 - **Forms**: React Hook Form with Zod validation for type-safe form handling
-- **Navigation**: Port forms use dedicated pages (/ports/new, /ports/edit/:id) instead of modal forms
+- **Navigation**: Clean routing structure without dedicated port form pages
 
 ## Backend Architecture
 - **Framework**: ASP.NET Core 8.0 with C#
