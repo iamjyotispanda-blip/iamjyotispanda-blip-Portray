@@ -70,16 +70,19 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: AuthService.login,
     onSuccess: (response: any) => {
+      console.log("Login mutation success, response:", response);
       toast({
         title: "Welcome to PortRay",
         description: "Successfully signed in to your account.",
       });
       // Use the redirectPath from backend response or default to dashboard
       const redirectPath = response.redirectPath || "/dashboard";
+      console.log("Redirecting to:", redirectPath);
       // Wait a moment for token to be properly set, then redirect
       setTimeout(() => {
+        console.log("Setting location to:", redirectPath);
         setLocation(redirectPath);
-      }, 100);
+      }, 300);
     },
     onError: (error: any) => {
       const message = error.message || "Login failed. Please try again.";

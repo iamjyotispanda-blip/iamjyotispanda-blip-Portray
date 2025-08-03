@@ -78,11 +78,14 @@ export class AuthService {
       
       const data: AuthResponse = await response.json();
       
+      console.log("Login successful, storing token:", data.token);
       AuthService.setToken(data.token);
       AuthService.setUser(data.user);
+      console.log("Token stored, isAuthenticated:", AuthService.isAuthenticated());
       
       return data;
     } catch (error) {
+      console.error("Login error:", error);
       throw error;
     }
   }
