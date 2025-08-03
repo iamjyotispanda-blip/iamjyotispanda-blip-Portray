@@ -30,7 +30,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   useEffect(() => {
     const checkSession = async () => {
       // Give a small delay to ensure token is set after login
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       if (!AuthService.isAuthenticated()) {
         console.log("No authentication token found");

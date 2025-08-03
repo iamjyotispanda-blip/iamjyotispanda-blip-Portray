@@ -74,9 +74,11 @@ export default function LoginPage() {
         title: "Welcome to PortRay",
         description: "Successfully signed in to your account.",
       });
+      // Use the redirectPath from backend response or default to dashboard
+      const redirectPath = response.redirectPath || "/dashboard";
       // Wait a moment for token to be properly set, then redirect
       setTimeout(() => {
-        setLocation("/dashboard");
+        setLocation(redirectPath);
       }, 100);
     },
     onError: (error: any) => {
