@@ -21,7 +21,7 @@ Consistent Layout: All form pages and view pages should have identical header, l
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
 - **Styling**: Tailwind CSS with custom design system and dark/light theme support
 - **Forms**: React Hook Form with Zod validation for type-safe form handling
-- **Navigation**: Clean routing structure without dedicated port form pages
+- **Navigation**: Port forms use dedicated pages (/ports/new, /ports/edit/:id) with complete application layout
 
 ## Backend Architecture
 - **Framework**: ASP.NET Core 8.0 with C#
