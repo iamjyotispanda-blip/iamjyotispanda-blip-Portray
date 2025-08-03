@@ -18,6 +18,17 @@ interface PortFormPageProps {
   };
 }
 
+// Helper function to get country flag
+const getCountryFlag = (country: string): string => {
+  const flags: Record<string, string> = {
+    "India": "🇮🇳",
+    "USA": "🇺🇸",
+    "UK": "🇬🇧",
+    "Canada": "🇨🇦"
+  };
+  return flags[country] || "🏳️";
+};
+
 export default function PortFormPage({ params }: PortFormPageProps) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -64,6 +75,19 @@ export default function PortFormPage({ params }: PortFormPageProps) {
       });
     }
   }, [isEdit, port]);
+
+  // Update country when organization changes
+  useEffect(() => {
+    if (formData.organizationId && organizations.length > 0) {
+      const selectedOrg = organizations.find((org: Organization) => org.id === formData.organizationId);
+      if (selectedOrg && selectedOrg.country) {
+        setFormData(prev => ({
+          ...prev,
+          country: selectedOrg.country
+        }));
+      }
+    }
+  }, [formData.organizationId, organizations]);
 
   // Create port mutation
   const createPortMutation = useMutation({
@@ -205,20 +229,45 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
                   <div>
                     <Label htmlFor="country">Country *</Label>
-                    <Select
-                      value={formData.country}
-                      onValueChange={(value) => handleInputChange('country', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="India">India</SelectItem>
-                        <SelectItem value="USA">USA</SelectItem>
-                        <SelectItem value="UK">UK</SelectItem>
-                        <SelectItem value="Canada">Canada</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="relative">
+                      <Select
+                        value={formData.country}
+                        onValueChange={(value) => handleInputChange('country', value)}
+                      >
+                        <SelectTrigger>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{getCountryFlag(formData.country)}</span>
+                            <SelectValue />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="India">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🇮🇳</span>
+                              <span>India</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="USA">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🇺🇸</span>
+                              <span>USA</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="UK">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🇬🇧</span>
+                              <span>UK</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Canada">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🇨🇦</span>
+                              <span>Canada</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div>

@@ -31,6 +31,7 @@ export default function DashboardPage() {
   };
 
   const navigationItems = [
+    { id: "dashboard", label: "Dashboard", icon: Home },
     { 
       id: "configuration", 
       label: "Configuration", 
@@ -40,7 +41,6 @@ export default function DashboardPage() {
         { id: "ports", label: "Ports", icon: Ship },
       ]
     },
-    { id: "dashboard", label: "Dashboard", icon: Home },
   ];
 
   const renderContent = () => {

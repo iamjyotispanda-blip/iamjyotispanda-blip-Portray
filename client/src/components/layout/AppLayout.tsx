@@ -32,6 +32,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   };
 
   const navigationItems = [
+    { id: "dashboard", label: "Dashboard", icon: Home },
     { 
       id: "configuration", 
       label: "Configuration", 
@@ -41,7 +42,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         { id: "ports", label: "Ports", icon: Ship },
       ]
     },
-    { id: "dashboard", label: "Dashboard", icon: Home },
   ];
 
   const handleNavigation = (itemId: string) => {
