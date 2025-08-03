@@ -160,17 +160,14 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Breadcrumb Bar */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">
           {isEdit ? "Edit Port" : "New Port"}
         </span>
       </div>
-
-      {/* Main Content Area */}
+      
       <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
         <div className="space-y-2">
-          {/* Form Card */}
           <Card>
             <CardContent className="pt-6">
               <form onSubmit={handleSubmit} className="space-y-4">
