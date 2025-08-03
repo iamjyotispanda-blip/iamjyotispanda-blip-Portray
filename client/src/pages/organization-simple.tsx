@@ -494,7 +494,7 @@ export default function OrganizationPage() {
         <div className="space-y-6">
           <div className="flex justify-end">
         
-        <Button onClick={handleAdd}>
+        <Button onClick={handleAdd} className="h-8">
           <Plus className="w-4 h-4 mr-2" />
           Add Organization
         </Button>
@@ -665,12 +665,14 @@ export default function OrganizationPage() {
                 type="button" 
                 variant="outline" 
                 onClick={() => setIsFormOpen(false)}
+                className="h-8"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={addOrganizationMutation.isPending || updateOrganizationMutation.isPending}
+                className="h-8"
               >
                 {isEditMode 
                   ? (updateOrganizationMutation.isPending ? "Updating..." : "Update Organization")
@@ -784,6 +786,7 @@ export default function OrganizationPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(org)}
+                            className="h-8"
                           >
                             <Edit2 className="w-4 h-4" />
                           </Button>
@@ -792,6 +795,7 @@ export default function OrganizationPage() {
                             variant={org.isActive ? "secondary" : "default"}
                             onClick={() => handleToggleStatus(org.id)}
                             disabled={toggleStatusMutation.isPending}
+                            className="h-8"
                           >
                             <Power className="w-4 h-4" />
                           </Button>

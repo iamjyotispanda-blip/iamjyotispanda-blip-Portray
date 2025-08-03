@@ -131,7 +131,7 @@ export default function PortalWelcome() {
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{user.email}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{user.role}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="h-8">
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </Button>
@@ -186,7 +186,7 @@ export default function PortalWelcome() {
               </CardHeader>
               <CardContent className="pt-0">
                 <Button 
-                  className="w-full" 
+                  className="w-full h-8" 
                   variant="outline"
                   onClick={() => setLocation(feature.path)}
                 >

@@ -146,7 +146,7 @@ export default function PortsPage() {
           </div>
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button onClick={handleNewPort} className="flex items-center gap-2">
+              <Button onClick={handleNewPort} className="flex items-center gap-2 h-8">
                 <Plus className="h-4 w-4" />
                 New Port
               </Button>

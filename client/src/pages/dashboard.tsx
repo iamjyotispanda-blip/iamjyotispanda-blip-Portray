@@ -265,7 +265,7 @@ export default function DashboardPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleLogout}
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-2 h-8"
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="hidden sm:inline">Logout</span>

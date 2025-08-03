@@ -190,7 +190,7 @@ export default function OrganizationPage() {
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="h-8">
               <Plus className="w-4 h-4 mr-2" />
               Add Organization
             </Button>
@@ -328,12 +328,14 @@ export default function OrganizationPage() {
                     type="button" 
                     variant="outline" 
                     onClick={() => setIsAddDialogOpen(false)}
+                    className="h-8"
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit" 
                     disabled={addOrganizationMutation.isPending}
+                    className="h-8"
                   >
                     {addOrganizationMutation.isPending ? "Adding..." : "Add Organization"}
                   </Button>
@@ -433,6 +435,7 @@ export default function OrganizationPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(org)}
+                            className="h-8"
                           >
                             <Edit2 className="w-4 h-4" />
                           </Button>
@@ -441,6 +444,7 @@ export default function OrganizationPage() {
                             variant={org.isActive ? "secondary" : "default"}
                             onClick={() => handleToggleStatus(org.id)}
                             disabled={toggleStatusMutation.isPending}
+                            className="h-8"
                           >
                             <Power className="w-4 h-4" />
                           </Button>
@@ -593,12 +597,14 @@ export default function OrganizationPage() {
                     setIsEditDialogOpen(false);
                     setSelectedOrganization(null);
                   }}
+                  className="h-8"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={updateOrganizationMutation.isPending}
+                  className="h-8"
                 >
                   {updateOrganizationMutation.isPending ? "Updating..." : "Update Organization"}
                 </Button>

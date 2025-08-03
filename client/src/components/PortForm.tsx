@@ -318,7 +318,7 @@ export function PortForm({ port, organizations, mode, onSuccess }: PortFormProps
 
       {!isReadOnly && (
         <div className="flex gap-3 pt-4">
-          <Button type="submit" disabled={isLoading} className="flex-1">
+          <Button type="submit" disabled={isLoading} className="flex-1 h-8">
             {isLoading && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
             )}
