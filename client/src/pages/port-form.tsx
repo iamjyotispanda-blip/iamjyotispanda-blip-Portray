@@ -159,7 +159,14 @@ export default function PortFormPage({ params }: PortFormPageProps) {
   }
 
   return (
-    <AppLayout title={isEdit ? "Edit Port" : "New Port"} activeSection="ports">
+    <AppLayout title="" activeSection="ports">
+      {/* Breadcrumb Bar */}
+      <div className="border-b border-gray-200 dark:border-gray-700 -m-4 mb-4 p-4">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          {isEdit ? "Edit Port" : "New Port"}
+        </span>
+      </div>
+      
       <div className="space-y-2">
         {/* Back Button */}
         <div className="flex justify-start">

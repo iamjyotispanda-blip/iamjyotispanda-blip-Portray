@@ -193,11 +193,27 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {title}
-              </h1>
-            </div>
+          </div>
+          
+          {/* Desktop user profile - always visible */}
+          <div className="hidden lg:flex items-center space-x-4">
+            {user && (
+              <div className="flex items-center space-x-3 text-sm">
+                <div className="text-right">
+                  <div className="font-medium text-gray-900 dark:text-white">{user.firstName} {user.lastName}</div>
+                  <div className="text-gray-600 dark:text-gray-400">{user.email}</div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400">{user.role}</div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
           
           {/* Mobile user menu */}
