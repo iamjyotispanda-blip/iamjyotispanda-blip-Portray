@@ -127,8 +127,8 @@ export default function PortsPage() {
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Breadcrumb Bar */}
-      <div className="bg-white dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-        <span className="text-sm text-gray-600 dark:text-gray-400">Ports</span>
+      <div className="bg-white dark:bg-gray-800 py-2 border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Ports</span>
       </div>
 
       {/* Main Content Area */}
