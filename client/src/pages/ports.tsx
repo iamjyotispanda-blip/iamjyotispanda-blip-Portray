@@ -131,7 +131,7 @@ export default function PortsPage() {
         <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Ports</span>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Updated padding */}
       <main className="px-4 sm:px-6 lg:px-2 py-4 flex-1">
         {/* Action Bar */}
         <div className="flex justify-between items-center mb-3">
