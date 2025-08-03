@@ -125,19 +125,25 @@ export default function PortsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Breadcrumb outside container */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-6 py-2">
-          <nav className="text-sm text-gray-500 dark:text-gray-400">
-            <span>Ports</span>
-          </nav>
-        </div>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Breadcrumb Bar */}
+      <div className="bg-white dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400">Ports</span>
       </div>
 
-      <div className="container mx-auto px-6 pt-4 pb-6">
-        {/* Header with New Port button */}
-        <div className="flex justify-end mb-4">
+      {/* Main Content Area */}
+      <div className="flex-1 p-4">
+        {/* Action Bar */}
+        <div className="flex justify-between items-center mb-3">
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search ports..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button onClick={handleNewPort} className="flex items-center gap-2">
@@ -169,20 +175,8 @@ export default function PortsPage() {
           </Sheet>
         </div>
 
-        {/* Search bar */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search ports..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        <Card className="shadow-sm">
+        {/* Data Table */}
+        <Card>
           <CardContent className="p-0">
             <div className="rounded-md border">
               <Table>
