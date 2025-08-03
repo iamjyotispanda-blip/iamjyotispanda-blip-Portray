@@ -78,11 +78,12 @@ export default function LoginPage() {
       // Use the redirectPath from backend response or default to dashboard
       const redirectPath = response.redirectPath || "/dashboard";
       console.log("Redirecting to:", redirectPath);
-      // Wait a moment for token to be properly set, then redirect
+      
+      // Force page reload to ensure proper state reset
       setTimeout(() => {
-        console.log("Setting location to:", redirectPath);
-        setLocation(redirectPath);
-      }, 300);
+        console.log("Reloading page to:", redirectPath);
+        window.location.href = redirectPath;
+      }, 500);
     },
     onError: (error: any) => {
       const message = error.message || "Login failed. Please try again.";
