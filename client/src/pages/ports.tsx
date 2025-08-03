@@ -126,65 +126,62 @@ export default function PortsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">Ports</CardTitle>
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-              <SheetTrigger asChild>
-                <Button onClick={handleNewPort} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Port
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md">
-                <SheetHeader>
-                  <SheetTitle>{getSheetTitle()}</SheetTitle>
-                  <SheetDescription>
-                    {formMode === "create" && "Add a new port to the system"}
-                    {formMode === "edit" && "Update port information"}
-                    {formMode === "view" && "View port details"}
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="mt-6">
-                  <PortForm
-                    port={selectedPort}
-                    organizations={organizations}
-                    mode={formMode}
-                    onSuccess={() => {
-                      setIsSheetOpen(false);
-                      queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
-                    }}
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          <div className="flex items-center gap-4 mt-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search ports..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+      {/* Header outside the panel */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-semibold">Ports</h1>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetTrigger asChild>
+            <Button onClick={handleNewPort} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              New Port
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-full sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>{getSheetTitle()}</SheetTitle>
+              <SheetDescription>
+                {formMode === "create" && "Add a new port to the system"}
+                {formMode === "edit" && "Update port information"}
+                {formMode === "view" && "View port details"}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6">
+              <PortForm
+                port={selectedPort}
+                organizations={organizations}
+                mode={formMode}
+                onSuccess={() => {
+                  setIsSheetOpen(false);
+                  queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
+                }}
               />
             </div>
-          </div>
-        </CardHeader>
+          </SheetContent>
+        </Sheet>
+      </div>
 
-        <CardContent>
+      {/* Search bar */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search ports..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Port Name</TableHead>
-                  <TableHead>Display Name</TableHead>
+                  <TableHead>Port Name & Display Name</TableHead>
                   <TableHead>Organization</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>State</TableHead>
+                  <TableHead>Address, State & Country</TableHead>
                   <TableHead>PAN</TableHead>
                   <TableHead>GSTN</TableHead>
                   <TableHead>Status</TableHead>
@@ -194,25 +191,48 @@ export default function PortsPage() {
               <TableBody>
                 {filteredPorts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       {searchTerm ? "No ports found matching your search." : "No ports available. Create your first port to get started."}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredPorts.map((port: Port) => (
                     <TableRow key={port.id}>
-                      <TableCell className="font-medium">{port.portName}</TableCell>
-                      <TableCell>{port.displayName}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{port.portName}</div>
+                          <div className="text-sm text-gray-500">{port.displayName}</div>
+                        </div>
+                      </TableCell>
                       <TableCell>{getOrganizationName(port.organizationId)}</TableCell>
-                      <TableCell className="max-w-xs truncate">{port.address}</TableCell>
-                      <TableCell>{port.country}</TableCell>
-                      <TableCell>{port.state}</TableCell>
+                      <TableCell className="max-w-xs">
+                        <div>
+                          <div className="truncate">{port.address}</div>
+                          <div className="text-sm text-gray-500">{port.state}, {port.country}</div>
+                        </div>
+                      </TableCell>
                       <TableCell>{port.pan}</TableCell>
                       <TableCell>{port.gstn}</TableCell>
                       <TableCell>
-                        <Badge variant={port.isActive ? "default" : "secondary"}>
-                          {port.isActive ? "Active" : "Inactive"}
-                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleStatus(port.id)}
+                          disabled={toggleStatusMutation.isPending}
+                          className="flex items-center gap-2"
+                        >
+                          {port.isActive ? (
+                            <>
+                              <ToggleRight className="h-5 w-5 text-green-600" />
+                              <span className="text-green-600">Active</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="h-5 w-5 text-gray-400" />
+                              <span className="text-gray-400">Inactive</span>
+                            </>
+                          )}
+                        </Button>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -229,18 +249,6 @@ export default function PortsPage() {
                             onClick={() => handleEditPort(port)}
                           >
                             <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleStatus(port.id)}
-                            disabled={toggleStatusMutation.isPending}
-                          >
-                            {port.isActive ? (
-                              <ToggleRight className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <ToggleLeft className="h-4 w-4 text-gray-400" />
-                            )}
                           </Button>
                         </div>
                       </TableCell>
