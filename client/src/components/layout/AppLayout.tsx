@@ -84,7 +84,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <div className={`flex items-center space-x-3 ${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>
             <PortrayLogo className="h-8 w-8" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">PortRay</span>
           </div>
           <Button
             variant="ghost"
