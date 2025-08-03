@@ -301,7 +301,7 @@ export default function LoginPage() {
                 {/* Login Button */}
                 <Button 
                   type="submit" 
-                  className="w-full h-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold"
+                  className="w-full h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold"
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? "Signing In..." : "Sign In"}
@@ -335,7 +335,7 @@ export default function LoginPage() {
                   <Button 
                     type="button" 
                     variant="outline"
-                    className="w-full h-8 border-2"
+                    className="w-full h-10 border-2"
                   >
                     <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/>

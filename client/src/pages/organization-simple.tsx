@@ -32,7 +32,7 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { Plus, Edit2, Power, Building2, MapPin, Phone, Globe, Upload, X } from "lucide-react";
+import { Plus, Edit2, Power, Building2, MapPin, Phone, Globe, Upload, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Organization } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -282,6 +282,7 @@ export default function OrganizationPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [countryOpen, setCountryOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<OrganizationFormData>({
     organizationName: "",
     displayName: "",
@@ -303,6 +304,13 @@ export default function OrganizationPage() {
   const { data: organizations = [], isLoading } = useQuery<Organization[]>({
     queryKey: ["/api/organizations"],
   });
+
+  // Filter organizations based on search term
+  const filteredOrganizations = organizations.filter(org => 
+    org.organizationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    org.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    org.organizationCode.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Add organization mutation
   const addOrganizationMutation = useMutation({
@@ -491,14 +499,22 @@ export default function OrganizationPage() {
       </div>
       
       <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
-        <div className="space-y-6">
-          <div className="flex justify-end">
-        
-        <Button onClick={handleAdd} className="h-8">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Organization
-        </Button>
-      </div>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search organizations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleAdd} className="h-8">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Organization
+            </Button>
+          </div>
 
       {/* Unified Form Sheet */}
       <Sheet open={isFormOpen} onOpenChange={(open) => {
@@ -687,7 +703,7 @@ export default function OrganizationPage() {
       {/* Organizations List */}
       <Card>
         <CardContent className="pt-6">
-          {organizations.length === 0 ? (
+          {filteredOrganizations.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No organizations found. Add your first organization to get started.</p>
@@ -706,7 +722,7 @@ export default function OrganizationPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {organizations.map((org) => (
+                  {filteredOrganizations.map((org) => (
                     <TableRow key={org.id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
