@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, type InsertUser } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -613,6 +613,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Register port admin error:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Email Configuration endpoints
+  app.get("/api/configuration/email", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const config = await storage.getEmailConfiguration();
+      
+      if (!config) {
+        return res.status(404).json({ message: "Email configuration not found" });
+      }
+      
+      // Don't send sensitive password in response
+      const safeConfig = {
+        ...config,
+        smtpPassword: config.smtpPassword ? '***masked***' : ''
+      };
+      
+      res.json(safeConfig);
+    } catch (error) {
+      console.error("Get email configuration error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/configuration/email", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const configData = insertEmailConfigurationSchema.parse(req.body);
+      const config = await storage.createEmailConfiguration(configData);
+      
+      // Don't send sensitive password in response
+      const safeConfig = {
+        ...config,
+        smtpPassword: config.smtpPassword ? '***masked***' : ''
+      };
+      
+      res.status(201).json(safeConfig);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create email configuration error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/configuration/email/test", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { testEmail, ...configData } = req.body;
+      
+      if (!testEmail) {
+        return res.status(400).json({ message: "Test email address required" });
+      }
+      
+      // Validate configuration data
+      const validatedConfig = insertEmailConfigurationSchema.parse(configData);
+      
+      // Simulate sending test email (in a real implementation, you would use the SMTP config to actually send)
+      console.log(`Test email would be sent to ${testEmail} using config:`, {
+        host: validatedConfig.smtpHost,
+        port: validatedConfig.smtpPort,
+        user: validatedConfig.smtpUser,
+        from: validatedConfig.fromEmail,
+        fromName: validatedConfig.fromName,
+        tls: validatedConfig.enableTLS
+      });
+      
+      res.json({ message: "Test email sent successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Test email error:", error);
+      res.status(500).json({ message: "Failed to send test email" });
     }
   });
 

@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -45,6 +45,11 @@ export interface IStorage {
   deletePortAdminContact(id: number): Promise<void>;
   updatePortAdminContactVerification(id: number, token: string, expiresAt: Date): Promise<void>;
   verifyPortAdminContact(token: string, userId: string): Promise<PortAdminContact | undefined>;
+
+  // Email Configuration operations
+  getEmailConfiguration(): Promise<EmailConfiguration | undefined>;
+  createEmailConfiguration(config: InsertEmailConfiguration): Promise<EmailConfiguration>;
+  updateEmailConfiguration(id: number, updates: Partial<EmailConfiguration>): Promise<EmailConfiguration | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -53,9 +58,11 @@ export class MemStorage implements IStorage {
   private organizations: Map<number, Organization>;
   private ports: Map<number, Port>;
   private portAdminContacts: Map<number, PortAdminContact>;
+  private emailConfigurations: Map<number, EmailConfiguration>;
   private nextOrgId: number = 1;
   private nextPortId: number = 1;
   private nextContactId: number = 1;
+  private nextEmailConfigId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -63,6 +70,7 @@ export class MemStorage implements IStorage {
     this.organizations = new Map();
     this.ports = new Map();
     this.portAdminContacts = new Map();
+    this.emailConfigurations = new Map();
     
     // Create a default admin user for testing
     this.initializeDefaultUser();
@@ -444,6 +452,46 @@ export class MemStorage implements IStorage {
     }
     
     return undefined;
+  }
+
+  // Email Configuration operations
+  async getEmailConfiguration(): Promise<EmailConfiguration | undefined> {
+    const config = Array.from(this.emailConfigurations.values()).find(c => c.isActive);
+    return config;
+  }
+
+  async createEmailConfiguration(config: InsertEmailConfiguration): Promise<EmailConfiguration> {
+    // Deactivate any existing configuration
+    this.emailConfigurations.forEach((existingConfig, id) => {
+      if (existingConfig.isActive) {
+        this.emailConfigurations.set(id, { ...existingConfig, isActive: false });
+      }
+    });
+
+    const newConfig: EmailConfiguration = {
+      id: this.nextEmailConfigId++,
+      ...config,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.emailConfigurations.set(newConfig.id, newConfig);
+    return newConfig;
+  }
+
+  async updateEmailConfiguration(id: number, updates: Partial<EmailConfiguration>): Promise<EmailConfiguration | undefined> {
+    const config = this.emailConfigurations.get(id);
+    if (!config) return undefined;
+
+    const updatedConfig: EmailConfiguration = {
+      ...config,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.emailConfigurations.set(id, updatedConfig);
+    return updatedConfig;
   }
 }
 

@@ -76,6 +76,21 @@ export const portAdminContacts = pgTable("port_admin_contacts", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Email Configuration table
+export const emailConfigurations = pgTable("email_configurations", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  smtpHost: text("smtp_host").notNull(),
+  smtpPort: integer("smtp_port").notNull(),
+  smtpUser: text("smtp_user").notNull(),
+  smtpPassword: text("smtp_password").notNull(),
+  fromEmail: text("from_email").notNull(),
+  fromName: text("from_name").notNull(),
+  enableTLS: boolean("enable_tls").notNull().default(true),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 // Relations
 export const portAdminContactsRelations = relations(portAdminContacts, ({ one }) => ({
   port: one(ports, {
@@ -127,18 +142,35 @@ export const loginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
-export const insertOrganizationSchema = createInsertSchema(organizations).omit({
-  id: true,
-  isActive: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertOrganizationSchema = createInsertSchema(organizations).pick({
+  organizationName: true,
+  displayName: true,
+  organizationCode: true,
+  registerOffice: true,
+  country: true,
+  telephone: true,
+  fax: true,
+  website: true,
+  logoUrl: true,
 });
 
-export const insertPortSchema = createInsertSchema(ports).omit({
-  id: true,
-  isActive: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertPortSchema = createInsertSchema(ports).pick({
+  portName: true,
+  displayName: true,
+  organizationId: true,
+  address: true,
+  country: true,
+  state: true,
+});
+
+export const insertEmailConfigurationSchema = createInsertSchema(emailConfigurations).pick({
+  smtpHost: true,
+  smtpPort: true,
+  smtpUser: true,
+  smtpPassword: true,
+  fromEmail: true,
+  fromName: true,
+  enableTLS: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -155,3 +187,6 @@ export type InsertPort = z.infer<typeof insertPortSchema>;
 export type PortAdminContact = typeof portAdminContacts.$inferSelect;
 export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema>;
 export type UpdatePortAdminContact = z.infer<typeof updatePortAdminContactSchema>;
+
+export type EmailConfiguration = typeof emailConfigurations.$inferSelect;
+export type InsertEmailConfiguration = z.infer<typeof insertEmailConfigurationSchema>;

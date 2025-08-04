@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen 
+  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PortrayLogo } from "@/components/portray-logo";
@@ -40,6 +40,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       children: [
         { id: "organization", label: "Organization", icon: Building2 },
         { id: "ports", label: "Ports", icon: Ship },
+        { id: "email", label: "Email Configuration", icon: Mail },
       ]
     },
   ];
@@ -55,6 +56,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         break;
       case "ports":
         setLocation("/ports");
+        break;
+      case "email":
+        setLocation("/configuration/email");
         break;
       default:
         break;
