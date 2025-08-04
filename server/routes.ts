@@ -596,20 +596,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If contact is not yet verified, mark it as verified and create user
       if (!contact.isVerified) {
-        // Create user account first
-        const [firstName, ...lastNameParts] = contact.contactName.split(' ');
-        const lastName = lastNameParts.join(' ') || firstName;
+        // Check if user already exists for this email
+        let user = await storage.getUserByEmail(contact.email);
         
-        const userData: InsertUser = {
-          email: contact.email,
-          password: "TEMP_PASSWORD_NEEDS_SETUP", // Temporary, user will set real password
-          firstName,
-          lastName,
-          role: "PortAdmin",
-          isActive: false, // Will be activated after password setup
-        };
-        
-        const user = await storage.createUser(userData);
+        if (!user) {
+          // Create user account only if it doesn't exist
+          const [firstName, ...lastNameParts] = contact.contactName.split(' ');
+          const lastName = lastNameParts.join(' ') || firstName;
+          
+          const userData: InsertUser = {
+            email: contact.email,
+            password: "TEMP_PASSWORD_NEEDS_SETUP", // Temporary, user will set real password
+            firstName,
+            lastName,
+            role: "PortAdmin",
+            isActive: false, // Will be activated after password setup
+          };
+          
+          user = await storage.createUser(userData);
+        }
         
         // Now verify the contact and link to the user
         const verifiedContact = await storage.verifyPortAdminContact(token, user.id);
