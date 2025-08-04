@@ -172,7 +172,7 @@ export default function LoginPage() {
 
           {/* Feature Carousel */}
           <div className="relative">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 min-h-[200px]">
+            <div className="p-6 min-h-[200px]">
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0">
                   {features[currentFeature].icon}
