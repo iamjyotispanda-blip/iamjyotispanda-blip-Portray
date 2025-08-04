@@ -91,7 +91,7 @@ function Router() {
         {(params) => <ProtectedRoute component={() => <AppLayoutWrapper><PortFormPage params={params} /></AppLayoutWrapper>} />}
       </Route>
       <Route path="/ports/:portId/contacts">
-        {(params) => <ProtectedRoute component={() => <PortContactsPage params={params} />} />}
+        {(params) => <ProtectedRoute component={() => <AppLayoutWrapper><PortContactsPage params={params} /></AppLayoutWrapper>} />}
       </Route>
       <Route path="/ports">
         {() => <ProtectedRoute component={() => <AppLayoutWrapper><PortsPage /></AppLayoutWrapper>} />}

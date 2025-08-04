@@ -5,7 +5,6 @@ import { Plus, Mail, Phone, User, Edit, Trash2, ToggleLeft, ToggleRight, Refresh
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AddContactDialog } from "@/components/add-contact-dialog";
@@ -123,8 +122,7 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
   };
 
   return (
-    <AppLayout title="Port Admin Contacts" activeSection="ports">
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -290,6 +288,6 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
           }}
         />
       )}
-    </AppLayout>
+    </div>
   );
 }
