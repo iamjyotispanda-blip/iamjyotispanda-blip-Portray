@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Users, Edit, Building2, MapPin, Flag } from "lucide-react";
+import { Plus, Users, Edit, Building2, MapPin, Flag, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,37 +47,31 @@ export function PortsContent() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Ports
-          </h1>
-        </div>
-        <Button
-          onClick={() => setLocation("/ports/new")}
-          className="h-8"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Port
-        </Button>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Ports</span>
       </div>
+      
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search ports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={() => setLocation("/ports/new")} className="h-8">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Port
+            </Button>
+          </div>
 
-      {/* Search */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1">
-          <Input
-            placeholder="Search ports by name, code, address, country, or state..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
-        </div>
-      </div>
-
-      {/* Ports List */}
-      <div className="grid gap-4">
+          {/* Ports List */}
+          <div className="grid gap-4">
         {portsLoading ? (
           <Card>
             <CardContent className="p-6">
@@ -152,9 +146,11 @@ export function PortsContent() {
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+            ))
+          )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
