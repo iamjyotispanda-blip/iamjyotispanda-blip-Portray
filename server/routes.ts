@@ -596,7 +596,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If contact is not yet verified, mark it as verified and create user
       if (!contact.isVerified) {
-        const verifiedContact = await storage.markContactAsVerified(contact.id);
+        const verifiedContact = await storage.updatePortAdminContact(contact.id, { 
+          isVerified: true, 
+          status: "active",
+          verificationToken: null,
+          verificationTokenExpires: null 
+        });
         if (verifiedContact) {
           console.log(`Contact ${contact.email} verified successfully - status updated to active`);
           
