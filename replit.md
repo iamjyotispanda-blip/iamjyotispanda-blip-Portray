@@ -59,7 +59,7 @@ Role-Based Access: Port Admins redirect to `/port-admin-dashboard` with only "Te
 - **Database Storage**: Complete PostgreSQL implementation with full persistence across server restarts
 - **Contact Storage**: Port Admin contacts stored in database with full CRUD operations and verification workflow
 - **Email Configuration**: Email configurations stored in database with full CRUD operations and persistence
-- **Reverification System**: Port Admin contacts can resend verification emails with new tokens, handles duplicate user emails gracefully
+- **Unique User Management**: Users remain unique by email, contact reverification updates existing user details instead of creating duplicates
 - **Authentication**: Users, sessions, organizations, ports, contacts, and email configurations all persist in database
 - **Schema Migration**: Successfully completed - all entities stored in PostgreSQL database with full persistence
 

@@ -594,7 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid or expired verification token" });
       }
       
-      // If contact is not yet verified, mark it as verified and create user
+      // If contact is not yet verified, mark it as verified and create/update user
       if (!contact.isVerified) {
         // Check if user already exists for this email
         let user = await storage.getUserByEmail(contact.email);
@@ -614,6 +614,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
           
           user = await storage.createUser(userData);
+        } else {
+          // Update existing user details from contact information
+          const [firstName, ...lastNameParts] = contact.contactName.split(' ');
+          const lastName = lastNameParts.join(' ') || firstName;
+          
+          const updatedUser = await storage.updateUser(user.id, {
+            firstName,
+            lastName,
+            role: "PortAdmin",
+            isActive: false, // Reset to inactive, will be activated after password setup
+            password: "TEMP_PASSWORD_NEEDS_SETUP" // Reset password for security
+          });
+          
+          if (updatedUser) {
+            user = updatedUser;
+            console.log(`Updated existing user ${user.email} with new contact details`);
+          }
         }
         
         // Now verify the contact and link to the user
