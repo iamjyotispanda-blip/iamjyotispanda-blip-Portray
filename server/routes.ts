@@ -443,17 +443,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send welcome email using configured email service
       try {
-        const emailConfig = await storage.getEmailConfiguration();
-        if (emailConfig) {
+        const emailConfigs = await storage.getAllEmailConfigurations();
+        const activeConfig = emailConfigs.find(config => config.isActive);
+        if (activeConfig) {
           const emailService = new EmailService();
-          const emailSent = await emailService.sendWelcomeEmail(emailConfig, contact.email, verificationToken);
+          const emailSent = await emailService.sendWelcomeEmail(activeConfig, contact.email, verificationToken);
           if (emailSent) {
             console.log(`Welcome email sent to ${contact.email} with verification link`);
           } else {
             console.log(`Failed to send welcome email to ${contact.email}, using fallback notification`);
           }
         } else {
-          console.log(`No email configuration found, verification link: /verify?token=${verificationToken}`);
+          console.log(`No active email configuration found, verification link: /verify?token=${verificationToken}`);
         }
       } catch (emailError) {
         console.error('Email service error:', emailError);
@@ -535,17 +536,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send verification email using configured email service
       try {
-        const emailConfig = await storage.getEmailConfiguration();
-        if (emailConfig) {
+        const emailConfigs = await storage.getAllEmailConfigurations();
+        const activeConfig = emailConfigs.find(config => config.isActive);
+        if (activeConfig) {
           const emailService = new EmailService();
-          const emailSent = await emailService.sendWelcomeEmail(emailConfig, contact.email, verificationToken);
+          const emailSent = await emailService.sendWelcomeEmail(activeConfig, contact.email, verificationToken);
           if (emailSent) {
             console.log(`Verification email resent to ${contact.email}`);
           } else {
             console.log(`Failed to resend verification email to ${contact.email}`);
           }
         } else {
-          console.log(`No email configuration found, verification link: /verify?token=${verificationToken}`);
+          console.log(`No active email configuration found, verification link: /verify?token=${verificationToken}`);
         }
       } catch (emailError) {
         console.error('Email service error:', emailError);
@@ -693,25 +695,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/configuration/email/test", authenticateToken, async (req: Request, res: Response) => {
     try {
-      const { testEmail, ...configData } = req.body;
+      const { configId, testEmail } = req.body;
       
-      if (!testEmail) {
-        return res.status(400).json({ message: "Test email address required" });
+      if (!configId || !testEmail) {
+        return res.status(400).json({ message: "Configuration ID and test email are required" });
       }
-      
-      // Validate configuration data
-      const validatedConfig = insertEmailConfigurationSchema.parse(configData);
-      
-      // Create email service and send test email
+
+      const config = await storage.getEmailConfigurationById(configId);
+      if (!config) {
+        return res.status(404).json({ message: "Email configuration not found" });
+      }
+
       const emailService = new EmailService();
       const emailConfig = {
-        smtpHost: validatedConfig.smtpHost,
-        smtpPort: validatedConfig.smtpPort,
-        smtpUser: validatedConfig.smtpUser,
-        smtpPassword: validatedConfig.smtpPassword,
-        fromEmail: validatedConfig.fromEmail,
-        fromName: validatedConfig.fromName,
-        enableTLS: validatedConfig.enableTLS ?? false
+        smtpHost: config.smtpHost,
+        smtpPort: config.smtpPort,
+        smtpUser: config.smtpUser,
+        smtpPassword: config.smtpPassword,
+        fromEmail: config.fromEmail,
+        fromName: config.fromName,
+        enableTLS: config.enableTLS
       };
       
       const success = await emailService.sendTestEmail(emailConfig, testEmail);
@@ -722,14 +725,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({ message: "Failed to send test email. Please check your SMTP configuration." });
       }
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          errors: error.errors 
-        });
-      }
-      console.error("Test email error:", error);
+      console.error("Send test email error:", error);
       res.status(500).json({ message: "Failed to send test email. Please verify your SMTP settings." });
+    }
+  });
+
+  app.delete("/api/configuration/email/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteEmailConfiguration(id);
+      res.json({ message: "Email configuration deleted successfully" });
+    } catch (error) {
+      console.error("Delete email configuration error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
