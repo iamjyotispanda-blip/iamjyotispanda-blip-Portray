@@ -11,6 +11,7 @@ Button Heights: Login page buttons use h-10 height, all other buttons use h-8 he
 Search Functionality: Organization and port pages require search functionality with real-time filtering.
 Layout Spacing: Minimal gaps between buttons and cards throughout application (space-y-2).
 Consistent Layout: All form pages and view pages should have identical header, left panel, and styling structure. Port form pages should match port view page styling exactly, with breadcrumb bar and main content container. Remove "Back to Port" option from new port page.
+Email Configuration: Email Configuration link should be always available as a top-level navigation item (not nested under Configuration section). Email configuration page should send actual test emails using real SMTP configuration.
 
 # System Architecture
 

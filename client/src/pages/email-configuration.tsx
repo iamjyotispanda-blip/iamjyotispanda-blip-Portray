@@ -138,7 +138,7 @@ export default function EmailConfigurationPage() {
   const connectionStatus = getConnectionStatus();
 
   return (
-    <AppLayout title="Email Configuration" activeSection="configuration">
+    <AppLayout title="Email Configuration" activeSection="email">
       <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
           <div className="flex items-center justify-between">
