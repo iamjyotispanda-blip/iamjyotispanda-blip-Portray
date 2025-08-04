@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Ship, Package, TrendingUp, Moon, Sun, Monitor, Truck, FileText } from "lucide-react";
+import portBackgroundImage from "@assets/8_1754302078221.png";
 import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
@@ -135,10 +136,10 @@ export default function LoginPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
+            backgroundImage: `url(${portBackgroundImage})`
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-700/90 via-blue-600/80 to-orange-500/70" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-700/70 via-blue-600/60 to-purple-500/50" />
         
         <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full">
           {/* Logo and tagline in same line */}
