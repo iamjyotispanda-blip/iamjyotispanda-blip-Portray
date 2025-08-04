@@ -1,18 +1,23 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Users, Edit, Building2, MapPin, Flag, Search } from "lucide-react";
+import { Plus, Users, Edit, Building2, MapPin, Flag, Search, Calendar, ToggleLeft, ToggleRight } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Port, Organization } from "@shared/schema";
 
 // Component for the ports content without layout
 export function PortsContent() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Get all ports
   const { data: ports = [], isLoading: portsLoading } = useQuery({
@@ -38,12 +43,39 @@ export function PortsContent() {
     return org?.organizationName || "Unknown Organization";
   };
 
+  // Toggle port status mutation
+  const togglePortStatusMutation = useMutation({
+    mutationFn: async (portId: number) => {
+      return apiRequest(`/api/ports/${portId}/toggle-status`, {
+        method: "PATCH"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
+      toast({
+        title: "Success",
+        description: "Port status updated successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update port status",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleManageContacts = (portId: number) => {
     setLocation(`/ports/${portId}/contacts`);
   };
 
   const handleEditPort = (portId: number) => {
     setLocation(`/ports/edit/${portId}`);
+  };
+
+  const handleTogglePortStatus = (portId: number) => {
+    togglePortStatusMutation.mutate(portId);
   };
 
   return (
@@ -121,10 +153,27 @@ export function PortsContent() {
                           <Flag className="w-4 h-4" />
                           <span>{port.state}, {port.country}</span>
                         </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>Created: {format(new Date(port.createdAt), "MMM dd, yyyy")}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleTogglePortStatus(port.id)}
+                      disabled={togglePortStatusMutation.isPending}
+                      className="h-8"
+                    >
+                      {port.isActive ? (
+                        <ToggleRight className="w-4 h-4" />
+                      ) : (
+                        <ToggleLeft className="w-4 h-4" />
+                      )}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
