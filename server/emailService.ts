@@ -141,6 +141,9 @@ This verification link will expire in 24 hours.
 
       const info = await transporter.sendMail(mailOptions);
       console.log('Welcome email sent successfully:', info.messageId);
+      console.log('Verification URL sent:', verificationUrl);
+      console.log('Email sent to:', recipientEmail);
+      console.log('From:', `"${config.fromName}" <${config.fromEmail}>`);
       return true;
     } catch (error) {
       console.error('Failed to send welcome email:', error);

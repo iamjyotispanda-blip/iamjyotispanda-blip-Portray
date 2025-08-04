@@ -17,6 +17,7 @@ import PortAdminVerificationPage from "@/pages/port-admin-verification";
 import PortAdminDashboard from "@/pages/port-admin-dashboard";
 import EmailConfigurationPage from "@/pages/email-configuration";
 import OrganizationsPage from "@/pages/organizations";
+import VerifyPage from "@/pages/verify";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -78,7 +79,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
-      <Route path="/verify" component={PortAdminVerificationPage} />
+      <Route path="/verify" component={VerifyPage} />
+      <Route path="/port-admin-verification" component={PortAdminVerificationPage} />
       <Route path="/port-admin-dashboard" component={PortAdminDashboard} />
       <Route path="/portal/welcome">
         {() => <ProtectedRoute component={PortalWelcome} />}
