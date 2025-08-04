@@ -12,7 +12,7 @@ Search Functionality: Organization and port pages require search functionality w
 Layout Spacing: Minimal gaps between buttons and cards throughout application (space-y-2).
 Consistent Layout: All form pages and view pages should have identical header, left panel, and styling structure. Port form pages should match port view page styling exactly, with breadcrumb bar and main content container. Remove "Back to Port" option from new port page.
 Email Configuration: Email Configuration link should be always available as a top-level navigation item (not nested under Configuration section). Email configuration page should send actual test emails using real SMTP configuration.
-Role-Based Access: Port Admins redirect to `/port-admin-dashboard` with only "Terminals" navigation link. System Admins have full navigation access to all features. Role-based navigation filtering implemented in AppLayout component.
+Role-Based Access: Port Admins redirect to `/port-admin-dashboard` with only "Terminals" navigation link. System Admins have full navigation access to all features. Role-based navigation filtering implemented in AppLayout component. Port Admin dashboard uses AppLayout for consistent navigation structure.
 
 # System Architecture
 
