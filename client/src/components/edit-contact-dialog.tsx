@@ -79,10 +79,7 @@ export function EditContactDialog({
 
   const updateContactMutation = useMutation({
     mutationFn: async (data: EditContactFormData) => {
-      return apiRequest(`/api/contacts/${contact.id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PUT", `/api/contacts/${contact.id}`, data);
     },
     onSuccess: () => {
       toast({

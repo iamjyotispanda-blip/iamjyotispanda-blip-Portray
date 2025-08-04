@@ -129,12 +129,14 @@ export const loginSchema = z.object({
 
 export const insertOrganizationSchema = createInsertSchema(organizations).omit({
   id: true,
+  isActive: true,
   createdAt: true,
   updatedAt: true,
 });
 
 export const insertPortSchema = createInsertSchema(ports).omit({
   id: true,
+  isActive: true,
   createdAt: true,
   updatedAt: true,
 });

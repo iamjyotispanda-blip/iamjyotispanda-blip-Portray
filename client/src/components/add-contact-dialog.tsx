@@ -67,10 +67,7 @@ export function AddContactDialog({
 
   const createContactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      return apiRequest(`/api/ports/${portId}/contacts`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", `/api/ports/${portId}/contacts`, data);
     },
     onSuccess: () => {
       toast({

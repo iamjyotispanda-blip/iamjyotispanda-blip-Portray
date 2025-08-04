@@ -24,13 +24,13 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
   const [editingContact, setEditingContact] = useState<PortAdminContact | null>(null);
 
   // Get port details
-  const { data: port } = useQuery({
+  const { data: port } = useQuery<Port>({
     queryKey: ["/api/ports", portId],
     enabled: !!portId,
   });
 
   // Get port admin contacts
-  const { data: contacts = [], isLoading } = useQuery({
+  const { data: contacts = [], isLoading } = useQuery<PortAdminContact[]>({
     queryKey: ["/api/ports", portId, "contacts"],
     enabled: !!portId,
   });
@@ -38,9 +38,7 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
   // Toggle contact status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async (contactId: number) => {
-      return apiRequest(`/api/contacts/${contactId}/toggle-status`, {
-        method: "PATCH",
-      });
+      return apiRequest("PATCH", `/api/contacts/${contactId}/toggle-status`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ports", portId, "contacts"] });
@@ -61,9 +59,7 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
   // Resend verification mutation
   const resendVerificationMutation = useMutation({
     mutationFn: async (contactId: number) => {
-      return apiRequest(`/api/contacts/${contactId}/resend-verification`, {
-        method: "POST",
-      });
+      return apiRequest("POST", `/api/contacts/${contactId}/resend-verification`);
     },
     onSuccess: () => {
       toast({
@@ -83,9 +79,7 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
   // Delete contact mutation
   const deleteContactMutation = useMutation({
     mutationFn: async (contactId: number) => {
-      return apiRequest(`/api/contacts/${contactId}`, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", `/api/contacts/${contactId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ports", portId, "contacts"] });
@@ -263,7 +257,6 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
             ))
           )}
         </div>
-      </div>
 
       {/* Add Contact Dialog */}
       <AddContactDialog
@@ -280,7 +273,7 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
       {editingContact && (
         <EditContactDialog
           open={!!editingContact}
-          onOpenChange={(open) => !open && setEditingContact(null)}
+          onOpenChange={(open: boolean) => !open && setEditingContact(null)}
           contact={editingContact}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["/api/ports", portId, "contacts"] });
