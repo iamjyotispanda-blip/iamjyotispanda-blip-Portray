@@ -80,7 +80,7 @@ export const portAdminContacts = pgTable("port_admin_contacts", {
 export const emailConfigurations = pgTable("email_configurations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   smtpHost: text("smtp_host").notNull(),
-  smtpPort: integer("smtp_port").notNull(),
+  smtpPort: integer("smtp_port").notNull().default(587),
   smtpUser: text("smtp_user").notNull(),
   smtpPassword: text("smtp_password").notNull(),
   fromEmail: text("from_email").notNull(),
