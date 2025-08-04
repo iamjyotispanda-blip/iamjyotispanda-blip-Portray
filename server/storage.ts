@@ -810,5 +810,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use MemStorage for now until database is properly migrated
+// Note: DatabaseStorage is implemented and PostgreSQL is configured
+// Admin authentication works with database (persists across restarts)
+// Contact storage requires schema migration to complete database setup
 export const storage = new MemStorage();
