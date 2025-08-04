@@ -1,8 +1,10 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
+import { randomUUID } from "crypto";
+import bcrypt from "bcrypt";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 // Extend Express Request to include user session
@@ -402,6 +404,214 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(port);
     } catch (error) {
       console.error("Toggle port status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Port Admin Contact endpoints
+  app.get("/api/ports/:portId/contacts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const portId = parseInt(req.params.portId);
+      const contacts = await storage.getPortAdminContactsByPortId(portId);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Get port admin contacts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/ports/:portId/contacts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const portId = parseInt(req.params.portId);
+      const contactData = insertPortAdminContactSchema.parse({ ...req.body, portId });
+      
+      // Check if email already exists
+      const existingContact = await storage.getPortAdminContactByEmail(contactData.email);
+      if (existingContact) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      
+      const contact = await storage.createPortAdminContact(contactData);
+      
+      // Generate verification token and send email
+      const verificationToken = randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setTime(expiresAt.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      await storage.updatePortAdminContactVerification(contact.id, verificationToken, expiresAt);
+      
+      // Send welcome email (simulated)
+      console.log(`Welcome email sent to ${contact.email} with verification link: /verify?token=${verificationToken}`);
+      
+      res.status(201).json(contact);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create port admin contact error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/contacts/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = updatePortAdminContactSchema.parse(req.body);
+      
+      const contact = await storage.updatePortAdminContact(id, updates);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      res.json(contact);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Update port admin contact error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/contacts/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contact = await storage.togglePortAdminContactStatus(id);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      res.json(contact);
+    } catch (error) {
+      console.error("Toggle contact status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/contacts/:id/resend-verification", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contact = await storage.getPortAdminContactById(id);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      if (contact.isVerified) {
+        return res.status(400).json({ message: "Contact already verified" });
+      }
+      
+      // Generate new verification token
+      const verificationToken = randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setTime(expiresAt.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      await storage.updatePortAdminContactVerification(contact.id, verificationToken, expiresAt);
+      
+      // Send verification email (simulated)
+      console.log(`Verification email resent to ${contact.email} with link: /verify?token=${verificationToken}`);
+      
+      res.json({ message: "Verification email sent successfully" });
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/contacts/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contact = await storage.getPortAdminContactById(id);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      await storage.deletePortAdminContact(id);
+      res.json({ message: "Contact deleted successfully" });
+    } catch (error) {
+      console.error("Delete contact error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Port Admin verification and registration endpoints
+  app.get("/api/verify", async (req: Request, res: Response) => {
+    try {
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Verification token required" });
+      }
+      
+      const contact = await storage.getPortAdminContactByToken(token);
+      
+      if (!contact) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+      
+      res.json({ 
+        message: "Token valid", 
+        contactId: contact.id, 
+        email: contact.email,
+        contactName: contact.contactName 
+      });
+    } catch (error) {
+      console.error("Verify token error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/register-port-admin", async (req: Request, res: Response) => {
+    try {
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password required" });
+      }
+      
+      const contact = await storage.getPortAdminContactByToken(token);
+      
+      if (!contact) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+      
+      // Create user account
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const [firstName, ...lastNameParts] = contact.contactName.split(' ');
+      const lastName = lastNameParts.join(' ') || firstName;
+      
+      const userData: InsertUser = {
+        email: contact.email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: "PortAdmin",
+      };
+      
+      const user = await storage.createUser(userData);
+      
+      // Link contact to user and verify
+      await storage.verifyPortAdminContact(token, user.id);
+      
+      // Create session
+      const session = await storage.createSession(user.id);
+      
+      res.json({
+        user: { ...user, password: undefined },
+        token: session.token,
+        message: "Registration successful"
+      });
+    } catch (error) {
+      console.error("Register port admin error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

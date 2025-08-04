@@ -1,66 +1,26 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Eye, Edit, ToggleLeft, ToggleRight, Search } from "lucide-react";
+import { Plus, Users, Edit, Building2, MapPin, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { AuthService } from "@/lib/auth";
+import { Input } from "@/components/ui/input";
+import { AppLayout } from "@/components/layout/AppLayout";
 import type { Port, Organization } from "@shared/schema";
 
 export default function PortsPage() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Validate session on component mount
-  useEffect(() => {
-    const validateSession = async () => {
-      const sessionValid = await AuthService.validateSession();
-      if (!sessionValid) {
-        setLocation("/login");
-      }
-    };
-    validateSession();
-  }, [setLocation]);
-
-  // Fetch ports
-  const { data: ports = [], isLoading: portsLoading } = useQuery<Port[]>({
+  // Get all ports
+  const { data: ports = [], isLoading: portsLoading } = useQuery({
     queryKey: ["/api/ports"],
-    retry: false,
   });
 
-  // Fetch organizations for dropdown
-  const { data: organizations = [] } = useQuery<Organization[]>({
+  // Get all organizations
+  const { data: organizations = [] } = useQuery({
     queryKey: ["/api/organizations"],
-    retry: false,
-  });
-
-  // Toggle port status mutation
-  const toggleStatusMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("PATCH", `/api/ports/${id}/toggle-status`);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
-      toast({
-        title: "Success",
-        description: "Port status updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update port status: ${error.message}`,
-        variant: "destructive",
-      });
-    },
   });
 
   // Filter ports based on search term
@@ -68,155 +28,134 @@ export default function PortsPage() {
     port.portName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     port.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     port.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    port.pan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    port.gstn.toLowerCase().includes(searchTerm.toLowerCase())
+    port.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    port.state.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const handleNewPort = () => {
-    setLocation("/ports/new");
-  };
-
-  const handleEditPort = (port: Port) => {
-    setLocation(`/ports/edit/${port.id}`);
-  };
-
-  const handleToggleStatus = (id: number) => {
-    toggleStatusMutation.mutate(id);
-  };
 
   const getOrganizationName = (organizationId: number) => {
     const org = organizations.find((o: Organization) => o.id === organizationId);
     return org?.organizationName || "Unknown Organization";
   };
 
+  const handleManageContacts = (portId: number) => {
+    setLocation(`/ports/${portId}/contacts`);
+  };
 
-
-  if (portsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading ports...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleEditPort = (portId: number) => {
+    setLocation(`/ports/edit/${portId}`);
+  };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Breadcrumb Bar */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Ports</span>
-      </div>
-
-      {/* Main Content Area - Updated padding */}
-      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
-        {/* Action Bar */}
-        <div className="flex justify-between items-center mb-2">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search ports..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <AppLayout title="Ports" activeSection="ports">
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Ports
+            </h1>
           </div>
-          <Button onClick={handleNewPort} className="flex items-center gap-2 h-8">
-            <Plus className="h-4 w-4" />
-            New Port
+          <Button
+            onClick={() => setLocation("/ports/new")}
+            className="h-8"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Port
           </Button>
         </div>
 
+        {/* Search */}
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <Input
+              placeholder="Search ports by name, code, address, country, or state..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+        </div>
+
         {/* Ports List */}
-        <Card>
-          <CardContent className="pt-6">
-            {filteredPorts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <Plus className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>
-                  {searchTerm ? 
-                    "No ports match your search criteria." : 
-                    "No ports found. Add your first port to get started."
-                  }
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Port</TableHead>
-                      <TableHead>Display Name</TableHead>
-                      <TableHead>Organization</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredPorts.map((port: Port) => (
-                      <TableRow key={port.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{port.portName}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {port.country}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm">
+        <div className="grid gap-4">
+          {portsLoading ? (
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center text-gray-500">Loading ports...</div>
+              </CardContent>
+            </Card>
+          ) : filteredPorts.length === 0 ? (
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center text-gray-500">
+                  {searchTerm ? "No ports found matching your search." : "No ports found. Add the first port to get started."}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredPorts.map((port: Port) => (
+              <Card key={port.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-3">
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                            {port.portName}
+                          </h3>
+                          <Badge variant="outline">
                             {port.displayName}
-                          </code>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">{getOrganizationName(port.organizationId)}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm max-w-xs truncate">
-                            {port.address}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
+                          </Badge>
+                          <Badge
                             variant={port.isActive ? "default" : "secondary"}
-                            className={port.isActive ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : ""}
                           >
                             {port.isActive ? "Active" : "Inactive"}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditPort(port)}
-                              className="h-8"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={port.isActive ? "secondary" : "default"}
-                              onClick={() => handleToggleStatus(port.id)}
-                              disabled={toggleStatusMutation.isPending}
-                              className="h-8"
-                            >
-                              {port.isActive ? <ToggleLeft className="w-4 h-4" /> : <ToggleRight className="w-4 h-4" />}
-                            </Button>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {getOrganizationName(port.organizationId)}
+                        </p>
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="w-4 h-4" />
+                            <span>{port.address}</span>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+                          <div className="flex items-center space-x-1">
+                            <Flag className="w-4 h-4" />
+                            <span>{port.state}, {port.country}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleManageContacts(port.id)}
+                        className="h-8"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Manage Contacts
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditPort(port.id)}
+                        className="h-8"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      </div>
+    </AppLayout>
   );
 }

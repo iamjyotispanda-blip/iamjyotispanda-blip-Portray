@@ -12,6 +12,9 @@ import DashboardPage from "@/pages/dashboard";
 import PortalWelcome from "@/pages/portal-welcome";
 import PortsPage from "@/pages/ports";
 import PortFormPage from "@/pages/port-form";
+import PortContactsPage from "@/pages/port-contacts";
+import PortAdminVerificationPage from "@/pages/port-admin-verification";
+import PortAdminDashboard from "@/pages/port-admin-dashboard";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -73,6 +76,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
+      <Route path="/verify" component={PortAdminVerificationPage} />
+      <Route path="/port-admin-dashboard" component={PortAdminDashboard} />
       <Route path="/portal/welcome">
         {() => <ProtectedRoute component={PortalWelcome} />}
       </Route>
@@ -84,6 +89,9 @@ function Router() {
       </Route>
       <Route path="/ports/edit/:id">
         {(params) => <ProtectedRoute component={() => <AppLayoutWrapper><PortFormPage params={params} /></AppLayoutWrapper>} />}
+      </Route>
+      <Route path="/ports/:portId/contacts">
+        {(params) => <ProtectedRoute component={() => <PortContactsPage params={params} />} />}
       </Route>
       <Route path="/ports">
         {() => <ProtectedRoute component={() => <AppLayoutWrapper><PortsPage /></AppLayoutWrapper>} />}

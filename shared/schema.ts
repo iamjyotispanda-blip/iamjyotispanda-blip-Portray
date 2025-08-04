@@ -57,11 +57,43 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   ports: many(ports),
 }));
 
-export const portsRelations = relations(ports, ({ one }) => ({
+
+
+// Port Admin Contacts table
+export const portAdminContacts = pgTable("port_admin_contacts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  portId: integer("port_id").notNull().references(() => ports.id),
+  contactName: text("contact_name").notNull(),
+  designation: text("designation").notNull(),
+  email: text("email").notNull().unique(),
+  mobileNumber: text("mobile_number").notNull(),
+  status: text("status").notNull().default("inactive"), // active, inactive
+  verificationToken: text("verification_token").unique(),
+  verificationTokenExpires: timestamp("verification_token_expires"),
+  isVerified: boolean("is_verified").notNull().default(false),
+  userId: varchar("user_id").references(() => users.id), // Link to actual user account after registration
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// Relations
+export const portAdminContactsRelations = relations(portAdminContacts, ({ one }) => ({
+  port: one(ports, {
+    fields: [portAdminContacts.portId],
+    references: [ports.id],
+  }),
+  user: one(users, {
+    fields: [portAdminContacts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const portsRelations = relations(ports, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [ports.organizationId],
     references: [organizations.id],
   }),
+  portAdminContacts: many(portAdminContacts),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -71,6 +103,23 @@ export const insertUserSchema = createInsertSchema(users).pick({
   lastName: true,
   role: true,
 });
+
+export const insertPortAdminContactSchema = createInsertSchema(portAdminContacts).pick({
+  portId: true,
+  contactName: true,
+  designation: true,
+  email: true,
+  mobileNumber: true,
+  status: true,
+});
+
+export const updatePortAdminContactSchema = createInsertSchema(portAdminContacts).pick({
+  contactName: true,
+  designation: true,
+  email: true,
+  mobileNumber: true,
+  status: true,
+}).partial();
 
 export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -100,3 +149,7 @@ export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
 
 export type Port = typeof ports.$inferSelect;
 export type InsertPort = z.infer<typeof insertPortSchema>;
+
+export type PortAdminContact = typeof portAdminContacts.$inferSelect;
+export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema>;
+export type UpdatePortAdminContact = z.infer<typeof updatePortAdminContactSchema>;

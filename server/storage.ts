@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -33,6 +33,18 @@ export interface IStorage {
   updatePort(id: number, updates: Partial<Port>): Promise<Port | undefined>;
   togglePortStatus(id: number): Promise<Port | undefined>;
   deletePort(id: number): Promise<void>;
+
+  // Port Admin Contact operations
+  getPortAdminContactsByPortId(portId: number): Promise<PortAdminContact[]>;
+  getPortAdminContactById(id: number): Promise<PortAdminContact | undefined>;
+  getPortAdminContactByEmail(email: string): Promise<PortAdminContact | undefined>;
+  getPortAdminContactByToken(token: string): Promise<PortAdminContact | undefined>;
+  createPortAdminContact(contact: InsertPortAdminContact): Promise<PortAdminContact>;
+  updatePortAdminContact(id: number, updates: UpdatePortAdminContact): Promise<PortAdminContact | undefined>;
+  togglePortAdminContactStatus(id: number): Promise<PortAdminContact | undefined>;
+  deletePortAdminContact(id: number): Promise<void>;
+  updatePortAdminContactVerification(id: number, token: string, expiresAt: Date): Promise<void>;
+  verifyPortAdminContact(token: string, userId: string): Promise<PortAdminContact | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -40,14 +52,17 @@ export class MemStorage implements IStorage {
   private sessions: Map<string, Session>;
   private organizations: Map<number, Organization>;
   private ports: Map<number, Port>;
+  private portAdminContacts: Map<number, PortAdminContact>;
   private nextOrgId: number = 1;
   private nextPortId: number = 1;
+  private nextContactId: number = 1;
 
   constructor() {
     this.users = new Map();
     this.sessions = new Map();
     this.organizations = new Map();
     this.ports = new Map();
+    this.portAdminContacts = new Map();
     
     // Create a default admin user for testing
     this.initializeDefaultUser();
@@ -321,6 +336,114 @@ export class MemStorage implements IStorage {
 
   async deletePort(id: number): Promise<void> {
     this.ports.delete(id);
+  }
+
+  // Port Admin Contact methods
+  async getPortAdminContactsByPortId(portId: number): Promise<PortAdminContact[]> {
+    return Array.from(this.portAdminContacts.values()).filter(
+      (contact) => contact.portId === portId
+    );
+  }
+
+  async getPortAdminContactById(id: number): Promise<PortAdminContact | undefined> {
+    return this.portAdminContacts.get(id);
+  }
+
+  async getPortAdminContactByEmail(email: string): Promise<PortAdminContact | undefined> {
+    return Array.from(this.portAdminContacts.values()).find(
+      (contact) => contact.email === email
+    );
+  }
+
+  async getPortAdminContactByToken(token: string): Promise<PortAdminContact | undefined> {
+    return Array.from(this.portAdminContacts.values()).find(
+      (contact) => contact.verificationToken === token
+    );
+  }
+
+  async createPortAdminContact(insertContact: InsertPortAdminContact): Promise<PortAdminContact> {
+    const id = this.nextContactId++;
+    const contact: PortAdminContact = {
+      ...insertContact,
+      id,
+      status: insertContact.status || "inactive",
+      verificationToken: null,
+      verificationTokenExpires: null,
+      isVerified: false,
+      userId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.portAdminContacts.set(id, contact);
+    return contact;
+  }
+
+  async updatePortAdminContact(id: number, updates: UpdatePortAdminContact): Promise<PortAdminContact | undefined> {
+    const contact = this.portAdminContacts.get(id);
+    if (!contact) return undefined;
+
+    const updatedContact: PortAdminContact = {
+      ...contact,
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+    this.portAdminContacts.set(id, updatedContact);
+    return updatedContact;
+  }
+
+  async togglePortAdminContactStatus(id: number): Promise<PortAdminContact | undefined> {
+    const contact = this.portAdminContacts.get(id);
+    if (!contact) return undefined;
+
+    const updatedContact: PortAdminContact = {
+      ...contact,
+      status: contact.status === "active" ? "inactive" : "active",
+      updatedAt: new Date(),
+    };
+    this.portAdminContacts.set(id, updatedContact);
+    return updatedContact;
+  }
+
+  async deletePortAdminContact(id: number): Promise<void> {
+    this.portAdminContacts.delete(id);
+  }
+
+  async updatePortAdminContactVerification(id: number, token: string, expiresAt: Date): Promise<void> {
+    const contact = this.portAdminContacts.get(id);
+    if (contact) {
+      const updatedContact: PortAdminContact = {
+        ...contact,
+        verificationToken: token,
+        verificationTokenExpires: expiresAt,
+        updatedAt: new Date(),
+      };
+      this.portAdminContacts.set(id, updatedContact);
+    }
+  }
+
+  async verifyPortAdminContact(token: string, userId: string): Promise<PortAdminContact | undefined> {
+    const contact = Array.from(this.portAdminContacts.values()).find(
+      (c) => c.verificationToken === token && 
+             c.verificationTokenExpires && 
+             c.verificationTokenExpires > new Date()
+    );
+    
+    if (contact) {
+      const updatedContact: PortAdminContact = {
+        ...contact,
+        isVerified: true,
+        userId,
+        status: "active",
+        verificationToken: null,
+        verificationTokenExpires: null,
+        updatedAt: new Date(),
+      };
+      this.portAdminContacts.set(contact.id, updatedContact);
+      return updatedContact;
+    }
+    
+    return undefined;
   }
 }
 
