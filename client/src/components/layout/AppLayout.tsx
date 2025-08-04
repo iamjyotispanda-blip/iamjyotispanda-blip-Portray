@@ -34,6 +34,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "email", label: "Email Configuration", icon: Mail },
+    { id: "organization", label: "Organizations", icon: Building2 },
+    { id: "ports", label: "Ports", icon: Ship },
   ];
 
   const handleNavigation = (itemId: string) => {
@@ -43,6 +45,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         break;
       case "email":
         setLocation("/configuration/email");
+        break;
+      case "organization":
+        setLocation("/organizations");
+        break;
+      case "ports":
+        setLocation("/ports");
         break;
       default:
         break;

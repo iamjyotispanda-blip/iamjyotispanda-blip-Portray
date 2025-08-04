@@ -97,6 +97,9 @@ function Router() {
       <Route path="/ports">
         {() => <ProtectedRoute component={PortsPage} />}
       </Route>
+      <Route path="/organizations">
+        {() => <ProtectedRoute component={() => <AppLayout title="Organizations" activeSection="organization"><div>Organizations content coming soon</div></AppLayout>} />}
+      </Route>
       <Route path="/configuration/email">
         {() => <ProtectedRoute component={EmailConfigurationPage} />}
       </Route>
