@@ -1,4 +1,7 @@
 import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -7,6 +10,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   updateUserLastLogin(id: string): Promise<void>;
   
   // Authentication operations
@@ -52,6 +56,272 @@ export interface IStorage {
   createEmailConfiguration(config: InsertEmailConfiguration): Promise<EmailConfiguration>;
   updateEmailConfiguration(id: number, updates: Partial<EmailConfiguration>): Promise<EmailConfiguration | undefined>;
   deleteEmailConfiguration(id: number): Promise<void>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
+    return user;
+  }
+
+  async updateUserLastLogin(id: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastLogin: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async validateUserCredentials(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return null;
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    return isValidPassword ? user : null;
+  }
+
+  async createSession(userId: string, rememberMe: boolean = false): Promise<Session> {
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + (rememberMe ? 720 : 24)); // 30 days vs 24 hours
+
+    const [session] = await db
+      .insert(sessions)
+      .values({
+        userId,
+        token: randomUUID(),
+        expiresAt,
+      })
+      .returning();
+    return session;
+  }
+
+  async getSessionByToken(token: string): Promise<Session | undefined> {
+    const [session] = await db.select().from(sessions).where(eq(sessions.token, token));
+    return session || undefined;
+  }
+
+  async deleteSession(token: string): Promise<void> {
+    await db.delete(sessions).where(eq(sessions.token, token));
+  }
+
+  async deleteUserSessions(userId: string): Promise<void> {
+    await db.delete(sessions).where(eq(sessions.userId, userId));
+  }
+
+  async getAllOrganizations(): Promise<Organization[]> {
+    return db.select().from(organizations);
+  }
+
+  async getOrganizationById(id: number): Promise<Organization | undefined> {
+    const [org] = await db.select().from(organizations).where(eq(organizations.id, id));
+    return org || undefined;
+  }
+
+  async createOrganization(orgData: InsertOrganization): Promise<Organization> {
+    const [org] = await db
+      .insert(organizations)
+      .values(orgData)
+      .returning();
+    return org;
+  }
+
+  async updateOrganization(id: number, updates: Partial<Organization>): Promise<Organization | undefined> {
+    const [org] = await db
+      .update(organizations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(organizations.id, id))
+      .returning();
+    return org || undefined;
+  }
+
+  async toggleOrganizationStatus(id: number): Promise<Organization | undefined> {
+    const org = await this.getOrganizationById(id);
+    if (!org) return undefined;
+
+    const [updated] = await db
+      .update(organizations)
+      .set({ isActive: !org.isActive, updatedAt: new Date() })
+      .where(eq(organizations.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getAllPorts(): Promise<Port[]> {
+    return db.select().from(ports);
+  }
+
+  async getPortById(id: number): Promise<Port | undefined> {
+    const [port] = await db.select().from(ports).where(eq(ports.id, id));
+    return port || undefined;
+  }
+
+  async getPortsByOrganizationId(organizationId: number): Promise<Port[]> {
+    return db.select().from(ports).where(eq(ports.organizationId, organizationId));
+  }
+
+  async createPort(portData: InsertPort): Promise<Port> {
+    const [port] = await db
+      .insert(ports)
+      .values(portData)
+      .returning();
+    return port;
+  }
+
+  async updatePort(id: number, updates: Partial<Port>): Promise<Port | undefined> {
+    const [port] = await db
+      .update(ports)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(ports.id, id))
+      .returning();
+    return port || undefined;
+  }
+
+  async togglePortStatus(id: number): Promise<Port | undefined> {
+    const port = await this.getPortById(id);
+    if (!port) return undefined;
+
+    const [updated] = await db
+      .update(ports)
+      .set({ isActive: !port.isActive, updatedAt: new Date() })
+      .where(eq(ports.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deletePort(id: number): Promise<void> {
+    await db.delete(ports).where(eq(ports.id, id));
+  }
+
+  async getPortAdminContactsByPortId(portId: number): Promise<PortAdminContact[]> {
+    return db.select().from(portAdminContacts).where(eq(portAdminContacts.portId, portId));
+  }
+
+  async getPortAdminContactById(id: number): Promise<PortAdminContact | undefined> {
+    const [contact] = await db.select().from(portAdminContacts).where(eq(portAdminContacts.id, id));
+    return contact || undefined;
+  }
+
+  async getPortAdminContactByEmail(email: string): Promise<PortAdminContact | undefined> {
+    const [contact] = await db.select().from(portAdminContacts).where(eq(portAdminContacts.email, email));
+    return contact || undefined;
+  }
+
+  async getPortAdminContactByToken(token: string): Promise<PortAdminContact | undefined> {
+    const [contact] = await db.select().from(portAdminContacts).where(eq(portAdminContacts.verificationToken, token));
+    return contact || undefined;
+  }
+
+  async createPortAdminContact(contactData: InsertPortAdminContact): Promise<PortAdminContact> {
+    const [contact] = await db
+      .insert(portAdminContacts)
+      .values(contactData)
+      .returning();
+    return contact;
+  }
+
+  async updatePortAdminContact(id: number, updates: UpdatePortAdminContact): Promise<PortAdminContact | undefined> {
+    const [contact] = await db
+      .update(portAdminContacts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(portAdminContacts.id, id))
+      .returning();
+    return contact || undefined;
+  }
+
+  async togglePortAdminContactStatus(id: number): Promise<PortAdminContact | undefined> {
+    const contact = await this.getPortAdminContactById(id);
+    if (!contact) return undefined;
+
+    const newStatus = contact.status === "active" ? "inactive" : "active";
+    const [updated] = await db
+      .update(portAdminContacts)
+      .set({ status: newStatus, updatedAt: new Date() })
+      .where(eq(portAdminContacts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deletePortAdminContact(id: number): Promise<void> {
+    await db.delete(portAdminContacts).where(eq(portAdminContacts.id, id));
+  }
+
+  async updatePortAdminContactVerification(id: number, token: string, expiresAt: Date): Promise<void> {
+    await db
+      .update(portAdminContacts)
+      .set({ 
+        verificationToken: token, 
+        verificationTokenExpires: expiresAt,
+        updatedAt: new Date()
+      })
+      .where(eq(portAdminContacts.id, id));
+  }
+
+  async verifyPortAdminContact(token: string, userId: string): Promise<PortAdminContact | undefined> {
+    const [contact] = await db
+      .update(portAdminContacts)
+      .set({ 
+        isVerified: true, 
+        status: "active", 
+        userId: userId,
+        verificationToken: null,
+        verificationTokenExpires: null,
+        updatedAt: new Date()
+      })
+      .where(eq(portAdminContacts.verificationToken, token))
+      .returning();
+    return contact || undefined;
+  }
+
+  async getAllEmailConfigurations(): Promise<EmailConfiguration[]> {
+    return db.select().from(emailConfigurations);
+  }
+
+  async getEmailConfigurationById(id: number): Promise<EmailConfiguration | undefined> {
+    const [config] = await db.select().from(emailConfigurations).where(eq(emailConfigurations.id, id));
+    return config || undefined;
+  }
+
+  async createEmailConfiguration(configData: InsertEmailConfiguration): Promise<EmailConfiguration> {
+    const [config] = await db
+      .insert(emailConfigurations)
+      .values(configData)
+      .returning();
+    return config;
+  }
+
+  async updateEmailConfiguration(id: number, updates: Partial<EmailConfiguration>): Promise<EmailConfiguration | undefined> {
+    const [config] = await db
+      .update(emailConfigurations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(emailConfigurations.id, id))
+      .returning();
+    return config || undefined;
+  }
+
+  async deleteEmailConfiguration(id: number): Promise<void> {
+    await db.delete(emailConfigurations).where(eq(emailConfigurations.id, id));
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -540,4 +810,5 @@ export class MemStorage implements IStorage {
   }
 }
 
+// Use MemStorage for now until database is properly migrated
 export const storage = new MemStorage();

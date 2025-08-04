@@ -56,7 +56,8 @@ Role-Based Access: Port Admins redirect to `/port-admin-dashboard` with only "Te
 - **Path Aliases**: Configured aliases for clean imports (@, @shared, @assets) on frontend
 - **Environment**: Supports both development and production with separate configuration files
 - **Port Configuration**: Both frontend and backend run on port 5000 through Vite proxy
-- **Storage Limitation**: Uses in-memory storage that clears on server restart (for development)
+- **Storage Limitation**: Currently uses in-memory storage that clears on server restart (for development)
+- **Database Setup**: PostgreSQL database configured and available, ready for migration from in-memory storage
 
 # External Dependencies
 
