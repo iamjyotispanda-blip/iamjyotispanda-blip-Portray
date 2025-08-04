@@ -125,8 +125,8 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
         
         <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
           <div className="space-y-4">
-            {/* Back button and Port heading */}
-            <div className="space-y-2">
+            {/* Back button and Add Contact button on same line */}
+            <div className="flex items-center justify-between">
               <Button
                 variant="outline"
                 size="sm"
@@ -136,13 +136,6 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Ports
               </Button>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {port ? `${port.portName} (${port.displayName})` : "Loading..."}
-              </h1>
-            </div>
-
-            {/* Add Contact Button */}
-            <div className="flex justify-end">
               <Button
                 onClick={() => setShowAddDialog(true)}
                 className="h-8"
@@ -151,6 +144,11 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
                 Add Contact
               </Button>
             </div>
+            
+            {/* Port heading */}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {port ? `${port.portName} (${port.displayName})` : "Loading..."}
+            </h1>
             {/* Contacts List */}
             <div className="grid gap-4">
               {isLoading ? (
