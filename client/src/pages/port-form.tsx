@@ -264,8 +264,6 @@ export default function PortFormPage({ params }: PortFormPageProps) {
     address: "",
     country: "India",
     state: "",
-    pan: "",
-    gstn: "",
     isActive: true,
   });
 
@@ -290,8 +288,6 @@ export default function PortFormPage({ params }: PortFormPageProps) {
         address: (port as any).address || "",
         country: (port as any).country || "India",
         state: (port as any).state || "",
-        pan: (port as any).pan || "",
-        gstn: (port as any).gstn || "",
         isActive: (port as any).isActive ?? true,
       });
     }
@@ -510,29 +506,7 @@ export default function PortFormPage({ params }: PortFormPageProps) {
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="pan">PAN</Label>
-                    <Input
-                      id="pan"
-                      placeholder="ABCDE1234F"
-                      value={formData.pan}
-                      onChange={(e) => handleInputChange('pan', e.target.value)}
-                      pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
-                      maxLength={10}
-                    />
-                  </div>
 
-                  <div>
-                    <Label htmlFor="gstn">GSTN</Label>
-                    <Input
-                      id="gstn"
-                      placeholder="22AAAAA0000A1Z5"
-                      value={formData.gstn}
-                      onChange={(e) => handleInputChange('gstn', e.target.value)}
-                      pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}"
-                      maxLength={15}
-                    />
-                  </div>
                 </div>
 
                 <div>

@@ -47,8 +47,6 @@ export const ports = pgTable("ports", {
   address: text("address").notNull(),
   country: text("country").notNull(),
   state: text("state").notNull(),
-  pan: varchar("pan", { length: 10 }).notNull().unique(),
-  gstn: varchar("gstn", { length: 15 }).notNull().unique(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
