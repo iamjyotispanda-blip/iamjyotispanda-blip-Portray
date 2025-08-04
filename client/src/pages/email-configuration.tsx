@@ -196,7 +196,7 @@ export default function EmailConfigurationPage() {
                 Add Configuration
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-[400px] sm:w-[540px]">
+            <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Add Email Configuration</SheetTitle>
                 <SheetDescription>
@@ -204,7 +204,7 @@ export default function EmailConfigurationPage() {
                 </SheetDescription>
               </SheetHeader>
               
-              <div className="space-y-4 mt-6">
+              <div className="space-y-4 mt-6 pb-6">
                 <div className="space-y-2">
                   <Label htmlFor="smtpHost">SMTP Host *</Label>
                   <Input
@@ -289,11 +289,11 @@ export default function EmailConfigurationPage() {
                   <Label htmlFor="enableTLS">Enable TLS/SSL</Label>
                 </div>
 
-                <div className="flex space-x-2 pt-4">
+                <div className="flex space-x-3 pt-6 sticky bottom-0 bg-white dark:bg-slate-950 border-t pt-4 mt-6">
                   <Button 
                     onClick={handleSaveConfig}
                     disabled={saveConfigMutation.isPending}
-                    className="flex-1"
+                    className="flex-1 h-10"
                   >
                     {saveConfigMutation.isPending ? "Saving..." : "Save Configuration"}
                   </Button>
@@ -303,7 +303,7 @@ export default function EmailConfigurationPage() {
                       setShowAddForm(false);
                       resetForm();
                     }}
-                    className="flex-1"
+                    className="flex-1 h-10"
                   >
                     Cancel
                   </Button>

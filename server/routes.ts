@@ -652,21 +652,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Email Configuration endpoints
   app.get("/api/configuration/email", authenticateToken, async (req: Request, res: Response) => {
     try {
-      const config = await storage.getEmailConfiguration();
+      const configs = await storage.getAllEmailConfigurations();
       
-      if (!config) {
-        return res.status(404).json({ message: "Email configuration not found" });
-      }
-      
-      // Don't send sensitive password in response
-      const safeConfig = {
+      // Don't send sensitive passwords in response
+      const safeConfigs = configs.map(config => ({
         ...config,
         smtpPassword: config.smtpPassword ? '***masked***' : ''
-      };
+      }));
       
-      res.json(safeConfig);
+      res.json(safeConfigs);
     } catch (error) {
-      console.error("Get email configuration error:", error);
+      console.error("Get email configurations error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

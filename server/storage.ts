@@ -47,9 +47,11 @@ export interface IStorage {
   verifyPortAdminContact(token: string, userId: string): Promise<PortAdminContact | undefined>;
 
   // Email Configuration operations
-  getEmailConfiguration(): Promise<EmailConfiguration | undefined>;
+  getAllEmailConfigurations(): Promise<EmailConfiguration[]>;
+  getEmailConfigurationById(id: number): Promise<EmailConfiguration | undefined>;
   createEmailConfiguration(config: InsertEmailConfiguration): Promise<EmailConfiguration>;
   updateEmailConfiguration(id: number, updates: Partial<EmailConfiguration>): Promise<EmailConfiguration | undefined>;
+  deleteEmailConfiguration(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -455,19 +457,15 @@ export class MemStorage implements IStorage {
   }
 
   // Email Configuration operations
-  async getEmailConfiguration(): Promise<EmailConfiguration | undefined> {
-    const config = Array.from(this.emailConfigurations.values()).find(c => c.isActive);
-    return config;
+  async getAllEmailConfigurations(): Promise<EmailConfiguration[]> {
+    return Array.from(this.emailConfigurations.values());
+  }
+
+  async getEmailConfigurationById(id: number): Promise<EmailConfiguration | undefined> {
+    return this.emailConfigurations.get(id);
   }
 
   async createEmailConfiguration(config: InsertEmailConfiguration): Promise<EmailConfiguration> {
-    // Deactivate any existing configuration
-    this.emailConfigurations.forEach((existingConfig, id) => {
-      if (existingConfig.isActive) {
-        this.emailConfigurations.set(id, { ...existingConfig, isActive: false });
-      }
-    });
-
     const newConfig: EmailConfiguration = {
       id: this.nextEmailConfigId++,
       ...config,
@@ -492,6 +490,10 @@ export class MemStorage implements IStorage {
     
     this.emailConfigurations.set(id, updatedConfig);
     return updatedConfig;
+  }
+
+  async deleteEmailConfiguration(id: number): Promise<void> {
+    this.emailConfigurations.delete(id);
   }
 }
 

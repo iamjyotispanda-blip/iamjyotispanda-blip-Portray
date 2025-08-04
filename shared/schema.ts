@@ -76,7 +76,7 @@ export const portAdminContacts = pgTable("port_admin_contacts", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
-// Email Configuration table
+// Email Configuration table  
 export const emailConfigurations = pgTable("email_configurations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   smtpHost: text("smtp_host").notNull(),
@@ -173,20 +173,18 @@ export const insertEmailConfigurationSchema = createInsertSchema(emailConfigurat
   enableTLS: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
+// Type definitions
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
-export type LoginCredentials = z.infer<typeof loginSchema>;
-
 export type Organization = typeof organizations.$inferSelect;
-export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
-
 export type Port = typeof ports.$inferSelect;
-export type InsertPort = z.infer<typeof insertPortSchema>;
-
 export type PortAdminContact = typeof portAdminContacts.$inferSelect;
-export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema>;
-export type UpdatePortAdminContact = z.infer<typeof updatePortAdminContactSchema>;
-
 export type EmailConfiguration = typeof emailConfigurations.$inferSelect;
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+export type InsertPort = z.infer<typeof insertPortSchema>;
+export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema>;
 export type InsertEmailConfiguration = z.infer<typeof insertEmailConfigurationSchema>;
+export type UpdatePortAdminContact = z.infer<typeof updatePortAdminContactSchema>;
+export type LoginCredentials = z.infer<typeof loginSchema>;
