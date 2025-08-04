@@ -75,6 +75,7 @@ export function AddContactDialog({
         description: "Contact added successfully. Verification email sent.",
       });
       form.reset();
+      onOpenChange(false);
       onSuccess();
     },
     onError: (error: any) => {
