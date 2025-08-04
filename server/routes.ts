@@ -710,12 +710,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const emailService = new EmailService();
       const emailConfig = {
         smtpHost: validatedConfig.smtpHost,
-        smtpPort: validatedConfig.smtpPort || 587,
+        smtpPort: validatedConfig.smtpPort,
         smtpUser: validatedConfig.smtpUser,
         smtpPassword: validatedConfig.smtpPassword,
         fromEmail: validatedConfig.fromEmail,
         fromName: validatedConfig.fromName,
-        enableTLS: validatedConfig.enableTLS ?? true
+        enableTLS: validatedConfig.enableTLS ?? false
       };
       
       const success = await emailService.sendTestEmail(emailConfig, testEmail);
