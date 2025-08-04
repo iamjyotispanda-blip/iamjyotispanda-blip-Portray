@@ -117,148 +117,153 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
   };
 
   return (
-    <AppLayout title="Port Contacts" activeSection="ports">
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation("/ports")}
-              className="h-8"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Ports
-            </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Port Admin Contacts
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+    <AppLayout title="Port Admin Contacts" activeSection="ports">
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Port Admin Contacts</span>
+        </div>
+        
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+          <div className="space-y-4">
+            {/* Back button and Port heading */}
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation("/ports")}
+                className="h-8"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Ports
+              </Button>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {port ? `${port.portName} (${port.displayName})` : "Loading..."}
-              </p>
+              </h1>
+            </div>
+
+            {/* Add Contact Button */}
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setShowAddDialog(true)}
+                className="h-8"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Contact
+              </Button>
+            </div>
+            {/* Contacts List */}
+            <div className="grid gap-4">
+              {isLoading ? (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-gray-500">Loading contacts...</div>
+                  </CardContent>
+                </Card>
+              ) : contacts.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-gray-500">
+                      No contacts found. Add the first contact to get started.
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                contacts.map((contact: PortAdminContact) => (
+                  <Card key={contact.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <h3 className="font-medium text-gray-900 dark:text-white">
+                                {contact.contactName}
+                              </h3>
+                              <Badge
+                                variant={contact.status === "active" ? "default" : "secondary"}
+                              >
+                                {contact.status}
+                              </Badge>
+                              {contact.isVerified ? (
+                                <Badge variant="outline" className="text-green-600 border-green-200">
+                                  Verified
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-orange-600 border-orange-200">
+                                  Pending Verification
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {contact.designation}
+                            </p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                              <div className="flex items-center space-x-1">
+                                <Mail className="w-4 h-4" />
+                                <span>{contact.email}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Phone className="w-4 h-4" />
+                                <span>{contact.mobileNumber}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {!contact.isVerified && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleResendVerification(contact.id)}
+                              disabled={resendVerificationMutation.isPending}
+                              className="h-8"
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Resend Verification
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditContact(contact)}
+                            className="h-8"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleStatus(contact.id)}
+                            disabled={toggleStatusMutation.isPending}
+                            className="h-8"
+                          >
+                            {contact.status === "active" ? (
+                              <ToggleRight className="w-4 h-4" />
+                            ) : (
+                              <ToggleLeft className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteContact(contact.id)}
+                            disabled={deleteContactMutation.isPending}
+                            className="h-8 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+              ))
+              )}
             </div>
           </div>
-          <Button
-            onClick={() => setShowAddDialog(true)}
-            className="h-8"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Contact
-          </Button>
-        </div>
-
-        {/* Contacts List */}
-        <div className="grid gap-4">
-          {isLoading ? (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center text-gray-500">Loading contacts...</div>
-              </CardContent>
-            </Card>
-          ) : contacts.length === 0 ? (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center text-gray-500">
-                  No contacts found. Add the first contact to get started.
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            contacts.map((contact: PortAdminContact) => (
-              <Card key={contact.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-medium text-gray-900 dark:text-white">
-                            {contact.contactName}
-                          </h3>
-                          <Badge
-                            variant={contact.status === "active" ? "default" : "secondary"}
-                          >
-                            {contact.status}
-                          </Badge>
-                          {contact.isVerified ? (
-                            <Badge variant="outline" className="text-green-600 border-green-200">
-                              Verified
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-orange-600 border-orange-200">
-                              Pending Verification
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {contact.designation}
-                        </p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <Mail className="w-4 h-4" />
-                            <span>{contact.email}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Phone className="w-4 h-4" />
-                            <span>{contact.mobileNumber}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {!contact.isVerified && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleResendVerification(contact.id)}
-                          disabled={resendVerificationMutation.isPending}
-                          className="h-8"
-                        >
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Resend Verification
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditContact(contact)}
-                        className="h-8"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleStatus(contact.id)}
-                        disabled={toggleStatusMutation.isPending}
-                        className="h-8"
-                      >
-                        {contact.status === "active" ? (
-                          <ToggleRight className="w-4 h-4" />
-                        ) : (
-                          <ToggleLeft className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteContact(contact.id)}
-                        disabled={deleteContactMutation.isPending}
-                        className="h-8 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+        </main>
+      </div>
 
       {/* Add Contact Dialog */}
       <AddContactDialog
@@ -283,7 +288,6 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
           }}
         />
       )}
-      </div>
     </AppLayout>
   );
 }
