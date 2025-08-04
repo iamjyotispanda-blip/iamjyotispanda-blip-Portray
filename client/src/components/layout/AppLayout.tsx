@@ -33,6 +33,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
+    { id: "email", label: "Email Configuration", icon: Mail },
     { 
       id: "configuration", 
       label: "Configuration", 
@@ -40,7 +41,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       children: [
         { id: "organization", label: "Organization", icon: Building2 },
         { id: "ports", label: "Ports", icon: Ship },
-        { id: "email", label: "Email Configuration", icon: Mail },
       ]
     },
   ];
@@ -50,15 +50,15 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       case "dashboard":
         setLocation("/dashboard");
         break;
+      case "email":
+        setLocation("/configuration/email");
+        break;
       case "organization":
         setLocation("/dashboard");
         // Since organization is handled within dashboard
         break;
       case "ports":
         setLocation("/ports");
-        break;
-      case "email":
-        setLocation("/configuration/email");
         break;
       default:
         break;
