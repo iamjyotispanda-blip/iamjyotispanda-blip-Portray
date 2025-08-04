@@ -6,6 +6,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { EmailService } from "./emailService";
 
 // Extend Express Request to include user session
 declare global {
@@ -440,8 +441,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.updatePortAdminContactVerification(contact.id, verificationToken, expiresAt);
       
-      // Send welcome email (simulated)
-      console.log(`Welcome email sent to ${contact.email} with verification link: /verify?token=${verificationToken}`);
+      // Send welcome email using configured email service
+      try {
+        const emailConfig = await storage.getEmailConfiguration();
+        if (emailConfig) {
+          const emailService = new EmailService();
+          const emailSent = await emailService.sendWelcomeEmail(emailConfig, contact.email, verificationToken);
+          if (emailSent) {
+            console.log(`Welcome email sent to ${contact.email} with verification link`);
+          } else {
+            console.log(`Failed to send welcome email to ${contact.email}, using fallback notification`);
+          }
+        } else {
+          console.log(`No email configuration found, verification link: /verify?token=${verificationToken}`);
+        }
+      } catch (emailError) {
+        console.error('Email service error:', emailError);
+        console.log(`Fallback: Welcome email for ${contact.email} with verification link: /verify?token=${verificationToken}`);
+      }
       
       res.status(201).json(contact);
     } catch (error) {
@@ -516,8 +533,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.updatePortAdminContactVerification(contact.id, verificationToken, expiresAt);
       
-      // Send verification email (simulated)
-      console.log(`Verification email resent to ${contact.email} with link: /verify?token=${verificationToken}`);
+      // Send verification email using configured email service
+      try {
+        const emailConfig = await storage.getEmailConfiguration();
+        if (emailConfig) {
+          const emailService = new EmailService();
+          const emailSent = await emailService.sendWelcomeEmail(emailConfig, contact.email, verificationToken);
+          if (emailSent) {
+            console.log(`Verification email resent to ${contact.email}`);
+          } else {
+            console.log(`Failed to resend verification email to ${contact.email}`);
+          }
+        } else {
+          console.log(`No email configuration found, verification link: /verify?token=${verificationToken}`);
+        }
+      } catch (emailError) {
+        console.error('Email service error:', emailError);
+        console.log(`Fallback: Verification email for ${contact.email} with link: /verify?token=${verificationToken}`);
+      }
       
       res.json({ message: "Verification email sent successfully" });
     } catch (error) {
@@ -673,17 +706,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate configuration data
       const validatedConfig = insertEmailConfigurationSchema.parse(configData);
       
-      // Simulate sending test email (in a real implementation, you would use the SMTP config to actually send)
-      console.log(`Test email would be sent to ${testEmail} using config:`, {
-        host: validatedConfig.smtpHost,
-        port: validatedConfig.smtpPort,
-        user: validatedConfig.smtpUser,
-        from: validatedConfig.fromEmail,
+      // Create email service and send test email
+      const emailService = new EmailService();
+      const emailConfig = {
+        smtpHost: validatedConfig.smtpHost,
+        smtpPort: validatedConfig.smtpPort,
+        smtpUser: validatedConfig.smtpUser,
+        smtpPassword: validatedConfig.smtpPassword,
+        fromEmail: validatedConfig.fromEmail,
         fromName: validatedConfig.fromName,
-        tls: validatedConfig.enableTLS
-      });
+        enableTLS: validatedConfig.enableTLS ?? false
+      };
       
-      res.json({ message: "Test email sent successfully" });
+      const success = await emailService.sendTestEmail(emailConfig, testEmail);
+      
+      if (success) {
+        res.json({ message: "Test email sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send test email. Please check your SMTP configuration." });
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -692,7 +733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       console.error("Test email error:", error);
-      res.status(500).json({ message: "Failed to send test email" });
+      res.status(500).json({ message: "Failed to send test email. Please verify your SMTP settings." });
     }
   });
 
