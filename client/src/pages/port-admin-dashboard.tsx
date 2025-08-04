@@ -158,56 +158,56 @@ export default function PortAdminDashboard() {
             </Card>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Terminals - Main Section for Port Admin */}
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Ship className="w-5 h-5" />
-                  <span>Vessel Management</span>
+                  <Ship className="w-5 h-5 text-blue-600" />
+                  <span>Terminals Management</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Monitor vessel arrivals, departures, and berth assignments.
-                </p>
-                <Button className="w-full h-8" disabled>
-                  Coming Soon
-                </Button>
-              </CardContent>
-            </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="text-center p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                    <Ship className="h-12 w-12 text-blue-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Vessel Operations
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Monitor vessel arrivals, departures, and berth assignments
+                    </p>
+                    <Button className="h-8">
+                      Manage Vessels
+                    </Button>
+                  </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="w-5 h-5" />
-                  <span>Operations Analytics</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  View detailed reports and performance metrics.
-                </p>
-                <Button className="w-full h-8" disabled>
-                  Coming Soon
-                </Button>
-              </CardContent>
-            </Card>
+                  <div className="text-center p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                    <BarChart3 className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Berth Management
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Track berth availability and scheduling
+                    </p>
+                    <Button className="h-8">
+                      Manage Berths
+                    </Button>
+                  </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Settings className="w-5 h-5" />
-                  <span>Port Settings</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Configure port operations and system preferences.
-                </p>
-                <Button className="w-full h-8" disabled>
-                  Coming Soon
-                </Button>
+                  <div className="text-center p-6 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                    <Users className="h-12 w-12 text-purple-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Terminal Operations
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Oversee cargo handling and terminal activities
+                    </p>
+                    <Button className="h-8">
+                      View Operations
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

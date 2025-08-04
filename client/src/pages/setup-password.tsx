@@ -83,8 +83,9 @@ export default function SetupPasswordPage() {
           description: "Password setup completed successfully!",
         });
 
-        // Redirect to dashboard
-        setLocation('/dashboard');
+        // Redirect based on user role
+        const redirectPath = data.redirectPath || '/dashboard';
+        setLocation(redirectPath);
       } else {
         toast({
           title: "Error",

@@ -31,24 +31,41 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     setLocation("/login");
   };
 
-  const navigationItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { 
-      id: "configuration", 
-      label: "Configuration", 
-      icon: Settings,
-      children: [
-        { id: "email", label: "Email Configuration", icon: Mail },
-        { id: "organization", label: "Organizations", icon: Building2 },
-        { id: "ports", label: "Ports", icon: Ship },
-      ]
-    },
-  ];
+  // Role-based navigation items
+  const getNavigationItems = () => {
+    if (user?.role === "PortAdmin") {
+      // Port Admin only sees Terminals
+      return [
+        { id: "terminals", label: "Terminals", icon: Ship }
+      ];
+    } else {
+      // System Admin sees all navigation
+      return [
+        { id: "dashboard", label: "Dashboard", icon: Home },
+        { 
+          id: "configuration", 
+          label: "Configuration", 
+          icon: Settings,
+          children: [
+            { id: "email", label: "Email Configuration", icon: Mail },
+            { id: "organization", label: "Organizations", icon: Building2 },
+            { id: "ports", label: "Ports", icon: Ship },
+          ]
+        },
+      ];
+    }
+  };
+
+  const navigationItems = getNavigationItems();
 
   const handleNavigation = (itemId: string) => {
     switch (itemId) {
       case "dashboard":
         setLocation("/dashboard");
+        break;
+      case "terminals":
+        // For Port Admin - redirect to their dashboard with terminals view
+        setLocation("/port-admin-dashboard");
         break;
       case "email":
         setLocation("/configuration/email");

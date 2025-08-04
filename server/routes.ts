@@ -104,7 +104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Return user info and token (exclude password)
       const { password, ...userWithoutPassword } = user;
-      const redirectPath = user.role === "SystemAdmin" ? "/portal/welcome" : "/dashboard";
+      const redirectPath = user.role === "PortAdmin" ? "/port-admin-dashboard" : 
+                          user.role === "SystemAdmin" ? "/portal/welcome" : "/dashboard";
       
       res.json({
         user: userWithoutPassword,
@@ -705,7 +706,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         user: { ...updatedUser, password: undefined },
         token: session.token,
-        message: "Password setup successful"
+        message: "Password setup successful",
+        redirectPath: updatedUser.role === "PortAdmin" ? "/port-admin-dashboard" : "/dashboard"
       });
     } catch (error) {
       console.error("Setup password error:", error);
