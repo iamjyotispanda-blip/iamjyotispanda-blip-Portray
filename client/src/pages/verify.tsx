@@ -23,7 +23,7 @@ export default function VerifyPage() {
     fetch(`/api/verify?token=${token}`)
       .then(response => response.json())
       .then(data => {
-        if (data.message === "Token valid") {
+        if (data.message === "Email verified successfully" || data.message === "Email already verified" || data.message === "Token valid") {
           setStatus('success');
           setMessage('Email verified successfully! You can now complete your registration.');
         } else {
