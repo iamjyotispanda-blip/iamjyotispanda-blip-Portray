@@ -16,6 +16,7 @@ import PortContactsPage from "@/pages/port-contacts";
 import PortAdminVerificationPage from "@/pages/port-admin-verification";
 import PortAdminDashboard from "@/pages/port-admin-dashboard";
 import EmailConfigurationPage from "@/pages/email-configuration";
+import OrganizationsPage from "@/pages/organizations";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -98,7 +99,7 @@ function Router() {
         {() => <ProtectedRoute component={PortsPage} />}
       </Route>
       <Route path="/organizations">
-        {() => <ProtectedRoute component={() => <AppLayout title="Organizations" activeSection="organization"><div>Organizations content coming soon</div></AppLayout>} />}
+        {() => <ProtectedRoute component={OrganizationsPage} />}
       </Route>
       <Route path="/configuration/email">
         {() => <ProtectedRoute component={EmailConfigurationPage} />}
