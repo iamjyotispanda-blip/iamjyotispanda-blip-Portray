@@ -1,72 +1,85 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
-  Mail, 
-  Server, 
-  Shield, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  Send,
-  Eye,
-  EyeOff 
-} from "lucide-react";
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Plus, Mail, Server, Shield, CheckCircle, AlertCircle, Settings, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-// Email configuration schema
-const emailConfigSchema = z.object({
-  smtpHost: z.string().min(1, "SMTP Host is required"),
-  smtpPort: z.number().min(1).max(65535, "Port must be between 1 and 65535"),
-  smtpUser: z.string().email("Valid email address required"),
-  smtpPassword: z.string().min(1, "SMTP Password is required"),
-  fromEmail: z.string().email("Valid from email address required"),
-  fromName: z.string().min(1, "From name is required"),
-  enableTLS: z.boolean().default(true),
-});
+interface EmailConfiguration {
+  id: number;
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  fromEmail: string;
+  fromName: string;
+  enableTLS: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
 
-type EmailConfigForm = z.infer<typeof emailConfigSchema>;
+interface EmailConfigFormData {
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  fromEmail: string;
+  fromName: string;
+  enableTLS: boolean;
+}
 
 export default function EmailConfigurationPage() {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingConfig, setEditingConfig] = useState<EmailConfiguration | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [testEmailAddress, setTestEmailAddress] = useState("");
+  const [formData, setFormData] = useState<EmailConfigFormData>({
+    smtpHost: "smtp.gmail.com",
+    smtpPort: 587,
+    smtpUser: "",
+    smtpPassword: "",
+    fromEmail: "",
+    fromName: "PortRay Support",
+    enableTLS: true,
+  });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Form setup
-  const form = useForm<EmailConfigForm>({
-    resolver: zodResolver(emailConfigSchema),
-    defaultValues: {
-      smtpHost: "smtp.gmail.com",
-      smtpPort: 587,
-      smtpUser: "",
-      smtpPassword: "",
-      fromEmail: "",
-      fromName: "PortRay Support",
-      enableTLS: true,
-    },
-  });
-
-  // Get current email configuration
-  const { data: emailConfig, isLoading } = useQuery({
+  // Get email configurations
+  const { data: emailConfigs = [], isLoading } = useQuery<EmailConfiguration[]>({
     queryKey: ["/api/configuration/email"],
-    enabled: false, // We'll implement this later if needed
   });
 
   // Save email configuration mutation
   const saveConfigMutation = useMutation({
-    mutationFn: async (data: EmailConfigForm) => {
+    mutationFn: async (data: EmailConfigFormData) => {
       return apiRequest("POST", "/api/configuration/email", data);
     },
     onSuccess: () => {
@@ -75,6 +88,8 @@ export default function EmailConfigurationPage() {
         description: "Email configuration saved successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/configuration/email"] });
+      setShowAddForm(false);
+      resetForm();
     },
     onError: (error: any) => {
       toast({
@@ -85,35 +100,74 @@ export default function EmailConfigurationPage() {
     },
   });
 
-  // Test email configuration mutation
+  // Send test email mutation
   const testEmailMutation = useMutation({
-    mutationFn: async (testEmail: string) => {
-      const formData = form.getValues();
-      return apiRequest("POST", "/api/configuration/email/test", {
-        ...formData,
-        testEmail,
-      });
+    mutationFn: async (data: { configId: number; testEmail: string }) => {
+      return apiRequest("POST", "/api/configuration/email/test", data);
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Test email sent successfully! Check your inbox.",
+        description: "Test email sent successfully",
       });
+      setTestEmailAddress("");
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: "Error", 
         description: error.message || "Failed to send test email",
         variant: "destructive",
       });
     },
   });
 
-  const handleSaveConfiguration = (data: EmailConfigForm) => {
-    saveConfigMutation.mutate(data);
+  // Delete configuration mutation
+  const deleteConfigMutation = useMutation({
+    mutationFn: async (configId: number) => {
+      return apiRequest("DELETE", `/api/configuration/email/${configId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Email configuration deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/configuration/email"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete email configuration",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      smtpHost: "smtp.gmail.com",
+      smtpPort: 587,
+      smtpUser: "",
+      smtpPassword: "",
+      fromEmail: "",
+      fromName: "PortRay Support",
+      enableTLS: true,
+    });
   };
 
-  const handleTestEmail = () => {
+  const handleSaveConfig = () => {
+    if (!formData.smtpHost || !formData.smtpUser || !formData.smtpPassword || !formData.fromEmail || !formData.fromName) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    saveConfigMutation.mutate(formData);
+  };
+
+  const handleSendTest = (configId: number) => {
     if (!testEmailAddress) {
       toast({
         title: "Error",
@@ -122,295 +176,259 @@ export default function EmailConfigurationPage() {
       });
       return;
     }
-    testEmailMutation.mutate(testEmailAddress);
-  };
 
-  const getConnectionStatus = () => {
-    if (saveConfigMutation.isSuccess) {
-      return { status: "connected", message: "Configuration saved" };
-    }
-    if (saveConfigMutation.isError) {
-      return { status: "error", message: "Configuration error" };
-    }
-    return { status: "pending", message: "Not configured" };
+    testEmailMutation.mutate({ configId, testEmail: testEmailAddress });
   };
-
-  const connectionStatus = getConnectionStatus();
 
   return (
     <AppLayout title="Email Configuration" activeSection="email">
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Email Configuration</span>
-            <Badge
-              variant={
-                connectionStatus.status === "connected" 
-                  ? "default" 
-                  : connectionStatus.status === "error" 
-                  ? "destructive" 
-                  : "secondary"
-              }
-              className="flex items-center space-x-1"
-            >
-              {connectionStatus.status === "connected" && <CheckCircle className="w-3 h-3" />}
-              {connectionStatus.status === "error" && <XCircle className="w-3 h-3" />}
-              {connectionStatus.status === "pending" && <AlertCircle className="w-3 h-3" />}
-              <span>{connectionStatus.message}</span>
-            </Badge>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Email Configuration</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Manage SMTP settings for email notifications</p>
           </div>
+          <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+            <SheetTrigger asChild>
+              <Button className="h-8">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Configuration
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-[400px] sm:w-[540px]">
+              <SheetHeader>
+                <SheetTitle>Add Email Configuration</SheetTitle>
+                <SheetDescription>
+                  Configure SMTP settings for sending emails
+                </SheetDescription>
+              </SheetHeader>
+              
+              <div className="space-y-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="smtpHost">SMTP Host *</Label>
+                  <Input
+                    id="smtpHost"
+                    value={formData.smtpHost}
+                    onChange={(e) => setFormData({ ...formData, smtpHost: e.target.value })}
+                    placeholder="smtp.gmail.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="smtpPort">SMTP Port *</Label>
+                  <Input
+                    id="smtpPort"
+                    type="number"
+                    value={formData.smtpPort}
+                    onChange={(e) => setFormData({ ...formData, smtpPort: parseInt(e.target.value) || 587 })}
+                    placeholder="587"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="smtpUser">SMTP Username *</Label>
+                  <Input
+                    id="smtpUser"
+                    type="email"
+                    value={formData.smtpUser}
+                    onChange={(e) => setFormData({ ...formData, smtpUser: e.target.value })}
+                    placeholder="your-email@gmail.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="smtpPassword">SMTP Password *</Label>
+                  <div className="relative">
+                    <Input
+                      id="smtpPassword"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.smtpPassword}
+                      onChange={(e) => setFormData({ ...formData, smtpPassword: e.target.value })}
+                      placeholder="Enter password or app password"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fromEmail">From Email *</Label>
+                  <Input
+                    id="fromEmail"
+                    type="email"
+                    value={formData.fromEmail}
+                    onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
+                    placeholder="noreply@yourcompany.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fromName">From Name *</Label>
+                  <Input
+                    id="fromName"
+                    value={formData.fromName}
+                    onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
+                    placeholder="PortRay Support"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="enableTLS"
+                    checked={formData.enableTLS}
+                    onCheckedChange={(checked) => setFormData({ ...formData, enableTLS: checked })}
+                  />
+                  <Label htmlFor="enableTLS">Enable TLS/SSL</Label>
+                </div>
+
+                <div className="flex space-x-2 pt-4">
+                  <Button 
+                    onClick={handleSaveConfig}
+                    disabled={saveConfigMutation.isPending}
+                    className="flex-1"
+                  >
+                    {saveConfigMutation.isPending ? "Saving..." : "Save Configuration"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowAddForm(false);
+                      resetForm();
+                    }}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
-                <Mail className="w-6 h-6" />
-                <span>Email Configuration</span>
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Configure SMTP settings to enable email notifications, verification emails, and password reset functionality.
-              </p>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Main Configuration */}
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Server className="w-5 h-5" />
-                      <span>SMTP Configuration</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <form onSubmit={form.handleSubmit(handleSaveConfiguration)}>
-                      {/* Server Settings */}
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="smtpHost">SMTP Host</Label>
-                          <Input
-                            id="smtpHost"
-                            placeholder="smtp.gmail.com"
-                            {...form.register("smtpHost")}
-                            className={form.formState.errors.smtpHost ? "border-red-500" : ""}
-                          />
-                          {form.formState.errors.smtpHost && (
-                            <p className="text-sm text-red-500">{form.formState.errors.smtpHost.message}</p>
-                          )}
+        {/* Email Configurations List */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Mail className="h-5 w-5" />
+              <span>Email Configurations</span>
+            </CardTitle>
+            <CardDescription>
+              View and manage SMTP configurations for email notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-4">Loading configurations...</div>
+            ) : emailConfigs.length === 0 ? (
+              <div className="text-center py-8">
+                <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Email Configurations</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">Get started by adding your first email configuration</p>
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Configuration
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>SMTP Host</TableHead>
+                    <TableHead>From Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>TLS</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {emailConfigs.map((config) => (
+                    <TableRow key={config.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{config.smtpHost}</div>
+                          <div className="text-sm text-gray-500">Port: {config.smtpPort}</div>
                         </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="smtpPort">SMTP Port</Label>
-                          <Input
-                            id="smtpPort"
-                            type="number"
-                            placeholder="587"
-                            {...form.register("smtpPort", { valueAsNumber: true })}
-                            className={form.formState.errors.smtpPort ? "border-red-500" : ""}
-                          />
-                          {form.formState.errors.smtpPort && (
-                            <p className="text-sm text-red-500">{form.formState.errors.smtpPort.message}</p>
-                          )}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{config.fromEmail}</div>
+                          <div className="text-sm text-gray-500">{config.fromName}</div>
                         </div>
-                      </div>
-
-                      {/* Authentication */}
-                      <Separator />
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium flex items-center space-x-2">
-                          <Shield className="w-4 h-4" />
-                          <span>Authentication</span>
-                        </h3>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="smtpUser">SMTP Username (Email)</Label>
-                          <Input
-                            id="smtpUser"
-                            type="email"
-                            placeholder="your-email@gmail.com"
-                            {...form.register("smtpUser")}
-                            className={form.formState.errors.smtpUser ? "border-red-500" : ""}
-                          />
-                          {form.formState.errors.smtpUser && (
-                            <p className="text-sm text-red-500">{form.formState.errors.smtpUser.message}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="smtpPassword">SMTP Password</Label>
-                          <div className="relative">
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={config.isActive ? "default" : "secondary"}>
+                          {config.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={config.enableTLS ? "default" : "outline"}>
+                          {config.enableTLS ? "Enabled" : "Disabled"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {new Date(config.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1">
                             <Input
-                              id="smtpPassword"
-                              type={showPassword ? "text" : "password"}
-                              placeholder="App Password (not your regular password)"
-                              {...form.register("smtpPassword")}
-                              className={form.formState.errors.smtpPassword ? "border-red-500" : ""}
+                              placeholder="test@example.com"
+                              value={testEmailAddress}
+                              onChange={(e) => setTestEmailAddress(e.target.value)}
+                              className="w-32 h-8"
                             />
                             <Button
-                              type="button"
-                              variant="ghost"
                               size="sm"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                              onClick={() => setShowPassword(!showPassword)}
+                              variant="outline"
+                              onClick={() => handleSendTest(config.id)}
+                              disabled={testEmailMutation.isPending}
+                              className="h-8"
                             >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              Test
                             </Button>
                           </div>
-                          {form.formState.errors.smtpPassword && (
-                            <p className="text-sm text-red-500">{form.formState.errors.smtpPassword.message}</p>
-                          )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm" className="h-8">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Configuration</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this email configuration? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteConfigMutation.mutate(config.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
-                      </div>
-
-                      {/* Sender Settings */}
-                      <Separator />
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Sender Information</h3>
-
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <div className="space-y-2">
-                            <Label htmlFor="fromEmail">From Email</Label>
-                            <Input
-                              id="fromEmail"
-                              type="email"
-                              placeholder="your-email@gmail.com"
-                              {...form.register("fromEmail")}
-                              className={form.formState.errors.fromEmail ? "border-red-500" : ""}
-                            />
-                            {form.formState.errors.fromEmail && (
-                              <p className="text-sm text-red-500">{form.formState.errors.fromEmail.message}</p>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="fromName">From Name</Label>
-                            <Input
-                              id="fromName"
-                              placeholder="PortRay Support"
-                              {...form.register("fromName")}
-                              className={form.formState.errors.fromName ? "border-red-500" : ""}
-                            />
-                            {form.formState.errors.fromName && (
-                              <p className="text-sm text-red-500">{form.formState.errors.fromName.message}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Security Settings */}
-                      <Separator />
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Security Settings</h3>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <Label htmlFor="enableTLS">Enable TLS/STARTTLS</Label>
-                            <p className="text-sm text-gray-500">
-                              Recommended for secure email transmission
-                            </p>
-                          </div>
-                          <Switch
-                            id="enableTLS"
-                            checked={form.watch("enableTLS")}
-                            onCheckedChange={(checked) => form.setValue("enableTLS", checked)}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Save Button */}
-                      <div className="flex justify-end pt-4">
-                        <Button
-                          type="submit"
-                          disabled={saveConfigMutation.isPending}
-                          className="w-full md:w-auto"
-                        >
-                          {saveConfigMutation.isPending ? "Saving..." : "Save Configuration"}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Test & Status */}
-              <div className="space-y-6">
-                {/* Test Email */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Send className="w-5 h-5" />
-                      <span>Test Email</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="testEmail">Test Email Address</Label>
-                      <Input
-                        id="testEmail"
-                        type="email"
-                        placeholder="test@example.com"
-                        value={testEmailAddress}
-                        onChange={(e) => setTestEmailAddress(e.target.value)}
-                      />
-                    </div>
-                    <Button
-                      onClick={handleTestEmail}
-                      disabled={testEmailMutation.isPending || !testEmailAddress}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      {testEmailMutation.isPending ? "Sending..." : "Send Test Email"}
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Setup Guide */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Gmail Setup Guide</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-sm space-y-2">
-                      <p className="font-medium">For Gmail:</p>
-                      <ol className="list-decimal list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                        <li>Enable 2-Factor Authentication</li>
-                        <li>Generate an App Password</li>
-                        <li>Use App Password (not regular password)</li>
-                        <li>Host: smtp.gmail.com</li>
-                        <li>Port: 587 (with TLS)</li>
-                      </ol>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Common Providers */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Common SMTP Settings</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-sm space-y-3">
-                      <div>
-                        <p className="font-medium">Gmail</p>
-                        <p className="text-gray-600 dark:text-gray-400">smtp.gmail.com:587</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Outlook</p>
-                        <p className="text-gray-600 dark:text-gray-400">smtp-mail.outlook.com:587</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Yahoo</p>
-                        <p className="text-gray-600 dark:text-gray-400">smtp.mail.yahoo.com:587</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </main>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
