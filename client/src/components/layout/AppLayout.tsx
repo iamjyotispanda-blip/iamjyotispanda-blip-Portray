@@ -33,9 +33,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "email", label: "Email Configuration", icon: Mail },
-    { id: "organization", label: "Organizations", icon: Building2 },
-    { id: "ports", label: "Ports", icon: Ship },
+    { 
+      id: "configuration", 
+      label: "Configuration", 
+      icon: Settings,
+      children: [
+        { id: "email", label: "Email Configuration", icon: Mail },
+        { id: "organization", label: "Organizations", icon: Building2 },
+        { id: "ports", label: "Ports", icon: Ship },
+      ]
+    },
   ];
 
   const handleNavigation = (itemId: string) => {
@@ -95,21 +102,43 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         <nav className="mt-5 px-2 flex-1">
           <div className="space-y-1">
             {navigationItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavigation(item.id)}
-                className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
-                  activeSection === item.id
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
-                }`}
-                title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
-              >
-                <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
-                  activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
-                }`} />
-                {(!sidebarCollapsed || sidebarHovered) && item.label}
-              </button>
+              <div key={item.id}>
+                <button
+                  onClick={() => handleNavigation(item.id)}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
+                    activeSection === item.id
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
+                >
+                  <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
+                    activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
+                  }`} />
+                  {(!sidebarCollapsed || sidebarHovered) && item.label}
+                </button>
+                
+                {item.children && (!sidebarCollapsed || sidebarHovered) && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {item.children.map((child) => (
+                      <button
+                        key={child.id}
+                        onClick={() => handleNavigation(child.id)}
+                        className={`group flex items-center px-2 py-1 text-sm rounded-md w-full text-left ${
+                          activeSection === child.id
+                            ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <child.icon className={`mr-2 h-4 w-4 ${
+                          activeSection === child.id ? 'text-blue-500' : 'text-gray-400'
+                        }`} />
+                        {child.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </nav>
