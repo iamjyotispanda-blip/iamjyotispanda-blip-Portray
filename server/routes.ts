@@ -593,12 +593,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid or expired verification token" });
       }
       
-      res.json({ 
-        message: "Token valid", 
-        contactId: contact.id, 
-        email: contact.email,
-        contactName: contact.contactName 
-      });
+      // If contact is not yet verified, mark it as verified
+      if (!contact.isVerified) {
+        const verifiedContact = await storage.markContactAsVerified(contact.id);
+        if (verifiedContact) {
+          console.log(`Contact ${contact.email} verified successfully - status updated to active`);
+          res.json({ 
+            message: "Email verified successfully", 
+            contactId: verifiedContact.id, 
+            email: verifiedContact.email,
+            contactName: verifiedContact.contactName,
+            status: verifiedContact.status
+          });
+        } else {
+          res.status(500).json({ message: "Failed to update verification status" });
+        }
+      } else {
+        res.json({ 
+          message: "Email already verified", 
+          contactId: contact.id, 
+          email: contact.email,
+          contactName: contact.contactName,
+          status: contact.status
+        });
+      }
     } catch (error) {
       console.error("Verify token error:", error);
       res.status(500).json({ message: "Internal server error" });

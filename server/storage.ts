@@ -456,6 +456,23 @@ export class MemStorage implements IStorage {
     return undefined;
   }
 
+  async markContactAsVerified(contactId: number): Promise<PortAdminContact | undefined> {
+    const contact = this.portAdminContacts.get(contactId);
+    if (!contact) return undefined;
+    
+    const updatedContact: PortAdminContact = {
+      ...contact,
+      isVerified: true,
+      status: "active",
+      verificationToken: null,
+      verificationTokenExpires: null,
+      updatedAt: new Date(),
+    };
+    
+    this.portAdminContacts.set(contactId, updatedContact);
+    return updatedContact;
+  }
+
   // Email Configuration operations
   async getAllEmailConfigurations(): Promise<EmailConfiguration[]> {
     return Array.from(this.emailConfigurations.values());
