@@ -497,6 +497,16 @@ export default function PortFormPage({ params }: PortFormPageProps) {
                   </div>
 
                   <div>
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      placeholder="Enter complete address"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
                     <Label htmlFor="state">State</Label>
                     <Input
                       id="state"
@@ -506,17 +516,6 @@ export default function PortFormPage({ params }: PortFormPageProps) {
                     />
                   </div>
 
-
-                </div>
-
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    placeholder="Enter complete address"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                  />
                 </div>
 
                 {/* Action Buttons */}
