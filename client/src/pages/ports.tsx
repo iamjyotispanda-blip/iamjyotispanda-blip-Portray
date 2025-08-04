@@ -30,7 +30,7 @@ export function PortsContent() {
   });
 
   // Filter ports based on search term
-  const filteredPorts = ports.filter((port: Port) =>
+  const filteredPorts = (ports as Port[]).filter((port: Port) =>
     port.portName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     port.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     port.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,16 +39,14 @@ export function PortsContent() {
   );
 
   const getOrganizationName = (organizationId: number) => {
-    const org = organizations.find((o: Organization) => o.id === organizationId);
+    const org = (organizations as Organization[]).find((o: Organization) => o.id === organizationId);
     return org?.organizationName || "Unknown Organization";
   };
 
   // Toggle port status mutation
   const togglePortStatusMutation = useMutation({
     mutationFn: async (portId: number) => {
-      return apiRequest(`/api/ports/${portId}/toggle-status`, {
-        method: "PATCH"
-      });
+      return apiRequest(`/api/ports/${portId}/toggle-status`, "PATCH");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
