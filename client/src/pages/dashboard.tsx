@@ -11,7 +11,7 @@ import {
 import { useLocation } from "wouter";
 import { useState } from "react";
 import OrganizationPage from "./organization-simple";
-import PortsPage from "./ports";
+import { PortsContent } from "./ports";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
@@ -48,7 +48,7 @@ export default function DashboardPage() {
       case "organization":
         return <OrganizationPage />;
       case "ports":
-        return <PortsPage />;
+        return <PortsContent />;
       default:
         return (
           <div className="space-y-6">

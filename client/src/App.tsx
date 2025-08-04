@@ -85,16 +85,16 @@ function Router() {
         {() => <ProtectedRoute component={DashboardPage} />}
       </Route>
       <Route path="/ports/new">
-        {() => <ProtectedRoute component={() => <AppLayoutWrapper><PortFormPage /></AppLayoutWrapper>} />}
+        {() => <ProtectedRoute component={PortFormPage} />}
       </Route>
       <Route path="/ports/edit/:id">
-        {(params) => <ProtectedRoute component={() => <AppLayoutWrapper><PortFormPage params={params} /></AppLayoutWrapper>} />}
+        {(params) => <ProtectedRoute component={() => <PortFormPage params={params} />} />}
       </Route>
       <Route path="/ports/:portId/contacts">
-        {(params) => <ProtectedRoute component={() => <AppLayoutWrapper><PortContactsPage params={params} /></AppLayoutWrapper>} />}
+        {(params) => <ProtectedRoute component={() => <PortContactsPage params={params} />} />}
       </Route>
       <Route path="/ports">
-        {() => <ProtectedRoute component={() => <AppLayoutWrapper><PortsPage /></AppLayoutWrapper>} />}
+        {() => <ProtectedRoute component={PortsPage} />}
       </Route>
       <Route path="/">
         {() => <ProtectedRoute component={DashboardPage} />}

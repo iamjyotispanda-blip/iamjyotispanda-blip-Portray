@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AddContactDialog } from "@/components/add-contact-dialog";
 import { EditContactDialog } from "@/components/edit-contact-dialog";
+import { AppLayout } from "@/components/layout/AppLayout";
 import type { Port, PortAdminContact } from "@shared/schema";
 
 interface PortContactsPageProps {
@@ -116,7 +117,8 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <AppLayout title="Port Contacts" activeSection="ports">
+      <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -281,6 +283,7 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
           }}
         />
       )}
-    </div>
+      </div>
+    </AppLayout>
   );
 }

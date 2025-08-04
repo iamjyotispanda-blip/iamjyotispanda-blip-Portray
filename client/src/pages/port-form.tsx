@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 import type { Port, Organization } from "@shared/schema";
 
@@ -370,31 +371,20 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
   if (isEdit && portLoading) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Loading...</span>
-        </div>
-        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1 flex items-center justify-center">
+      <AppLayout title="Loading Port" activeSection="ports">
+        <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-2 text-gray-600">Loading port...</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Breadcrumb Bar */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">
-          {isEdit ? "Edit Port" : "New Port"}
-        </span>
-      </div>
-      
-      {/* Main Content Area - Updated padding */}
-      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+    <AppLayout title={isEdit ? "Edit Port" : "Create Port"} activeSection="ports">
+      <div className="p-6">
         <div className="space-y-2">
           <Card>
             <CardContent className="pt-6">
@@ -544,7 +534,7 @@ export default function PortFormPage({ params }: PortFormPageProps) {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }
