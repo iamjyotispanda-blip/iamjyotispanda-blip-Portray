@@ -593,29 +593,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid or expired verification token" });
       }
       
-      // If contact is not yet verified, mark it as verified
+      // If contact is not yet verified, mark it as verified and create user
       if (!contact.isVerified) {
         const verifiedContact = await storage.markContactAsVerified(contact.id);
         if (verifiedContact) {
           console.log(`Contact ${contact.email} verified successfully - status updated to active`);
-          res.json({ 
-            message: "Email verified successfully", 
-            contactId: verifiedContact.id, 
-            email: verifiedContact.email,
-            contactName: verifiedContact.contactName,
-            status: verifiedContact.status
-          });
+          
+          // Check if user already exists for this contact
+          const existingUser = await storage.getUserByEmail(contact.email);
+          if (existingUser) {
+            // User already exists, just link the contact
+            await storage.linkContactToUser(contact.id, existingUser.id);
+            res.json({ 
+              message: "Email verified successfully",
+              action: "login_required",
+              contactId: verifiedContact.id, 
+              email: verifiedContact.email,
+              contactName: verifiedContact.contactName,
+              status: verifiedContact.status
+            });
+          } else {
+            // Create user account automatically
+            const [firstName, ...lastNameParts] = contact.contactName.split(' ');
+            const lastName = lastNameParts.join(' ') || firstName;
+            
+            const userData: InsertUser = {
+              email: contact.email,
+              password: "TEMP_PASSWORD_NEEDS_SETUP", // Temporary, user will set real password
+              firstName,
+              lastName,
+              role: "PortAdmin",
+              isActive: false, // Will be activated after password setup
+            };
+            
+            const user = await storage.createUser(userData);
+            await storage.linkContactToUser(contact.id, user.id);
+            
+            console.log(`User account created for ${contact.email} - redirecting to password setup`);
+            res.json({ 
+              message: "Email verified successfully",
+              action: "setup_password",
+              contactId: verifiedContact.id, 
+              email: verifiedContact.email,
+              contactName: verifiedContact.contactName,
+              status: verifiedContact.status,
+              userId: user.id
+            });
+          }
         } else {
           res.status(500).json({ message: "Failed to update verification status" });
         }
       } else {
-        res.json({ 
-          message: "Email already verified", 
-          contactId: contact.id, 
-          email: contact.email,
-          contactName: contact.contactName,
-          status: contact.status
-        });
+        // Already verified, check if user needs password setup
+        const existingUser = await storage.getUserByEmail(contact.email);
+        if (existingUser && !existingUser.isActive) {
+          res.json({ 
+            message: "Email already verified",
+            action: "setup_password",
+            contactId: contact.id, 
+            email: contact.email,
+            contactName: contact.contactName,
+            status: contact.status,
+            userId: existingUser.id
+          });
+        } else {
+          res.json({ 
+            message: "Email already verified",
+            action: "login_required",
+            contactId: contact.id, 
+            email: contact.email,
+            contactName: contact.contactName,
+            status: contact.status
+          });
+        }
       }
     } catch (error) {
       console.error("Verify token error:", error);
@@ -623,48 +673,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/register-port-admin", async (req: Request, res: Response) => {
+  app.post("/api/setup-password", async (req: Request, res: Response) => {
     try {
-      const { token, password } = req.body;
+      const { userId, password } = req.body;
       
-      if (!token || !password) {
-        return res.status(400).json({ message: "Token and password required" });
+      if (!userId || !password) {
+        return res.status(400).json({ message: "User ID and password required" });
       }
       
-      const contact = await storage.getPortAdminContactByToken(token);
-      
-      if (!contact) {
-        return res.status(400).json({ message: "Invalid or expired verification token" });
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid user ID" });
       }
       
-      // Create user account
+      // Update user with real password and activate account
       const hashedPassword = await bcrypt.hash(password, 10);
-      const [firstName, ...lastNameParts] = contact.contactName.split(' ');
-      const lastName = lastNameParts.join(' ') || firstName;
-      
-      const userData: InsertUser = {
-        email: contact.email,
+      const updatedUser = await storage.updateUser(userId, {
         password: hashedPassword,
-        firstName,
-        lastName,
-        role: "PortAdmin",
-      };
+        isActive: true,
+        lastLogin: new Date()
+      });
       
-      const user = await storage.createUser(userData);
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update password" });
+      }
       
-      // Link contact to user and verify
-      await storage.verifyPortAdminContact(token, user.id);
-      
-      // Create session
+      // Create session for the user
       const session = await storage.createSession(user.id);
       
+      console.log(`Password setup completed for user ${user.email}`);
       res.json({
-        user: { ...user, password: undefined },
+        user: { ...updatedUser, password: undefined },
         token: session.token,
-        message: "Registration successful"
+        message: "Password setup successful"
       });
     } catch (error) {
-      console.error("Register port admin error:", error);
+      console.error("Setup password error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

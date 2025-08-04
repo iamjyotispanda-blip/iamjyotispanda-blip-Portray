@@ -163,17 +163,29 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
     const user: User = {
       ...insertUser,
       id,
-      password: hashedPassword,
-      isActive: true,
+      role: insertUser.role || "user",
+      isActive: insertUser.isActive ?? true,
       lastLogin: null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    const updatedUser: User = {
+      ...user,
+      ...updates,
+      id, // Ensure ID doesn't change
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   async updateUserLastLogin(id: string): Promise<void> {
@@ -466,6 +478,20 @@ export class MemStorage implements IStorage {
       status: "active",
       verificationToken: null,
       verificationTokenExpires: null,
+      updatedAt: new Date(),
+    };
+    
+    this.portAdminContacts.set(contactId, updatedContact);
+    return updatedContact;
+  }
+
+  async linkContactToUser(contactId: number, userId: string): Promise<PortAdminContact | undefined> {
+    const contact = this.portAdminContacts.get(contactId);
+    if (!contact) return undefined;
+    
+    const updatedContact: PortAdminContact = {
+      ...contact,
+      userId,
       updatedAt: new Date(),
     };
     

@@ -25,7 +25,24 @@ export default function VerifyPage() {
       .then(data => {
         if (data.message === "Email verified successfully" || data.message === "Email already verified" || data.message === "Token valid") {
           setStatus('success');
-          setMessage('Email verified successfully! You can now complete your registration.');
+          
+          // Check if user needs password setup
+          if (data.action === "setup_password") {
+            setMessage('Email verified successfully! Setting up your account...');
+            // Redirect to password setup page with user details
+            setTimeout(() => {
+              const params = new URLSearchParams({
+                userId: data.userId,
+                email: data.email,
+                contactName: data.contactName
+              });
+              window.location.href = `/setup-password?${params.toString()}`;
+            }, 2000);
+          } else if (data.action === "login_required") {
+            setMessage('Email verified successfully! You can now log in to your account.');
+          } else {
+            setMessage('Email verified successfully! You can now complete your registration.');
+          }
         } else {
           setStatus('error');
           setMessage(data.message || 'Verification failed');
