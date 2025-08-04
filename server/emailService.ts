@@ -99,7 +99,9 @@ This email was sent automatically by PortRay at ${new Date().toLocaleString()}.
 
       const transporter = this.createTransporter(testConfig);
       // Use the Replit domain or fallback to localhost for development
-      const baseUrl = process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 'http://localhost:5000';
+      const baseUrl = process.env.REPL_SLUG && process.env.REPL_OWNER ? 
+        `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
+        'http://localhost:5000';
       const verificationUrl = `${baseUrl}/verify?token=${verificationToken}`;
 
       const mailOptions = {
