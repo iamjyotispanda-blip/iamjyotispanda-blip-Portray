@@ -12,6 +12,7 @@ Search Functionality: Organization and port pages require search functionality w
 Layout Spacing: Minimal gaps between buttons and cards throughout application (space-y-2).
 Consistent Layout: All form pages and view pages should have identical header, left panel, and styling structure. Port form pages should match port view page styling exactly, with breadcrumb bar and main content container. Remove "Back to Port" option from new port page.
 Email Configuration: Email Configuration link should be always available as a top-level navigation item (not nested under Configuration section). Email configuration page should send actual test emails using real SMTP configuration.
+Role-Based Access: Port Admins redirect to `/port-admin-dashboard` with only "Terminals" navigation link. System Admins have full navigation access to all features. Role-based navigation filtering implemented in AppLayout component.
 
 # System Architecture
 
@@ -50,11 +51,12 @@ Email Configuration: Email Configuration link should be always available as a to
 - **Verification Links**: Uses proper Replit domain (workspace-jyotibox.replit.app) for verification URLs
 
 ## Development Setup
-- **Build Process**: Vite for frontend bundling, .NET Core SDK for backend compilation
-- **Type Safety**: Full TypeScript coverage on frontend, C# with nullable reference types on backend
+- **Build Process**: Vite for frontend bundling, Node.js/Express backend with TypeScript
+- **Type Safety**: Full TypeScript coverage on frontend and backend
 - **Path Aliases**: Configured aliases for clean imports (@, @shared, @assets) on frontend
 - **Environment**: Supports both development and production with separate configuration files
-- **Dual Stack**: Frontend runs on port 5000, .NET Core API runs on port 5001
+- **Port Configuration**: Both frontend and backend run on port 5000 through Vite proxy
+- **Storage Limitation**: Uses in-memory storage that clears on server restart (for development)
 
 # External Dependencies
 
