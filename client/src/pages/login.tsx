@@ -139,7 +139,7 @@ export default function LoginPage() {
             backgroundImage: `url(${portBackgroundImage})`
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-700/70 via-blue-600/60 to-purple-500/50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-700/30 via-blue-600/20 to-purple-500/10" />
         
         <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full">
           {/* Logo and tagline in same line */}
