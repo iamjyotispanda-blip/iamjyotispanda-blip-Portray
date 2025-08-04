@@ -46,7 +46,7 @@ export function PortsContent() {
   // Toggle port status mutation
   const togglePortStatusMutation = useMutation({
     mutationFn: async (portId: number) => {
-      return apiRequest(`/api/ports/${portId}/toggle-status`, "PATCH");
+      return apiRequest("PATCH", `/api/ports/${portId}/toggle-status`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
