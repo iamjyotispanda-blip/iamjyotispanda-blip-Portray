@@ -1,6 +1,6 @@
 # Overview
 
-This is a full-stack web application called "PortRay" - a Port Management System built with React frontend and .NET Core C# backend. The application provides user authentication with email verification and a dashboard interface for managing port operations. It uses modern web technologies including TypeScript, Tailwind CSS, shadcn/ui components on the frontend, and ASP.NET Core Identity with Entity Framework and PostgreSQL on the backend.
+This is a full-stack web application called "PortRay" - a Port Management System built with React frontend and Node.js/Express backend. The application provides user authentication with complete email verification system and a dashboard interface for managing port operations. It uses modern web technologies including TypeScript, Tailwind CSS, shadcn/ui components, Drizzle ORM for database management, and comprehensive email configuration with SMTP support for verification workflows.
 
 # User Preferences
 
@@ -46,6 +46,8 @@ Email Configuration: Email Configuration link should be always available as a to
 - **Session Management**: Token-based sessions with proper authorization headers
 - **Route Protection**: Middleware authentication for protected routes
 - **User Profile**: Enhanced header displaying user info, role, email, and logout
+- **Email Verification**: Complete verification system with database token storage and email links
+- **Verification Links**: Uses proper Replit domain (workspace-jyotibox.replit.app) for verification URLs
 
 ## Development Setup
 - **Build Process**: Vite for frontend bundling, .NET Core SDK for backend compilation
