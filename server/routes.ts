@@ -596,56 +596,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If contact is not yet verified, mark it as verified and create user
       if (!contact.isVerified) {
-        const verifiedContact = await storage.updatePortAdminContact(contact.id, { 
-          isVerified: true, 
-          status: "active",
-          verificationToken: null,
-          verificationTokenExpires: null 
-        });
+        // Create user account first
+        const [firstName, ...lastNameParts] = contact.contactName.split(' ');
+        const lastName = lastNameParts.join(' ') || firstName;
+        
+        const userData: InsertUser = {
+          email: contact.email,
+          password: "TEMP_PASSWORD_NEEDS_SETUP", // Temporary, user will set real password
+          firstName,
+          lastName,
+          role: "PortAdmin",
+          isActive: false, // Will be activated after password setup
+        };
+        
+        const user = await storage.createUser(userData);
+        
+        // Now verify the contact and link to the user
+        const verifiedContact = await storage.verifyPortAdminContact(token, user.id);
         if (verifiedContact) {
           console.log(`Contact ${contact.email} verified successfully - status updated to active`);
-          
-          // Check if user already exists for this contact
-          const existingUser = await storage.getUserByEmail(contact.email);
-          if (existingUser) {
-            // User already exists, just link the contact
-            await storage.linkContactToUser(contact.id, existingUser.id);
-            res.json({ 
-              message: "Email verified successfully",
-              action: "login_required",
-              contactId: verifiedContact.id, 
-              email: verifiedContact.email,
-              contactName: verifiedContact.contactName,
-              status: verifiedContact.status
-            });
-          } else {
-            // Create user account automatically
-            const [firstName, ...lastNameParts] = contact.contactName.split(' ');
-            const lastName = lastNameParts.join(' ') || firstName;
-            
-            const userData: InsertUser = {
-              email: contact.email,
-              password: "TEMP_PASSWORD_NEEDS_SETUP", // Temporary, user will set real password
-              firstName,
-              lastName,
-              role: "PortAdmin",
-              isActive: false, // Will be activated after password setup
-            };
-            
-            const user = await storage.createUser(userData);
-            await storage.linkContactToUser(contact.id, user.id);
-            
-            console.log(`User account created for ${contact.email} - redirecting to password setup`);
-            res.json({ 
-              message: "Email verified successfully",
-              action: "setup_password",
-              contactId: verifiedContact.id, 
-              email: verifiedContact.email,
-              contactName: verifiedContact.contactName,
-              status: verifiedContact.status,
-              userId: user.id
-            });
-          }
+          console.log(`User account created for ${contact.email} - redirecting to password setup`);
+          res.json({ 
+            message: "Email verified successfully",
+            action: "setup_password",
+            contactId: verifiedContact.id, 
+            email: verifiedContact.email,
+            contactName: verifiedContact.contactName,
+            status: verifiedContact.status,
+            userId: user.id
+          });
         } else {
           res.status(500).json({ message: "Failed to update verification status" });
         }

@@ -322,6 +322,13 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user || undefined;
   }
+
+  async linkContactToUser(contactId: number, userId: string): Promise<void> {
+    await db
+      .update(portAdminContacts)
+      .set({ userId: userId, updatedAt: new Date() })
+      .where(eq(portAdminContacts.id, contactId));
+  }
 }
 
 export class MemStorage implements IStorage {
