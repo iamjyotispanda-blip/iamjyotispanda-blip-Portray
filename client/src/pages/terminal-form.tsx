@@ -258,35 +258,11 @@ export default function TerminalFormPage() {
           </div>
         </div>
 
-        {/* Port Info Bar */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700 px-6 py-4">
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <Ship className="h-5 w-5 text-blue-600" />
-              <span className="font-medium text-blue-900 dark:text-blue-100">
-                {(assignedPort as any).portName}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-blue-700 dark:text-blue-200">
-                Org ID: {(assignedPort as any).organizationId}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <MapPin className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-blue-700 dark:text-blue-200">
-                {(assignedPort as any).state}, {(assignedPort as any).country}
-              </span>
-            </div>
-          </div>
-        </div>
+
 
         {/* Main Content */}
         <main className="flex-1 p-6">
-          <div className="max-w-4xl mx-auto">
+          <div className="space-y-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Terminal Details */}

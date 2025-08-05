@@ -169,49 +169,11 @@ export default function TerminalsPage() {
           </div>
         </div>
 
-        {/* Assigned Port Info */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700 px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Ship className="h-5 w-5 text-blue-600" />
-              <span className="font-medium text-blue-900 dark:text-blue-100">
-                {assignedPort.portName}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-blue-700 dark:text-blue-200">
-                Organization ID: {assignedPort.organizationId}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <MapPin className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-blue-700 dark:text-blue-200">
-                {assignedPort.state}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <CountryFlag country={assignedPort.country} />
-              <div 
-                className="flag-fallback inline-flex items-center justify-center w-5 h-3 rounded-sm border border-gray-200 text-xs font-bold bg-gradient-to-br from-blue-500 to-green-500 text-white"
-                style={{ display: 'none' }}
-                title={assignedPort.country}
-              >
-                {assignedPort.country.substring(0, 2).toUpperCase()}
-              </div>
-              <span className="text-sm text-blue-700 dark:text-blue-200">
-                {assignedPort.country}
-              </span>
-            </div>
-          </div>
-        </div>
+
 
         {/* Main Content */}
         <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+          <div className="space-y-6">
             {/* Search */}
             <div className="flex items-center space-x-4">
               <div className="flex-1 relative">
