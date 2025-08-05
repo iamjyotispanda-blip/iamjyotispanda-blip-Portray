@@ -38,12 +38,12 @@ const CountryFlag = ({ country }: { country: string }) => {
       className="w-5 h-3 rounded-sm border border-gray-200 object-cover"
       title={country}
       onError={(e) => {
-        // Fallback to text badge if image fails
+        // Fallback to code badge if image fails to load
         const target = e.target as HTMLImageElement;
         target.style.display = 'none';
         const fallback = target.nextElementSibling as HTMLElement;
         if (fallback && fallback.classList.contains('flag-fallback')) {
-          fallback.style.display = 'inline-flex';
+          fallback.style.display = 'flex';
         }
       }}
     />
@@ -53,30 +53,40 @@ const CountryFlag = ({ country }: { country: string }) => {
 export default function TerminalsPage() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Get current user
-  const { data: user } = useQuery({
+  // Get authenticated user
+  const { data: user, isLoading: userLoading, error: userError } = useQuery({
     queryKey: ["/api/auth/me"],
-    queryFn: AuthService.getCurrentUser,
   });
 
-  // Get assigned port for Port Admin
-  const { data: assignedPort } = useQuery({
+  // Get assigned port for Port Admin users
+  const { data: assignedPort, isLoading: portLoading } = useQuery({
     queryKey: ["/api/terminals/my-port"],
-    enabled: user?.role === "PortAdmin",
+    enabled: !!user && user.role === "PortAdmin",
   });
 
   // Get terminals for the assigned port
-  const { data: terminals = [], isLoading } = useQuery({
+  const { data: terminals = [], isLoading: isLoadingTerminals } = useQuery({
     queryKey: ["/api/ports", assignedPort?.id, "terminals"],
     enabled: !!assignedPort?.id,
   });
 
+  // Filter terminals based on search term
+  const filteredTerminals = (terminals as Terminal[]).filter((terminal: Terminal) =>
+    terminal.terminalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    terminal.shortCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    terminal.terminalType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    terminal.billingCity.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Delete terminal mutation
   const deleteTerminalMutation = useMutation({
-    mutationFn: (terminalId: number) => apiRequest("DELETE", `/api/terminals/${terminalId}`),
+    mutationFn: async (terminalId: number) => {
+      const response = await apiRequest("DELETE", `/api/terminals/${terminalId}`);
+      return response;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ports", assignedPort?.id, "terminals"] });
       toast({
@@ -93,35 +103,38 @@ export default function TerminalsPage() {
     },
   });
 
-  // Auto-generate short code from terminal name
-  const generateShortCode = (terminalName: string): string => {
-    return terminalName
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "")
-      .substring(0, 6);
-  };
-
-  // Filter terminals based on search
-  const filteredTerminals = terminals.filter((terminal: Terminal) =>
-    terminal.terminalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    terminal.shortCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    terminal.terminalType.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleDeleteTerminal = (terminalId: number) => {
-    if (window.confirm("Are you sure you want to delete this terminal?")) {
+  const handleDeleteTerminal = async (terminalId: number) => {
+    if (confirm("Are you sure you want to delete this terminal?")) {
       deleteTerminalMutation.mutate(terminalId);
     }
   };
 
-  if (user?.role !== "PortAdmin") {
+  // Show loading state while checking authentication
+  if (userLoading || portLoading) {
     return (
-      <AppLayout title="Access Denied" activeSection="terminals">
+      <AppLayout title="Loading..." activeSection="terminals">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Handle user error
+  if (userError || !user) {
+    return (
+      <AppLayout title="Authentication Required" activeSection="terminals">
         <div className="flex-1 flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardContent className="p-6 text-center">
-              <p className="text-red-600 mb-4">Access denied. Port Admin role required.</p>
-              <Button onClick={() => setLocation("/login")} className="h-8">
+              <p className="text-gray-600 mb-4">Please log in to access this page.</p>
+              <Button
+                onClick={() => {
+                  AuthService.logout();
+                  setLocation("/login");
+                }}
+                className="h-8"
+              >
                 Back to Login
               </Button>
             </CardContent>
@@ -149,35 +162,16 @@ export default function TerminalsPage() {
 
   return (
     <AppLayout title="Terminals" activeSection="terminals">
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Terminals
-              </h1>
-            </div>
-            
-            <Button
-              onClick={() => setLocation("/terminals/new")}
-              className="h-8"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Terminal
-            </Button>
-          </div>
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Terminals</span>
         </div>
-
-
-
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="space-y-6">
-            {/* Search */}
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search terminals..."
                   value={searchTerm}
@@ -185,99 +179,78 @@ export default function TerminalsPage() {
                   className="pl-10"
                 />
               </div>
+              <Button onClick={() => setLocation("/terminals/new")} className="h-8">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Terminal
+              </Button>
             </div>
 
-            {/* Terminals Grid */}
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
+            {/* Terminals List */}
+            {isLoadingTerminals ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center text-gray-500">Loading terminals...</div>
+                </CardContent>
+              </Card>
             ) : filteredTerminals.length === 0 ? (
-              <div className="text-center py-12">
-                <Ship className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  {searchTerm ? "No terminals found" : "No terminals yet"}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {searchTerm 
-                    ? "Try adjusting your search criteria"
-                    : "Get started by creating your first terminal"
-                  }
-                </p>
-                {!searchTerm && (
-                  <Button onClick={() => setLocation("/terminals/new")} className="h-8">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Terminal
-                  </Button>
-                )}
-              </div>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center text-gray-500">
+                    {searchTerm ? "No terminals found matching your search." : "No terminals found. Add the first terminal to get started."}
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid gap-4">
                 {filteredTerminals.map((terminal: Terminal) => (
                   <Card key={terminal.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
+                    <CardContent className="p-6">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{terminal.terminalName}</CardTitle>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                            <Ship className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-3">
+                              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                                {terminal.terminalName}
+                              </h3>
+                              <Badge variant="outline">
+                                {terminal.shortCode}
+                              </Badge>
+                              <Badge
+                                variant={terminal.isActive ? "default" : "secondary"}
+                              >
+                                {terminal.isActive ? "Active" : "Inactive"}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {terminal.terminalType}
+                            </p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                              <span>{terminal.billingCity}</span>
+                              <span>{terminal.currency}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
                           <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => setLocation(`/terminals/edit/${terminal.id}`)}
-                            className="h-8 w-8 p-0"
+                            className="h-8"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => handleDeleteTerminal(terminal.id)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            className="h-8 text-red-600 hover:text-red-700"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
                           </Button>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="secondary">{terminal.shortCode}</Badge>
-                        <Badge variant="outline">{terminal.terminalType}</Badge>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Currency</p>
-                          <p className="font-medium">{terminal.currency}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Timezone</p>
-                          <p className="font-medium">{terminal.timezone}</p>
-                        </div>
-                      </div>
-                      
-                      {(terminal.gst || terminal.pan) && (
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          {terminal.gst && (
-                            <div>
-                              <p className="text-gray-500 dark:text-gray-400">GST</p>
-                              <p className="font-medium">{terminal.gst}</p>
-                            </div>
-                          )}
-                          {terminal.pan && (
-                            <div>
-                              <p className="text-gray-500 dark:text-gray-400">PAN</p>
-                              <p className="font-medium">{terminal.pan}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="text-sm">
-                        <p className="text-gray-500 dark:text-gray-400">Billing Address</p>
-                        <p className="font-medium">{terminal.billingAddress}</p>
-                        <p className="text-gray-600 dark:text-gray-300">
-                          {terminal.billingCity}, {terminal.billingPinCode}
-                        </p>
                       </div>
                     </CardContent>
                   </Card>
