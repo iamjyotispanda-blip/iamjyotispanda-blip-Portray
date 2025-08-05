@@ -85,12 +85,8 @@ export default function TerminalProfile() {
             {organization && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-blue-600 dark:bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">
-                        {organization.organizationName.split(' ').map(word => word[0]).join('').slice(0, 3)}
-                      </span>
-                    </div>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Building2 className="h-5 w-5" />
                     <span>Organization: <span className="text-blue-600 dark:text-blue-400">{organization.organizationName}</span></span>
                   </CardTitle>
                 </CardHeader>
@@ -112,7 +108,13 @@ export default function TerminalProfile() {
                     </div>
                     
                     {/* Organization Details Grid */}
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 h-full">
+                      {/* Organization Code */}
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex flex-col justify-center">
+                        <p className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400 text-center">
+                          {organization.organizationCode}
+                        </p>
+                      </div>
                       
                       {/* Country */}
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-center">
