@@ -910,8 +910,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const terminal = await storage.createTerminal(terminalData);
       
+      console.log("Terminal created with status:", terminal.status);
+      console.log("Checking if status is 'Processing for activation':", terminal.status === "Processing for activation");
+      
       // Create notification for system admin only if status is "Processing for activation"
       if (terminal.status === "Processing for activation") {
+        console.log("Creating notification for new terminal activation request");
         try {
           await storage.createNotification({
             userId: "admin-001", // System admin user ID
@@ -927,10 +931,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               action: "created"
             })
           });
+          console.log("Notification created successfully for new terminal");
         } catch (notificationError) {
           console.error("Failed to create notification:", notificationError);
           // Don't fail the terminal creation if notification fails
         }
+      } else {
+        console.log("No notification created for new terminal - status is:", terminal.status);
       }
       
       res.status(201).json(terminal);
@@ -949,15 +956,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/terminals/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      console.log("Terminal update request body:", JSON.stringify(req.body, null, 2));
       const updates = updateTerminalSchema.parse(req.body);
+      console.log("Parsed updates:", JSON.stringify(updates, null, 2));
       
       const terminal = await storage.updateTerminal(id, updates);
       if (!terminal) {
         return res.status(404).json({ message: "Terminal not found" });
       }
       
-      // Create notification for system admin only if status is changed to "Processing for activation"
+      console.log("Terminal after update:", JSON.stringify(terminal, null, 2));
+      console.log("Checking if status is 'Processing for activation':", updates.status === "Processing for activation");
+      
+      // Create notification for system admin only if status is "Processing for activation"
       if (updates.status === "Processing for activation") {
+        console.log("Creating notification for terminal activation request");
         try {
           await storage.createNotification({
             userId: "admin-001", // System admin user ID
@@ -973,10 +986,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               action: "updated"
             })
           });
+          console.log("Notification created successfully");
         } catch (notificationError) {
           console.error("Failed to create notification:", notificationError);
           // Don't fail the terminal update if notification fails
         }
+      } else {
+        console.log("No notification created - status is:", updates.status);
       }
       
       res.json(terminal);
