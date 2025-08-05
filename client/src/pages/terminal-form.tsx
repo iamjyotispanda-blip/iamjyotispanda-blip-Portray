@@ -373,16 +373,21 @@ export default function TerminalFormPage() {
                       <span>Terminal Details</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <CardContent className="space-y-6">
+                    {/* Primary Terminal Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="portName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Port Name</FormLabel>
+                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Port Name</FormLabel>
                             <FormControl>
-                              <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
+                              <Input 
+                                {...field} 
+                                readOnly 
+                                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 h-10" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -394,23 +399,35 @@ export default function TerminalFormPage() {
                         name="terminalName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Terminal Name</FormLabel>
+                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Terminal Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter terminal name" {...field} />
+                              <Input 
+                                placeholder="Enter terminal name" 
+                                {...field} 
+                                className="border-gray-200 dark:border-gray-700 h-10" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    </div>
 
+                    {/* Terminal Code and Configuration */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <FormField
                         control={form.control}
                         name="shortCode"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Short Code</FormLabel>
+                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Short Code</FormLabel>
                             <FormControl>
-                              <Input placeholder="Auto-generated" maxLength={6} {...field} />
+                              <Input 
+                                placeholder="Auto-generated" 
+                                maxLength={6} 
+                                {...field} 
+                                className="border-gray-200 dark:border-gray-700 h-10 font-mono" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -422,10 +439,10 @@ export default function TerminalFormPage() {
                         name="timezone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Timezone</FormLabel>
+                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Timezone</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="border-gray-200 dark:border-gray-700 h-10">
                                   <SelectValue placeholder="Select timezone" />
                                 </SelectTrigger>
                               </FormControl>
@@ -447,10 +464,10 @@ export default function TerminalFormPage() {
                         name="currency"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Currency</FormLabel>
+                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Currency</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="border-gray-200 dark:border-gray-700 h-10">
                                   <SelectValue placeholder="Select currency" />
                                 </SelectTrigger>
                               </FormControl>
@@ -468,34 +485,46 @@ export default function TerminalFormPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="gst"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>GST Number (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter GST number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    {/* Optional Tax Information */}
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Tax Information (Optional)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="gst"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">GST Number</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Enter GST number" 
+                                  {...field} 
+                                  className="border-gray-200 dark:border-gray-700 h-10 bg-white dark:bg-gray-900" 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="pan"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>PAN Number (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter PAN number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="pan"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">PAN Number</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Enter PAN number" 
+                                  {...field} 
+                                  className="border-gray-200 dark:border-gray-700 h-10 bg-white dark:bg-gray-900" 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
