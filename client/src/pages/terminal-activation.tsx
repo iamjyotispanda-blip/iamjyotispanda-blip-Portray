@@ -185,6 +185,14 @@ export default function TerminalActivationPage() {
                         </div>
                         <div className="flex flex-col space-y-2">
                           <Button
+                            variant="outline"
+                            onClick={() => setLocation(`/terminals/${terminal.id}`)}
+                            className="h-8"
+                          >
+                            <Ship className="w-4 h-4 mr-2" />
+                            View Profile
+                          </Button>
+                          <Button
                             size="sm"
                             onClick={() => updateStatusMutation.mutate({ terminalId: terminal.id, status: "Active" })}
                             disabled={updateStatusMutation.isPending}
