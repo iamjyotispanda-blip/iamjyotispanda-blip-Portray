@@ -163,12 +163,8 @@ export default function TerminalsPage() {
   return (
     <AppLayout title="Terminals" activeSection="terminals">
       <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-2 flex justify-between items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Terminals</span>
-          <Button onClick={() => setLocation("/terminals/new")} className="h-8">
-            <Plus className="w-4 h-4 mr-2" />
-            New Terminal
-          </Button>
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Terminals</span>
         </div>
         
         <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
@@ -183,6 +179,10 @@ export default function TerminalsPage() {
                   className="pl-10"
                 />
               </div>
+              <Button onClick={() => setLocation("/terminals/new")} className="h-8">
+                <Plus className="w-4 h-4 mr-2" />
+                New Terminal
+              </Button>
             </div>
 
             {/* Terminals List */}
