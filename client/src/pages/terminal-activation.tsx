@@ -292,34 +292,20 @@ export default function TerminalActivationPage() {
                                 <span>Created {format(new Date(terminal.createdAt), "MMM d, yyyy")}</span>
                               </div>
                               
-                              {/* Show activation details if terminal is active */}
+                              {/* Show activation details if terminal is active - compact version */}
                               {terminal.status === "Active" && terminal.activationStartDate && (
-                                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border">
-                                  <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
-                                    Activation Details
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 text-xs text-green-700 dark:text-green-300">
-                                    <div>
-                                      <span className="font-medium">Period:</span>
-                                      <br />
-                                      {format(new Date(terminal.activationStartDate), "MMM d, yyyy")} - 
-                                      {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
-                                    </div>
-                                    <div>
-                                      <span className="font-medium">Subscription:</span>
-                                      <br />
-                                      {terminal.subscriptionTypeId === 1 ? "1 Month" : 
-                                       terminal.subscriptionTypeId === 2 ? "12 Months" :
-                                       terminal.subscriptionTypeId === 3 ? "24 Months" :
-                                       terminal.subscriptionTypeId === 4 ? "48 Months" : "Unknown"}
-                                    </div>
-                                    {terminal.workOrderNo && (
-                                      <div className="col-span-2">
-                                        <span className="font-medium">Work Order:</span> {terminal.workOrderNo}
-                                        {terminal.workOrderDate && ` (${format(new Date(terminal.workOrderDate), "MMM d, yyyy")})`}
-                                      </div>
-                                    )}
-                                  </div>
+                                <div className="flex items-center space-x-4 text-xs text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded mt-2">
+                                  <span>
+                                    <span className="font-medium">Active:</span> {format(new Date(terminal.activationStartDate), "MMM d")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                  </span>
+                                  <span>
+                                    <span className="font-medium">Plan:</span> {terminal.subscriptionTypeId === 1 ? "1M" : terminal.subscriptionTypeId === 2 ? "12M" : terminal.subscriptionTypeId === 3 ? "24M" : terminal.subscriptionTypeId === 4 ? "48M" : "Unknown"}
+                                  </span>
+                                  {terminal.workOrderNo && (
+                                    <span>
+                                      <span className="font-medium">WO:</span> {terminal.workOrderNo}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </div>
