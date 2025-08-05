@@ -857,6 +857,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/terminals/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const terminal = await storage.getTerminalById(id);
+      if (!terminal) {
+        return res.status(404).json({ message: "Terminal not found" });
+      }
+      res.json(terminal);
+    } catch (error) {
+      console.error("Get terminal error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/ports/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const port = await storage.getPortById(id);
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      res.json(port);
+    } catch (error) {
+      console.error("Get port error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/organizations/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const organization = await storage.getOrganizationById(id);
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      res.json(organization);
+    } catch (error) {
+      console.error("Get organization error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/ports/:portId/terminals", authenticateToken, async (req: Request, res: Response) => {
     try {
       const portId = parseInt(req.params.portId);

@@ -21,6 +21,7 @@ import VerifyPage from "@/pages/verify";
 import SetupPasswordPage from "@/pages/setup-password";
 import TerminalsPage from "@/pages/terminals";
 import TerminalFormPage from "@/pages/terminal-form";
+import TerminalProfilePage from "@/pages/terminal-profile";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -115,6 +116,9 @@ function Router() {
       </Route>
       <Route path="/terminals/edit/:id">
         {() => <ProtectedRoute component={TerminalFormPage} />}
+      </Route>
+      <Route path="/terminals/:id">
+        {() => <ProtectedRoute component={TerminalProfilePage} />}
       </Route>
       <Route path="/terminals">
         {() => <ProtectedRoute component={TerminalsPage} />}

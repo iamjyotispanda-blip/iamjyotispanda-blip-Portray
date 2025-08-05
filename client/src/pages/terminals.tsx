@@ -77,7 +77,6 @@ export default function TerminalsPage() {
   const filteredTerminals = (terminals as Terminal[]).filter((terminal: Terminal) =>
     terminal.terminalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     terminal.shortCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    terminal.terminalType.toLowerCase().includes(searchTerm.toLowerCase()) ||
     terminal.billingCity.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -225,7 +224,7 @@ export default function TerminalsPage() {
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {terminal.terminalType}
+                              Terminal ID: {terminal.id}
                             </p>
                             <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                               <span>{terminal.billingCity}</span>
@@ -234,6 +233,14 @@ export default function TerminalsPage() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setLocation(`/terminals/${terminal.id}`)}
+                            className="h-8"
+                          >
+                            <Ship className="w-4 h-4 mr-2" />
+                            View Profile
+                          </Button>
                           <Button
                             variant="outline"
                             onClick={() => setLocation(`/terminals/edit/${terminal.id}`)}
