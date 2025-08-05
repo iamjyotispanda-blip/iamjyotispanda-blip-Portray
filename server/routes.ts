@@ -857,6 +857,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscription Types routes
+  app.get("/api/subscription-types", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const subscriptionTypes = await storage.getAllSubscriptionTypes();
+      res.json(subscriptionTypes);
+    } catch (error) {
+      console.error("Get subscription types error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Terminal activation routes (must be before parameterized routes)
   app.get("/api/terminals/pending-activation", authenticateToken, async (req: Request, res: Response) => {
     try {
@@ -869,6 +880,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(terminals);
     } catch (error) {
       console.error("Get pending terminals error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/terminals/:id/activate", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (req.user.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid terminal ID" });
+      }
+
+      const { activationStartDate, subscriptionTypeId, workOrderNo, workOrderDate } = req.body;
+
+      if (!activationStartDate || !subscriptionTypeId) {
+        return res.status(400).json({ message: "Activation start date and subscription type are required" });
+      }
+
+      const terminal = await storage.activateTerminal(id, {
+        activationStartDate: new Date(activationStartDate),
+        subscriptionTypeId: parseInt(subscriptionTypeId),
+        workOrderNo,
+        workOrderDate: workOrderDate ? new Date(workOrderDate) : null,
+      });
+
+      if (!terminal) {
+        return res.status(404).json({ message: "Terminal not found" });
+      }
+
+      res.json(terminal);
+    } catch (error) {
+      console.error("Activate terminal error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

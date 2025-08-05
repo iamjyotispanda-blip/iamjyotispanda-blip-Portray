@@ -119,6 +119,14 @@ export const terminals = pgTable("terminals", {
   sameAsBilling: boolean("same_as_billing").notNull().default(false),
   status: text("status").notNull().default("Processing for activation"), // "Processing for activation", "Active", "Inactive"
   isActive: boolean("is_active").notNull().default(false),
+  
+  // Activation details
+  subscriptionTypeId: integer("subscription_type_id").references(() => subscriptionTypes.id),
+  activationStartDate: timestamp("activation_start_date"),
+  activationEndDate: timestamp("activation_end_date"),
+  workOrderNo: text("work_order_no"),
+  workOrderDate: timestamp("work_order_date"),
+  
   createdBy: varchar("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
@@ -306,3 +314,15 @@ export type LoginCredentials = z.infer<typeof loginSchema>;
 export type InsertTerminal = z.infer<typeof insertTerminalSchema>;
 export type UpdateTerminal = z.infer<typeof updateTerminalSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+// Subscription Types Table
+export const subscriptionTypes = pgTable("subscription_types", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull(), // "1 Month", "12 Months", "24 Months", "48 Months"
+  months: integer("months").notNull(), // 1, 12, 24, 48
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+export const insertSubscriptionTypeSchema = createInsertSchema(subscriptionTypes);
+export type InsertSubscriptionType = z.infer<typeof insertSubscriptionTypeSchema>;
+export type SubscriptionType = typeof subscriptionTypes.$inferSelect;

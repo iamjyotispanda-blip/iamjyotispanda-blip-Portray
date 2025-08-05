@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -73,6 +73,18 @@ export interface IStorage {
   getUnreadNotificationsCount(userId: string): Promise<number>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<void>;
+
+  // Subscription Types operations
+  getAllSubscriptionTypes(): Promise<SubscriptionType[]>;
+  getSubscriptionTypeById(id: number): Promise<SubscriptionType | undefined>;
+
+  // Terminal activation operations
+  activateTerminal(id: number, data: {
+    activationStartDate: Date;
+    subscriptionTypeId: number;
+    workOrderNo?: string;
+    workOrderDate?: Date | null;
+  }): Promise<Terminal | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   deleteNotification(id: number): Promise<void>;
 }
@@ -553,6 +565,82 @@ export class DatabaseStorage implements IStorage {
       .where(eq(terminals.id, id))
       .returning();
     return terminal || undefined;
+  }
+
+  async getAllSubscriptionTypes(): Promise<SubscriptionType[]> {
+    return db.select().from(subscriptionTypes);
+  }
+
+  async getSubscriptionTypeById(id: number): Promise<SubscriptionType | undefined> {
+    const [type] = await db.select().from(subscriptionTypes).where(eq(subscriptionTypes.id, id));
+    return type || undefined;
+  }
+
+  async activateTerminal(id: number, data: {
+    activationStartDate: Date;
+    subscriptionTypeId: number;
+    workOrderNo?: string;
+    workOrderDate?: Date | null;
+  }): Promise<Terminal | undefined> {
+    // Get subscription type to calculate end date
+    const subscriptionType = await this.getSubscriptionTypeById(data.subscriptionTypeId);
+    if (!subscriptionType) return undefined;
+
+    // Calculate activation end date
+    const endDate = new Date(data.activationStartDate);
+    endDate.setMonth(endDate.getMonth() + subscriptionType.months);
+
+    const [terminal] = await db
+      .update(terminals)
+      .set({
+        status: "Active",
+        subscriptionTypeId: data.subscriptionTypeId,
+        activationStartDate: data.activationStartDate,
+        activationEndDate: endDate,
+        workOrderNo: data.workOrderNo || null,
+        workOrderDate: data.workOrderDate || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(terminals.id, id))
+      .returning();
+    return terminal || undefined;
+  }
+
+  async getNotificationsByUserId(userId: string): Promise<Notification[]> {
+    return db.select().from(notifications).where(eq(notifications.userId, userId));
+  }
+
+  async getUnreadNotificationsCount(userId: string): Promise<number> {
+    const result = await db.select({ count: notifications.id })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+    return result.length;
+  }
+
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const [notification] = await db
+      .insert(notifications)
+      .values(notificationData)
+      .returning();
+    return notification;
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
   }
 }
 
@@ -1159,6 +1247,51 @@ export class MemStorage implements IStorage {
     const updatedTerminal: Terminal = {
       ...terminal,
       status,
+      updatedAt: new Date(),
+    };
+    this.terminals.set(id, updatedTerminal);
+    return updatedTerminal;
+  }
+
+  async getAllSubscriptionTypes(): Promise<SubscriptionType[]> {
+    // Mock subscription types for memory storage
+    return [
+      { id: 1, name: "1 Month", months: 1, createdAt: new Date() },
+      { id: 2, name: "12 Months", months: 12, createdAt: new Date() },
+      { id: 3, name: "24 Months", months: 24, createdAt: new Date() },
+      { id: 4, name: "48 Months", months: 48, createdAt: new Date() },
+    ];
+  }
+
+  async getSubscriptionTypeById(id: number): Promise<SubscriptionType | undefined> {
+    const types = await this.getAllSubscriptionTypes();
+    return types.find(type => type.id === id);
+  }
+
+  async activateTerminal(id: number, data: {
+    activationStartDate: Date;
+    subscriptionTypeId: number;
+    workOrderNo?: string;
+    workOrderDate?: Date | null;
+  }): Promise<Terminal | undefined> {
+    const terminal = this.terminals.get(id);
+    if (!terminal) return undefined;
+
+    const subscriptionType = await this.getSubscriptionTypeById(data.subscriptionTypeId);
+    if (!subscriptionType) return undefined;
+
+    // Calculate end date
+    const endDate = new Date(data.activationStartDate);
+    endDate.setMonth(endDate.getMonth() + subscriptionType.months);
+
+    const updatedTerminal: Terminal = {
+      ...terminal,
+      status: "Active",
+      subscriptionTypeId: data.subscriptionTypeId,
+      activationStartDate: data.activationStartDate,
+      activationEndDate: endDate,
+      workOrderNo: data.workOrderNo || null,
+      workOrderDate: data.workOrderDate || null,
       updatedAt: new Date(),
     };
     this.terminals.set(id, updatedTerminal);

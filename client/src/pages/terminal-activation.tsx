@@ -1,29 +1,67 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { CheckCircle, XCircle, Clock, Search, Building, MapPin, Phone, Calendar, Ship } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { CheckCircle, XCircle, Clock, Search, Building, MapPin, Phone, Calendar, Ship, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { AuthService } from "@/lib/auth";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 
-import type { Terminal, Port, Organization } from "@shared/schema";
+import type { Terminal, Port, Organization, SubscriptionType } from "@shared/schema";
 
 interface TerminalWithDetails extends Terminal {
   port: Port;
   organization: Organization;
 }
 
+// Activation form schema
+const activationFormSchema = z.object({
+  activationStartDate: z.string().min(1, "Activation start date is required"),
+  subscriptionTypeId: z.string().min(1, "Subscription type is required"),
+  workOrderNo: z.string().optional(),
+  workOrderDate: z.string().optional(),
+}).refine((data) => {
+  // If subscription is not 1 month, work order fields are required
+  const subscriptionTypeId = parseInt(data.subscriptionTypeId);
+  if (subscriptionTypeId !== 1) { // Assuming ID 1 is for 1 month
+    return data.workOrderNo && data.workOrderDate;
+  }
+  return true;
+}, {
+  message: "Work order number and date are required for subscriptions longer than 1 month",
+  path: ["workOrderNo"]
+});
+
+type ActivationFormData = z.infer<typeof activationFormSchema>;
+
 export default function TerminalActivationPage() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [activationDialog, setActivationDialog] = useState<{ open: boolean; terminal?: TerminalWithDetails }>({ open: false });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Form for activation
+  const form = useForm<ActivationFormData>({
+    resolver: zodResolver(activationFormSchema),
+    defaultValues: {
+      activationStartDate: format(new Date(), "yyyy-MM-dd"),
+      subscriptionTypeId: "",
+      workOrderNo: "",
+      workOrderDate: "",
+    },
+  });
 
   // Get current user
   const { data: user } = useQuery({
@@ -43,24 +81,58 @@ export default function TerminalActivationPage() {
     },
   });
 
-  // Update terminal status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ terminalId, status }: { terminalId: number; status: string }) => {
-      return apiRequest("PUT", `/api/terminals/${terminalId}/status`, { status });
+  // Fetch subscription types
+  const { data: subscriptionTypes = [] } = useQuery({
+    queryKey: ["/api/subscription-types"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/subscription-types");
+      return response.json();
     },
-    onSuccess: (_, { status }) => {
+  });
+
+  // Activate terminal mutation
+  const activateTerminalMutation = useMutation({
+    mutationFn: async ({ terminalId, data }: { terminalId: number; data: ActivationFormData }) => {
+      return apiRequest("PUT", `/api/terminals/${terminalId}/activate`, data);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/terminals/pending-activation"] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      setActivationDialog({ open: false });
+      form.reset();
       toast({
         title: "Success",
-        description: `Terminal ${status === "Active" ? "activated" : "rejected"} successfully`,
+        description: "Terminal activated successfully",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update terminal status",
+        description: error.message || "Failed to activate terminal",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reject terminal mutation
+  const rejectTerminalMutation = useMutation({
+    mutationFn: async (terminalId: number) => {
+      return apiRequest("PUT", `/api/terminals/${terminalId}/status`, { status: "Rejected" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/terminals/pending-activation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      toast({
+        title: "Success",
+        description: "Terminal rejected successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject terminal",
         variant: "destructive",
       });
     },
@@ -73,12 +145,42 @@ export default function TerminalActivationPage() {
     terminal.organization?.organizationName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleActivate = (terminalId: number) => {
-    updateStatusMutation.mutate({ terminalId, status: "Active" });
+  const handleActivate = (terminal: TerminalWithDetails) => {
+    setActivationDialog({ open: true, terminal });
+    form.reset({
+      activationStartDate: format(new Date(), "yyyy-MM-dd"),
+      subscriptionTypeId: "",
+      workOrderNo: "",
+      workOrderDate: "",
+    });
   };
 
   const handleReject = (terminalId: number) => {
-    updateStatusMutation.mutate({ terminalId, status: "Rejected" });
+    rejectTerminalMutation.mutate(terminalId);
+  };
+
+  const onActivationSubmit = (data: ActivationFormData) => {
+    if (activationDialog.terminal) {
+      activateTerminalMutation.mutate({ 
+        terminalId: activationDialog.terminal.id, 
+        data 
+      });
+    }
+  };
+
+  const getSelectedSubscriptionType = () => {
+    const selectedId = form.watch("subscriptionTypeId");
+    return subscriptionTypes.find((type: SubscriptionType) => type.id.toString() === selectedId);
+  };
+
+  const calculateEndDate = () => {
+    const startDate = form.watch("activationStartDate");
+    const subscriptionType = getSelectedSubscriptionType();
+    
+    if (startDate && subscriptionType) {
+      return format(addMonths(new Date(startDate), subscriptionType.months), "yyyy-MM-dd");
+    }
+    return "";
   };
 
   // Check if user is System Admin
@@ -194,8 +296,8 @@ export default function TerminalActivationPage() {
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => updateStatusMutation.mutate({ terminalId: terminal.id, status: "Active" })}
-                            disabled={updateStatusMutation.isPending}
+                            onClick={() => handleActivate(terminal)}
+                            disabled={activateTerminalMutation.isPending}
                             className="h-8"
                           >
                             <CheckCircle className="w-4 h-4 mr-2" />
@@ -204,8 +306,8 @@ export default function TerminalActivationPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => updateStatusMutation.mutate({ terminalId: terminal.id, status: "Rejected" })}
-                            disabled={updateStatusMutation.isPending}
+                            onClick={() => handleReject(terminal.id)}
+                            disabled={rejectTerminalMutation.isPending}
                             className="h-8"
                           >
                             <XCircle className="w-4 h-4 mr-2" />
@@ -221,6 +323,147 @@ export default function TerminalActivationPage() {
           </div>
         </main>
       </div>
+
+      {/* Activation Dialog */}
+      <Dialog open={activationDialog.open} onOpenChange={(open) => setActivationDialog({ open })}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Ship className="w-5 h-5 text-blue-600" />
+              <span>Activate Terminal</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {activationDialog.terminal && (
+            <div className="space-y-6">
+              {/* Terminal Details */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
+                <h3 className="font-semibold text-lg">{activationDialog.terminal.terminalName}</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Applied On:</span>
+                    <p className="font-medium">{format(new Date(activationDialog.terminal.createdAt), "MMM dd, yyyy")}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Contact:</span>
+                    <p className="font-medium">{activationDialog.terminal.billingPhone}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Organization:</span>
+                    <p className="font-medium">{activationDialog.terminal.organization?.organizationName}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Port:</span>
+                    <p className="font-medium">{activationDialog.terminal.port?.portName}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Activation Form */}
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onActivationSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="activationStartDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Activation Start From</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="subscriptionTypeId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subscription Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select subscription type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {subscriptionTypes.map((type: SubscriptionType) => (
+                              <SelectItem key={type.id} value={type.id.toString()}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Show calculated end date */}
+                  {calculateEndDate() && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Subscription Period:</strong> {form.watch("activationStartDate")} to {calculateEndDate()}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Work Order fields (required for non-1-month subscriptions) */}
+                  {getSelectedSubscriptionType()?.months !== 1 && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="workOrderNo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Work Order No</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Enter work order number" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="workOrderDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Work Order Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+
+                  <DialogFooter className="space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActivationDialog({ open: false })}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={activateTerminalMutation.isPending}
+                    >
+                      {activateTerminalMutation.isPending ? "Activating..." : "Activate Terminal"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
