@@ -117,6 +117,7 @@ export const terminals = pgTable("terminals", {
   shippingFax: text("shipping_fax"),
   
   sameAsBilling: boolean("same_as_billing").notNull().default(false),
+  status: text("status").notNull().default("Processing for activation"), // "Processing for activation", "Active", "Inactive"
   isActive: boolean("is_active").notNull().default(false),
   createdBy: varchar("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
@@ -234,14 +235,6 @@ export const insertEmailConfigurationSchema = createInsertSchema(emailConfigurat
 });
 
 // Type definitions
-export type User = typeof users.$inferSelect;
-export type Session = typeof sessions.$inferSelect;
-export type Organization = typeof organizations.$inferSelect;
-export type Port = typeof ports.$inferSelect;
-export type PortAdminContact = typeof portAdminContacts.$inferSelect;
-export type EmailConfiguration = typeof emailConfigurations.$inferSelect;
-export type Notification = typeof notifications.$inferSelect;
-
 export const insertTerminalSchema = createInsertSchema(terminals).pick({
   portId: true,
   terminalName: true,
@@ -261,6 +254,7 @@ export const insertTerminalSchema = createInsertSchema(terminals).pick({
   shippingPhone: true,
   shippingFax: true,
   sameAsBilling: true,
+  status: true,
   createdBy: true,
 });
 
@@ -282,19 +276,8 @@ export const updateTerminalSchema = createInsertSchema(terminals).pick({
   shippingPhone: true,
   shippingFax: true,
   sameAsBilling: true,
-  isActive: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
-export type InsertPort = z.infer<typeof insertPortSchema>;
-export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema>;
-export type InsertEmailConfiguration = z.infer<typeof insertEmailConfigurationSchema>;
-export type UpdatePortAdminContact = z.infer<typeof updatePortAdminContactSchema>;
-export type LoginCredentials = z.infer<typeof loginSchema>;
-export type Terminal = typeof terminals.$inferSelect;
-export type InsertTerminal = z.infer<typeof insertTerminalSchema>;
-export type UpdateTerminal = z.infer<typeof updateTerminalSchema>;
+  status: true,
+}).partial();
 
 export const insertNotificationSchema = createInsertSchema(notifications).pick({
   userId: true,
@@ -304,4 +287,22 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
   data: true,
 });
 
+// Type definitions
+export type User = typeof users.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Port = typeof ports.$inferSelect;
+export type PortAdminContact = typeof portAdminContacts.$inferSelect;
+export type EmailConfiguration = typeof emailConfigurations.$inferSelect;
+export type Terminal = typeof terminals.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+export type InsertPort = z.infer<typeof insertPortSchema>;
+export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema>;
+export type InsertEmailConfiguration = z.infer<typeof insertEmailConfigurationSchema>;
+export type UpdatePortAdminContact = z.infer<typeof updatePortAdminContactSchema>;
+export type LoginCredentials = z.infer<typeof loginSchema>;
+export type InsertTerminal = z.infer<typeof insertTerminalSchema>;
+export type UpdateTerminal = z.infer<typeof updateTerminalSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
