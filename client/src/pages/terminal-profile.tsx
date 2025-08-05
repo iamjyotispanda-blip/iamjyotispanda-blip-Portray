@@ -91,65 +91,74 @@ export default function TerminalProfile() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Logo Section */}
+                  <div className="flex flex-col items-center space-y-8">
+                    {/* Logo and Organization Name */}
                     <div className="text-center">
                       {organization.logoUrl ? (
                         <img 
                           src={organization.logoUrl} 
                           alt={organization.organizationName}
-                          className="h-24 w-auto object-contain mx-auto mb-4"
+                          className="h-32 w-auto object-contain mx-auto mb-6"
                         />
                       ) : (
-                        <div className="h-24 w-24 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                          <Building2 className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+                        <div className="h-32 w-32 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto mb-6">
+                          <Building2 className="w-16 h-16 text-blue-600 dark:text-blue-400" />
                         </div>
                       )}
-                      <p className="text-lg font-semibold">{organization.organizationName}</p>
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{organization.organizationName}</h2>
+                      <p className="text-xl text-gray-600 dark:text-gray-400">{organization.displayName}</p>
                     </div>
                     
-                    {/* Organization Details - Left Column */}
-                    <div className="space-y-6">
-                      <div className="text-center">
-                        <p className="text-lg text-gray-700 dark:text-gray-300">{organization.displayName}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded inline-block">
+                    {/* Organization Details in Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+                      {/* Organization Code */}
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                        <p className="font-mono text-lg font-semibold text-blue-600 dark:text-blue-400">
                           {organization.organizationCode}
                         </p>
                       </div>
-                      <div className="text-center">
-                        <p className="flex items-center justify-center space-x-2 text-gray-700 dark:text-gray-300">
-                          <Globe className="h-4 w-4" />
-                          <span>{organization.country}</span>
-                        </p>
+                      
+                      {/* Country */}
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <span className="text-lg font-medium">{organization.country}</span>
+                        </div>
                       </div>
+                      
+                      {/* Telephone */}
+                      {organization.telephone && (
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                          <div className="flex items-center justify-center space-x-2">
+                            <Phone className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                            <span className="text-lg font-medium">{organization.telephone}</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Website */}
+                      {organization.website && (
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                          <div className="flex items-center justify-center space-x-2">
+                            <Globe className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            <span className="text-lg font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                              {organization.website}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
-                    {/* Organization Details - Right Column */}
-                    <div className="space-y-6">
-                      <div className="text-center">
-                        <p className="flex items-start justify-center space-x-2 text-gray-700 dark:text-gray-300">
-                          <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
-                          <span className="text-center">{organization.registerOffice}</span>
-                        </p>
+                    {/* Register Office */}
+                    <div className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                      <div className="flex items-start justify-center space-x-3">
+                        <MapPin className="h-6 w-6 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
+                        <div className="text-center">
+                          <p className="text-lg font-medium text-gray-900 dark:text-white">
+                            {organization.registerOffice}
+                          </p>
+                        </div>
                       </div>
-                      {organization.telephone && (
-                        <div className="text-center">
-                          <p className="flex items-center justify-center space-x-2 text-gray-700 dark:text-gray-300">
-                            <Phone className="h-4 w-4" />
-                            <span>{organization.telephone}</span>
-                          </p>
-                        </div>
-                      )}
-                      {organization.website && (
-                        <div className="text-center">
-                          <p className="flex items-center justify-center space-x-2 text-blue-600 dark:text-blue-400">
-                            <Globe className="h-4 w-4" />
-                            <span className="hover:underline cursor-pointer">{organization.website}</span>
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </CardContent>
