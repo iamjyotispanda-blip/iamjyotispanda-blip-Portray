@@ -1072,6 +1072,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Terminal activation routes
+  app.get("/api/terminals/pending-activation", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (req.user.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const terminals = await storage.getTerminalsPendingActivation();
+      res.json(terminals);
+    } catch (error) {
+      console.error("Get pending terminals error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/terminals/:id/status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (req.user.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+
+      // Validate status
+      if (!["Active", "Rejected", "Processing for activation"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const terminal = await storage.updateTerminalStatus(id, status);
+      if (!terminal) {
+        return res.status(404).json({ message: "Terminal not found" });
+      }
+
+      res.json(terminal);
+    } catch (error) {
+      console.error("Update terminal status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

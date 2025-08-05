@@ -65,6 +65,8 @@ export interface IStorage {
   updateTerminal(id: number, updates: UpdateTerminal): Promise<Terminal | undefined>;
   deleteTerminal(id: number): Promise<void>;
   getPortAdminAssignedPort(userId: string): Promise<any>;
+  getTerminalsPendingActivation(): Promise<any[]>;
+  updateTerminalStatus(id: number, status: string): Promise<Terminal | undefined>;
 
   // Notification operations
   getNotificationsByUserId(userId: string): Promise<Notification[]>;
@@ -454,6 +456,67 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNotification(id: number): Promise<void> {
     await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  async getTerminalsPendingActivation(): Promise<any[]> {
+    // Get all terminals with their port and organization information
+    const result = await db
+      .select({
+        id: terminals.id,
+        portId: terminals.portId,
+        terminalName: terminals.terminalName,
+        shortCode: terminals.shortCode,
+        gst: terminals.gst,
+        pan: terminals.pan,
+        currency: terminals.currency,
+        timezone: terminals.timezone,
+        billingAddress: terminals.billingAddress,
+        billingCity: terminals.billingCity,
+        billingPinCode: terminals.billingPinCode,
+        billingPhone: terminals.billingPhone,
+        billingFax: terminals.billingFax,
+        shippingAddress: terminals.shippingAddress,
+        shippingCity: terminals.shippingCity,
+        shippingPinCode: terminals.shippingPinCode,
+        shippingPhone: terminals.shippingPhone,
+        shippingFax: terminals.shippingFax,
+        sameAsBilling: terminals.sameAsBilling,
+        status: terminals.status,
+        isActive: terminals.isActive,
+        createdBy: terminals.createdBy,
+        createdAt: terminals.createdAt,
+        updatedAt: terminals.updatedAt,
+        // Port information
+        port: {
+          id: ports.id,
+          portName: ports.portName,
+          displayName: ports.displayName,
+          address: ports.address,
+          country: ports.country,
+          state: ports.state,
+        },
+        // Organization information
+        organization: {
+          id: organizations.id,
+          organizationName: organizations.organizationName,
+          displayName: organizations.displayName,
+          organizationCode: organizations.organizationCode,
+        }
+      })
+      .from(terminals)
+      .innerJoin(ports, eq(terminals.portId, ports.id))
+      .innerJoin(organizations, eq(ports.organizationId, organizations.id));
+
+    return result;
+  }
+
+  async updateTerminalStatus(id: number, status: string): Promise<Terminal | undefined> {
+    const [terminal] = await db
+      .update(terminals)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(terminals.id, id))
+      .returning();
+    return terminal || undefined;
   }
 }
 
@@ -1014,6 +1077,56 @@ export class MemStorage implements IStorage {
       ...port,
       organizationName: organization?.organizationName || "Unknown Organization"
     };
+  }
+
+  async getNotificationsByUserId(userId: string): Promise<Notification[]> {
+    return [];
+  }
+
+  async getUnreadNotificationsCount(userId: string): Promise<number> {
+    return 0;
+  }
+
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    throw new Error("Notifications not supported in memory storage");
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async getTerminalsPendingActivation(): Promise<any[]> {
+    return Array.from(this.terminals.values()).map(terminal => {
+      const port = this.ports.get(terminal.portId);
+      const organization = port ? this.organizations.get(port.organizationId) : undefined;
+      
+      return {
+        ...terminal,
+        port: port || { id: 0, portName: "Unknown Port", displayName: "Unknown", address: "", country: "", state: "" },
+        organization: organization || { id: 0, organizationName: "Unknown Organization", displayName: "Unknown", organizationCode: "" }
+      };
+    });
+  }
+
+  async updateTerminalStatus(id: number, status: string): Promise<Terminal | undefined> {
+    const terminal = this.terminals.get(id);
+    if (!terminal) return undefined;
+
+    const updatedTerminal: Terminal = {
+      ...terminal,
+      status,
+      updatedAt: new Date(),
+    };
+    this.terminals.set(id, updatedTerminal);
+    return updatedTerminal;
   }
 }
 
