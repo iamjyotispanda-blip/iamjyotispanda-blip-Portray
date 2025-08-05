@@ -309,7 +309,7 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
   // Create port mutation
   const createPortMutation = useMutation({
-    mutationFn: (data: typeof formData) => apiRequest("/api/ports", "POST", data),
+    mutationFn: (data: typeof formData) => apiRequest("POST", "/api/ports", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
       toast({
@@ -329,7 +329,7 @@ export default function PortFormPage({ params }: PortFormPageProps) {
 
   // Update port mutation
   const updatePortMutation = useMutation({
-    mutationFn: (data: typeof formData) => apiRequest(`/api/ports/${portId}`, "PUT", data),
+    mutationFn: (data: typeof formData) => apiRequest("PUT", `/api/ports/${portId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ports", portId] });
