@@ -64,7 +64,7 @@ export interface IStorage {
   createTerminal(terminal: InsertTerminal): Promise<Terminal>;
   updateTerminal(id: number, updates: UpdateTerminal): Promise<Terminal | undefined>;
   deleteTerminal(id: number): Promise<void>;
-  getPortAdminAssignedPort(userId: string): Promise<Port | undefined>;
+  getPortAdminAssignedPort(userId: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -375,8 +375,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(terminals).where(eq(terminals.id, id));
   }
 
-  async getPortAdminAssignedPort(userId: string): Promise<Port | undefined> {
-    // Get port admin contact by user ID, then get associated port
+  async getPortAdminAssignedPort(userId: string): Promise<any> {
+    // Get port admin contact by user ID, then get associated port with organization
     const [contact] = await db
       .select()
       .from(portAdminContacts)
@@ -386,7 +386,26 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
-    return this.getPortById(contact.portId);
+    // Get port with organization information
+    const [portWithOrg] = await db
+      .select({
+        id: ports.id,
+        portName: ports.portName,
+        displayName: ports.displayName,
+        organizationId: ports.organizationId,
+        address: ports.address,
+        country: ports.country,
+        state: ports.state,
+        isActive: ports.isActive,
+        createdAt: ports.createdAt,
+        updatedAt: ports.updatedAt,
+        organizationName: organizations.organizationName,
+      })
+      .from(ports)
+      .innerJoin(organizations, eq(ports.organizationId, organizations.id))
+      .where(eq(ports.id, contact.portId));
+
+    return portWithOrg || undefined;
   }
 }
 
@@ -926,8 +945,8 @@ export class MemStorage implements IStorage {
     this.terminals.delete(id);
   }
 
-  async getPortAdminAssignedPort(userId: string): Promise<Port | undefined> {
-    // Get port admin contact by user ID, then get associated port
+  async getPortAdminAssignedPort(userId: string): Promise<any> {
+    // Get port admin contact by user ID, then get associated port with organization
     const contact = Array.from(this.portAdminContacts.values()).find(
       (c) => c.userId === userId
     );
@@ -936,7 +955,17 @@ export class MemStorage implements IStorage {
       return undefined;
     }
 
-    return this.getPortById(contact.portId);
+    const port = this.ports.get(contact.portId);
+    if (!port) {
+      return undefined;
+    }
+
+    const organization = this.organizations.get(port.organizationId);
+    
+    return {
+      ...port,
+      organizationName: organization?.organizationName || "Unknown Organization"
+    };
   }
 }
 
