@@ -91,18 +91,21 @@ export default function TerminalProfile() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center space-x-6 h-[150px]">
+                  <div className="flex items-center space-x-6 h-[120px]">
                     {/* Logo Section */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 text-center">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {organization.displayName}
+                      </p>
                       {organization.logoUrl ? (
                         <img 
                           src={organization.logoUrl} 
                           alt={organization.organizationName}
-                          className="h-24 w-24 object-contain rounded-lg"
+                          className="h-16 w-16 object-contain rounded-lg mx-auto"
                         />
                       ) : (
-                        <div className="h-24 w-24 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                          <Building2 className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+                        <div className="h-16 w-16 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto">
+                          <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         </div>
                       )}
                     </div>
