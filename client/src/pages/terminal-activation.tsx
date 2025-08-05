@@ -273,6 +273,23 @@ export default function TerminalActivationPage() {
                               >
                                 {terminal.status}
                               </Badge>
+                              
+                              {/* Show activation details inline with badge if terminal is active */}
+                              {terminal.status === "Active" && terminal.activationStartDate && (
+                                <div className="flex items-center space-x-3 text-xs text-green-700 dark:text-green-300">
+                                  <span>
+                                    {format(new Date(terminal.activationStartDate), "MMM d")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                  </span>
+                                  <span>
+                                    {terminal.subscriptionTypeId === 1 ? "1M" : terminal.subscriptionTypeId === 2 ? "12M" : terminal.subscriptionTypeId === 3 ? "24M" : terminal.subscriptionTypeId === 4 ? "48M" : "Unknown"}
+                                  </span>
+                                  {terminal.workOrderNo && (
+                                    <span>
+                                      WO: {terminal.workOrderNo}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                               <div className="flex items-center space-x-2">
@@ -291,23 +308,6 @@ export default function TerminalActivationPage() {
                                 <Calendar className="w-4 h-4" />
                                 <span>Created {format(new Date(terminal.createdAt), "MMM d, yyyy")}</span>
                               </div>
-                              
-                              {/* Show activation details if terminal is active - compact version */}
-                              {terminal.status === "Active" && terminal.activationStartDate && (
-                                <div className="flex items-center space-x-4 text-xs text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded mt-2">
-                                  <span>
-                                    <span className="font-medium">Active:</span> {format(new Date(terminal.activationStartDate), "MMM d")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
-                                  </span>
-                                  <span>
-                                    <span className="font-medium">Plan:</span> {terminal.subscriptionTypeId === 1 ? "1M" : terminal.subscriptionTypeId === 2 ? "12M" : terminal.subscriptionTypeId === 3 ? "24M" : terminal.subscriptionTypeId === 4 ? "48M" : "Unknown"}
-                                  </span>
-                                  {terminal.workOrderNo && (
-                                    <span>
-                                      <span className="font-medium">WO:</span> {terminal.workOrderNo}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>

@@ -224,28 +224,28 @@ export default function TerminalsPage() {
                               >
                                 {terminal.status || "Processing for activation"}
                               </Badge>
+                              
+                              {/* Show activation details inline with badge if terminal is active */}
+                              {terminal.status === "Active" && terminal.activationStartDate && (
+                                <div className="flex items-center space-x-3 text-xs text-green-700 dark:text-green-300">
+                                  <span>
+                                    {format(new Date(terminal.activationStartDate), "MMM d")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                  </span>
+                                  <span>
+                                    {terminal.subscriptionTypeId === 1 ? "1M" : terminal.subscriptionTypeId === 2 ? "12M" : terminal.subscriptionTypeId === 3 ? "24M" : terminal.subscriptionTypeId === 4 ? "48M" : "Unknown"}
+                                  </span>
+                                  {terminal.workOrderNo && (
+                                    <span>
+                                      WO: {terminal.workOrderNo}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <p className="text-sm text-gray-600 dark:text-gray-400">
                                 Terminal ID: {terminal.id}
                               </p>
-                              
-                              {/* Show activation details if terminal is active - compact version */}
-                              {terminal.status === "Active" && terminal.activationStartDate && (
-                                <div className="flex items-center space-x-4 text-xs text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
-                                  <span>
-                                    <span className="font-medium">Active:</span> {format(new Date(terminal.activationStartDate), "MMM d")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
-                                  </span>
-                                  <span>
-                                    <span className="font-medium">Plan:</span> {terminal.subscriptionTypeId === 1 ? "1M" : terminal.subscriptionTypeId === 2 ? "12M" : terminal.subscriptionTypeId === 3 ? "24M" : terminal.subscriptionTypeId === 4 ? "48M" : "Unknown"}
-                                  </span>
-                                  {terminal.workOrderNo && (
-                                    <span>
-                                      <span className="font-medium">WO:</span> {terminal.workOrderNo}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
                               
                               <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                                 <span>{terminal.billingCity}</span>
