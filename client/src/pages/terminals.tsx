@@ -218,9 +218,10 @@ export default function TerminalsPage() {
                                 {terminal.shortCode}
                               </Badge>
                               <Badge
-                                variant={terminal.isActive ? "default" : "secondary"}
+                                variant={terminal.isActive ? "default" : "outline"}
+                                className={terminal.isActive ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
                               >
-                                {terminal.isActive ? "Active" : "Inactive"}
+                                {terminal.isActive ? "Active" : "Processing for activation"}
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
