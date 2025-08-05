@@ -81,15 +81,21 @@ export default function TerminalProfile() {
         {/* Main Content */}
         <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto space-y-6">
-            {/* Organization Logo */}
-            {organization && organization.logoUrl && (
+            {/* Organization Logo/Header */}
+            {organization && (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <img 
-                    src={organization.logoUrl} 
-                    alt={organization.organizationName}
-                    className="h-20 w-auto object-contain mx-auto"
-                  />
+                  {organization.logoUrl ? (
+                    <img 
+                      src={organization.logoUrl} 
+                      alt={organization.organizationName}
+                      className="h-20 w-auto object-contain mx-auto"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto">
+                      <Building2 className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  )}
                   <p className="text-lg font-semibold mt-2">{organization.organizationName}</p>
                 </CardContent>
               </Card>
