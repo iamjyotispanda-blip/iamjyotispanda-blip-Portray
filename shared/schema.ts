@@ -117,7 +117,7 @@ export const terminals = pgTable("terminals", {
   shippingFax: text("shipping_fax"),
   
   sameAsBilling: boolean("same_as_billing").notNull().default(false),
-  isActive: boolean("is_active").notNull().default(true),
+  isActive: boolean("is_active").notNull().default(false),
   createdBy: varchar("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
