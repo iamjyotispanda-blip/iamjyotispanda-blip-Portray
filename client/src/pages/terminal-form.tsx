@@ -22,6 +22,12 @@ import type { Terminal, Port, InsertTerminal } from "@shared/schema";
 
 // Terminal form schema
 const terminalFormSchema = z.object({
+  // Auto-filled fields
+  portName: z.string().min(1),
+  organization: z.string().min(1),
+  state: z.string().min(1),
+  country: z.string().min(1),
+  
   terminalName: z.string().min(1, "Terminal name is required"),
   shortCode: z.string().min(1, "Short code is required").max(6, "Short code must be 6 characters or less"),
   terminalType: z.string().min(1, "Terminal type is required"),
@@ -99,6 +105,10 @@ export default function TerminalFormPage() {
   const form = useForm<TerminalFormData>({
     resolver: zodResolver(terminalFormSchema),
     defaultValues: {
+      portName: "",
+      organization: "",
+      state: "",
+      country: "India",
       terminalName: "",
       shortCode: "",
       terminalType: "",
@@ -119,6 +129,16 @@ export default function TerminalFormPage() {
       sameAsBilling: false,
     },
   });
+
+  // Update form with port data when available
+  useEffect(() => {
+    if (assignedPort) {
+      form.setValue("portName", (assignedPort as any).portName || "");
+      form.setValue("organization", (assignedPort as any).organizationName || "");
+      form.setValue("state", (assignedPort as any).state || "");
+      form.setValue("country", (assignedPort as any).country || "India");
+    }
+  }, [assignedPort, form]);
 
   // Watch for terminal name changes to auto-generate short code
   const terminalName = form.watch("terminalName");
@@ -265,6 +285,78 @@ export default function TerminalFormPage() {
           <div className="space-y-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Auto-filled Port Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Building2 className="h-5 w-5" />
+                      <span>Port Information</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="portName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Port Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="organization"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Organization</FormLabel>
+                            <FormControl>
+                              <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-2xl">🇮🇳</span>
+                                <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Terminal Details */}
                 <Card>
                   <CardHeader>
@@ -411,193 +503,196 @@ export default function TerminalFormPage() {
                   </CardContent>
                 </Card>
 
-                {/* Billing Address */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <CreditCard className="h-5 w-5" />
-                      <span>Billing Address</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="billingAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Address</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Enter billing address" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Address Information - Side by Side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Billing Address */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <CreditCard className="h-5 w-5" />
+                        <span>Billing Address</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       <FormField
                         control={form.control}
-                        name="billingCity"
+                        name="billingAddress"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City</FormLabel>
+                            <FormLabel>Address</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter city" {...field} />
+                              <Textarea placeholder="Enter billing address" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
-                      <FormField
-                        control={form.control}
-                        name="billingPinCode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Pin Code</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter pin code" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="billingPhone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter phone number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="billingFax"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Fax (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter fax number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Shipping Address */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <MapPin className="h-5 w-5" />
-                      <span>Shipping Address</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="sameAsBilling"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Same as billing address</FormLabel>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-
-                    {!sameAsBilling && (
-                      <>
+                      <div className="grid grid-cols-1 gap-4">
                         <FormField
                           control={form.control}
-                          name="shippingAddress"
+                          name="billingCity"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Address</FormLabel>
+                              <FormLabel>City</FormLabel>
                               <FormControl>
-                                <Textarea placeholder="Enter shipping address" {...field} />
+                                <Input placeholder="Enter city" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="billingPinCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Pin Code</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter pin code" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="billingPhone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter phone number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="billingFax"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Fax (Optional)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter fax number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Shipping Address */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <MapPin className="h-5 w-5" />
+                        <span>Shipping Address</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="sameAsBilling"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Same as billing address</FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      {!sameAsBilling && (
+                        <>
                           <FormField
                             control={form.control}
-                            name="shippingCity"
+                            name="shippingAddress"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>City</FormLabel>
+                                <FormLabel>Address</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Enter city" {...field} />
+                                  <Textarea placeholder="Enter shipping address" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
 
-                          <FormField
-                            control={form.control}
-                            name="shippingPinCode"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Pin Code</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter pin code" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div className="grid grid-cols-1 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="shippingCity"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>City</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter city" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
-                          <FormField
-                            control={form.control}
-                            name="shippingPhone"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Phone</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter phone number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                            <FormField
+                              control={form.control}
+                              name="shippingPinCode"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Pin Code</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter pin code" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
-                          <FormField
-                            control={form.control}
-                            name="shippingFax"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Fax (Optional)</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter fax number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
+                            <FormField
+                              control={form.control}
+                              name="shippingPhone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Phone</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter phone number" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="shippingFax"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Fax (Optional)</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter fax number" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
 
                 {/* Submit Buttons */}
                 <div className="flex items-center justify-end space-x-4">
