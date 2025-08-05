@@ -105,11 +105,9 @@ export default function TerminalActivationPage() {
       <div className="flex-1 p-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Terminal Activation Requests
-            </h1>
-          </div>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Terminal Activation
+          </h1>
         </div>
 
         {/* Search */}
@@ -171,7 +169,7 @@ export default function TerminalActivationPage() {
         {/* Terminals Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Terminal Activation Requests</CardTitle>
+            <CardTitle className="text-lg">Terminals</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
