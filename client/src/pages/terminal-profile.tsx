@@ -109,18 +109,17 @@ export default function TerminalProfile() {
                     </div>
                     
                     {/* Organization Details - Left Column */}
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Display Name</label>
-                        <p>{organization.displayName}</p>
+                    <div className="space-y-6">
+                      <div className="text-center">
+                        <p className="text-lg text-gray-700 dark:text-gray-300">{organization.displayName}</p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Organization Code</label>
-                        <p>{organization.organizationCode}</p>
+                      <div className="text-center">
+                        <p className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded inline-block">
+                          {organization.organizationCode}
+                        </p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Country</label>
-                        <p className="flex items-center space-x-2">
+                      <div className="text-center">
+                        <p className="flex items-center justify-center space-x-2 text-gray-700 dark:text-gray-300">
                           <Globe className="h-4 w-4" />
                           <span>{organization.country}</span>
                         </p>
@@ -128,28 +127,29 @@ export default function TerminalProfile() {
                     </div>
                     
                     {/* Organization Details - Right Column */}
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Register Office</label>
-                        <p className="flex items-start space-x-2">
-                          <MapPin className="h-4 w-4 mt-1" />
-                          <span>{organization.registerOffice}</span>
+                    <div className="space-y-6">
+                      <div className="text-center">
+                        <p className="flex items-start justify-center space-x-2 text-gray-700 dark:text-gray-300">
+                          <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
+                          <span className="text-center">{organization.registerOffice}</span>
                         </p>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Telephone</label>
-                        <p className="flex items-center space-x-2">
-                          <Phone className="h-4 w-4" />
-                          <span>{organization.telephone || "Not provided"}</span>
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Website</label>
-                        <p className="flex items-center space-x-2">
-                          <Globe className="h-4 w-4" />
-                          <span>{organization.website || "Not provided"}</span>
-                        </p>
-                      </div>
+                      {organization.telephone && (
+                        <div className="text-center">
+                          <p className="flex items-center justify-center space-x-2 text-gray-700 dark:text-gray-300">
+                            <Phone className="h-4 w-4" />
+                            <span>{organization.telephone}</span>
+                          </p>
+                        </div>
+                      )}
+                      {organization.website && (
+                        <div className="text-center">
+                          <p className="flex items-center justify-center space-x-2 text-blue-600 dark:text-blue-400">
+                            <Globe className="h-4 w-4" />
+                            <span className="hover:underline cursor-pointer">{organization.website}</span>
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
