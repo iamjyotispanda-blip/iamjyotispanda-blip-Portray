@@ -123,6 +123,19 @@ export const terminals = pgTable("terminals", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // "terminal_activation_request", "terminal_approved", etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  data: text("data"), // JSON string for additional data
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 // Relations
 export const portAdminContactsRelations = relations(portAdminContacts, ({ one }) => ({
   port: one(ports, {
@@ -148,6 +161,13 @@ export const terminalsRelations = relations(terminals, ({ one }) => ({
   port: one(ports, {
     fields: [terminals.portId],
     references: [ports.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
   }),
 }));
 
@@ -220,6 +240,7 @@ export type Organization = typeof organizations.$inferSelect;
 export type Port = typeof ports.$inferSelect;
 export type PortAdminContact = typeof portAdminContacts.$inferSelect;
 export type EmailConfiguration = typeof emailConfigurations.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
 
 export const insertTerminalSchema = createInsertSchema(terminals).pick({
   portId: true,
@@ -274,3 +295,13 @@ export type LoginCredentials = z.infer<typeof loginSchema>;
 export type Terminal = typeof terminals.$inferSelect;
 export type InsertTerminal = z.infer<typeof insertTerminalSchema>;
 export type UpdateTerminal = z.infer<typeof updateTerminalSchema>;
+
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  userId: true,
+  type: true,
+  title: true,
+  message: true,
+  data: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;

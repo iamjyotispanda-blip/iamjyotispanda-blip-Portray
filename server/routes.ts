@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, type InsertUser } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -909,6 +909,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const terminal = await storage.createTerminal(terminalData);
+      
+      // Create notification for system admin about terminal activation request
+      try {
+        await storage.createNotification({
+          userId: "admin-001", // System admin user ID
+          type: "terminal_activation_request",
+          title: "Terminal Activation Request",
+          message: `New terminal "${terminal.terminalName}" (${terminal.shortCode}) has been submitted for activation review.`,
+          data: JSON.stringify({
+            terminalId: terminal.id,
+            terminalName: terminal.terminalName,
+            shortCode: terminal.shortCode,
+            portId: terminal.portId,
+            createdBy: req.user.id
+          })
+        });
+      } catch (notificationError) {
+        console.error("Failed to create notification:", notificationError);
+        // Don't fail the terminal creation if notification fails
+      }
+      
       res.status(201).json(terminal);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -952,6 +973,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Terminal deleted successfully" });
     } catch (error) {
       console.error("Delete terminal error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Notification routes
+  app.get("/api/notifications", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const notifications = await storage.getNotificationsByUserId(req.user.id);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Get notifications error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.getUnreadNotificationsCount(req.user.id);
+      res.json({ count });
+    } catch (error) {
+      console.error("Get unread notifications count error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.markNotificationAsRead(id);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Mark notification as read error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/notifications/mark-all-read", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      await storage.markAllNotificationsAsRead(req.user.id);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Mark all notifications as read error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteNotification(id);
+      res.json({ message: "Notification deleted successfully" });
+    } catch (error) {
+      console.error("Delete notification error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

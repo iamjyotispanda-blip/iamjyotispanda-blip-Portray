@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -65,6 +65,14 @@ export interface IStorage {
   updateTerminal(id: number, updates: UpdateTerminal): Promise<Terminal | undefined>;
   deleteTerminal(id: number): Promise<void>;
   getPortAdminAssignedPort(userId: string): Promise<any>;
+
+  // Notification operations
+  getNotificationsByUserId(userId: string): Promise<Notification[]>;
+  getUnreadNotificationsCount(userId: string): Promise<number>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  deleteNotification(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -406,6 +414,46 @@ export class DatabaseStorage implements IStorage {
       .where(eq(ports.id, contact.portId));
 
     return portWithOrg || undefined;
+  }
+
+  async getNotificationsByUserId(userId: string): Promise<Notification[]> {
+    return db.select().from(notifications).where(eq(notifications.userId, userId));
+  }
+
+  async getUnreadNotificationsCount(userId: string): Promise<number> {
+    const result = await db.select().from(notifications).where(
+      and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      )
+    );
+    return result.length;
+  }
+
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const [notification] = await db
+      .insert(notifications)
+      .values(notificationData)
+      .returning();
+    return notification;
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true, updatedAt: new Date() })
+      .where(eq(notifications.id, id));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true, updatedAt: new Date() })
+      .where(eq(notifications.userId, userId));
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
   }
 }
 

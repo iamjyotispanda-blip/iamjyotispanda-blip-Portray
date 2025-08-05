@@ -1,12 +1,23 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail 
+  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PortrayLogo } from "@/components/portray-logo";
 import { AuthService } from "@/lib/auth";
+import { apiRequest } from "@/lib/queryClient";
+import type { Notification } from "@shared/schema";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -24,6 +35,49 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: AuthService.getCurrentUser,
+  });
+
+  // Get notifications only for system admins
+  const queryClient = useQueryClient();
+  const { data: notifications = [] } = useQuery<Notification[]>({
+    queryKey: ["/api/notifications"],
+    enabled: user?.role === "SystemAdmin",
+  });
+
+  const { data: unreadCount = { count: 0 } } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count"],
+    enabled: user?.role === "SystemAdmin",
+    refetchInterval: 30000, // Poll every 30 seconds
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("PATCH", `/api/notifications/${id}/read`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+    },
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PATCH", "/api/notifications/mark-all-read");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+    },
+  });
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/notifications/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+    },
   });
 
   const handleLogout = async () => {
@@ -235,6 +289,97 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 </div>
                 
                 <div className="flex items-center space-x-2">
+                  {/* Notifications - Only for System Admin */}
+                  {user?.role === "SystemAdmin" && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="relative h-8 w-8 p-0">
+                          <Bell className="h-4 w-4" />
+                          {unreadCount.count > 0 && (
+                            <Badge 
+                              variant="destructive" 
+                              className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                            >
+                              {unreadCount.count}
+                            </Badge>
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-80">
+                        <div className="flex items-center justify-between px-4 py-2">
+                          <h4 className="text-sm font-medium">Notifications</h4>
+                          {notifications.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => markAllAsReadMutation.mutate()}
+                              className="h-6 text-xs"
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              Mark all read
+                            </Button>
+                          )}
+                        </div>
+                        <DropdownMenuSeparator />
+                        <ScrollArea className="h-64">
+                          {notifications.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-gray-500">
+                              No notifications
+                            </div>
+                          ) : (
+                            notifications.map((notification) => (
+                              <DropdownMenuItem key={notification.id} className="block p-0">
+                                <div className={`p-3 border-b last:border-b-0 ${!notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+                                        {notification.title}
+                                      </h5>
+                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                        {notification.message}
+                                      </p>
+                                      <p className="text-xs text-gray-400 mt-2">
+                                        {new Date(notification.createdAt).toLocaleDateString()} {new Date(notification.createdAt).toLocaleTimeString()}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center space-x-1 ml-2">
+                                      {!notification.isRead && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            markAsReadMutation.mutate(notification.id);
+                                          }}
+                                          className="h-6 w-6 p-0"
+                                          title="Mark as read"
+                                        >
+                                          <Check className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteNotificationMutation.mutate(notification.id);
+                                        }}
+                                        className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                                        title="Delete notification"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </DropdownMenuItem>
+                            ))
+                          )}
+                        </ScrollArea>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  
                   <Button
                     variant="outline"
                     size="sm"
