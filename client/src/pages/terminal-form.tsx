@@ -350,10 +350,12 @@ export default function TerminalFormPage() {
                           <FormItem>
                             <FormLabel>Country</FormLabel>
                             <FormControl>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-2xl">🇮🇳</span>
-                                <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
-                              </div>
+                              <Input 
+                                {...field} 
+                                readOnly 
+                                className="bg-gray-50 dark:bg-gray-800" 
+                                value={field.value ? `🇮🇳 ${field.value}` : ""}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
