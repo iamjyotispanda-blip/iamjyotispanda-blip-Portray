@@ -857,6 +857,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Terminal activation routes (must be before parameterized routes)
+  app.get("/api/terminals/pending-activation", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (req.user.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const terminals = await storage.getTerminalsPendingActivation();
+      res.json(terminals);
+    } catch (error) {
+      console.error("Get pending terminals error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/terminals/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -1068,22 +1084,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Notification deleted successfully" });
     } catch (error) {
       console.error("Delete notification error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Terminal activation routes
-  app.get("/api/terminals/pending-activation", authenticateToken, async (req: Request, res: Response) => {
-    try {
-      // Only allow System Admins
-      if (req.user.role !== "SystemAdmin") {
-        return res.status(403).json({ message: "Access denied. System Admin role required." });
-      }
-
-      const terminals = await storage.getTerminalsPendingActivation();
-      res.json(terminals);
-    } catch (error) {
-      console.error("Get pending terminals error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

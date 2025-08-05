@@ -459,7 +459,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTerminalsPendingActivation(): Promise<any[]> {
-    // Get all terminals with their port and organization information
+    // Get terminals with their port and organization information, formatted for frontend
     const result = await db
       .select({
         id: terminals.id,
@@ -487,27 +487,63 @@ export class DatabaseStorage implements IStorage {
         createdAt: terminals.createdAt,
         updatedAt: terminals.updatedAt,
         // Port information
-        port: {
-          id: ports.id,
-          portName: ports.portName,
-          displayName: ports.displayName,
-          address: ports.address,
-          country: ports.country,
-          state: ports.state,
-        },
+        portId2: ports.id,
+        portName: ports.portName,
+        portDisplayName: ports.displayName,
+        portAddress: ports.address,
+        portCountry: ports.country,
+        portState: ports.state,
         // Organization information
-        organization: {
-          id: organizations.id,
-          organizationName: organizations.organizationName,
-          displayName: organizations.displayName,
-          organizationCode: organizations.organizationCode,
-        }
+        organizationId: organizations.id,
+        organizationName: organizations.organizationName,
+        organizationDisplayName: organizations.displayName,
+        organizationCode: organizations.organizationCode,
       })
       .from(terminals)
       .innerJoin(ports, eq(terminals.portId, ports.id))
       .innerJoin(organizations, eq(ports.organizationId, organizations.id));
 
-    return result;
+    // Transform the result to match frontend expectations
+    return result.map(row => ({
+      id: row.id,
+      portId: row.portId,
+      terminalName: row.terminalName,
+      shortCode: row.shortCode,
+      gst: row.gst,
+      pan: row.pan,
+      currency: row.currency,
+      timezone: row.timezone,
+      billingAddress: row.billingAddress,
+      billingCity: row.billingCity,
+      billingPinCode: row.billingPinCode,
+      billingPhone: row.billingPhone,
+      billingFax: row.billingFax,
+      shippingAddress: row.shippingAddress,
+      shippingCity: row.shippingCity,
+      shippingPinCode: row.shippingPinCode,
+      shippingPhone: row.shippingPhone,
+      shippingFax: row.shippingFax,
+      sameAsBilling: row.sameAsBilling,
+      status: row.status,
+      isActive: row.isActive,
+      createdBy: row.createdBy,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      port: {
+        id: row.portId2,
+        portName: row.portName,
+        displayName: row.portDisplayName,
+        address: row.portAddress,
+        country: row.portCountry,
+        state: row.portState,
+      },
+      organization: {
+        id: row.organizationId,
+        organizationName: row.organizationName,
+        displayName: row.organizationDisplayName,
+        organizationCode: row.organizationCode,
+      }
+    }));
   }
 
   async updateTerminalStatus(id: number, status: string): Promise<Terminal | undefined> {
