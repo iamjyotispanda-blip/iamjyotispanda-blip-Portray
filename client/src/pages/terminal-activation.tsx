@@ -31,16 +31,25 @@ const activationFormSchema = z.object({
   subscriptionTypeId: z.string().min(1, "Subscription type is required"),
   workOrderNo: z.string().optional(),
   workOrderDate: z.string().optional(),
-}).refine((data) => {
+}).superRefine((data, ctx) => {
   // If subscription is not 1 month, work order fields are required
   const subscriptionTypeId = parseInt(data.subscriptionTypeId);
   if (subscriptionTypeId !== 1) { // Assuming ID 1 is for 1 month
-    return data.workOrderNo && data.workOrderDate;
+    if (!data.workOrderNo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Work order number is required for subscriptions longer than 1 month",
+        path: ["workOrderNo"]
+      });
+    }
+    if (!data.workOrderDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Work order date is required for subscriptions longer than 1 month",
+        path: ["workOrderDate"]
+      });
+    }
   }
-  return true;
-}, {
-  message: "Work order number and date are required for subscriptions longer than 1 month",
-  path: ["workOrderNo"]
 });
 
 type ActivationFormData = z.infer<typeof activationFormSchema>;
@@ -411,14 +420,17 @@ export default function TerminalActivationPage() {
                   )}
 
                   {/* Work Order fields (required for non-1-month subscriptions) */}
-                  {getSelectedSubscriptionType()?.months !== 1 && (
-                    <>
+                  {getSelectedSubscriptionType()?.months !== 1 && getSelectedSubscriptionType()?.months && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+                      <div className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                        Work Order Required for {getSelectedSubscriptionType()?.name} subscription
+                      </div>
                       <FormField
                         control={form.control}
                         name="workOrderNo"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Work Order No</FormLabel>
+                            <FormLabel>Work Order No *</FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Enter work order number" />
                             </FormControl>
@@ -432,7 +444,7 @@ export default function TerminalActivationPage() {
                         name="workOrderDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Work Order Date</FormLabel>
+                            <FormLabel>Work Order Date *</FormLabel>
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
@@ -440,7 +452,7 @@ export default function TerminalActivationPage() {
                           </FormItem>
                         )}
                       />
-                    </>
+                    </div>
                   )}
 
                   <DialogFooter className="space-x-2">
