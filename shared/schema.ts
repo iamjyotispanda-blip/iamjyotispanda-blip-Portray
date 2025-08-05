@@ -91,6 +91,39 @@ export const emailConfigurations = pgTable("email_configurations", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Terminals table
+export const terminals = pgTable("terminals", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  portId: integer("port_id").notNull().references(() => ports.id),
+  terminalName: text("terminal_name").notNull(),
+  shortCode: varchar("short_code", { length: 6 }).notNull().unique(),
+  terminalType: text("terminal_type").notNull(), // Dry Bulk, Break Bulk, Container
+  gst: text("gst"),
+  pan: text("pan"),
+  currency: text("currency").notNull().default("INR"),
+  timezone: text("timezone").notNull(),
+  
+  // Billing Address
+  billingAddress: text("billing_address").notNull(),
+  billingCity: text("billing_city").notNull(),
+  billingPinCode: text("billing_pin_code").notNull(),
+  billingPhone: text("billing_phone").notNull(),
+  billingFax: text("billing_fax"),
+  
+  // Shipping Address
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCity: text("shipping_city").notNull(),
+  shippingPinCode: text("shipping_pin_code").notNull(),
+  shippingPhone: text("shipping_phone").notNull(),
+  shippingFax: text("shipping_fax"),
+  
+  sameAsBilling: boolean("same_as_billing").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 // Relations
 export const portAdminContactsRelations = relations(portAdminContacts, ({ one }) => ({
   port: one(ports, {
@@ -109,6 +142,14 @@ export const portsRelations = relations(ports, ({ one, many }) => ({
     references: [organizations.id],
   }),
   portAdminContacts: many(portAdminContacts),
+  terminals: many(terminals),
+}));
+
+export const terminalsRelations = relations(terminals, ({ one }) => ({
+  port: one(ports, {
+    fields: [terminals.portId],
+    references: [ports.id],
+  }),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -181,6 +222,51 @@ export type Port = typeof ports.$inferSelect;
 export type PortAdminContact = typeof portAdminContacts.$inferSelect;
 export type EmailConfiguration = typeof emailConfigurations.$inferSelect;
 
+export const insertTerminalSchema = createInsertSchema(terminals).pick({
+  portId: true,
+  terminalName: true,
+  shortCode: true,
+  terminalType: true,
+  gst: true,
+  pan: true,
+  currency: true,
+  timezone: true,
+  billingAddress: true,
+  billingCity: true,
+  billingPinCode: true,
+  billingPhone: true,
+  billingFax: true,
+  shippingAddress: true,
+  shippingCity: true,
+  shippingPinCode: true,
+  shippingPhone: true,
+  shippingFax: true,
+  sameAsBilling: true,
+  createdBy: true,
+});
+
+export const updateTerminalSchema = createInsertSchema(terminals).pick({
+  terminalName: true,
+  shortCode: true,
+  terminalType: true,
+  gst: true,
+  pan: true,
+  currency: true,
+  timezone: true,
+  billingAddress: true,
+  billingCity: true,
+  billingPinCode: true,
+  billingPhone: true,
+  billingFax: true,
+  shippingAddress: true,
+  shippingCity: true,
+  shippingPinCode: true,
+  shippingPhone: true,
+  shippingFax: true,
+  sameAsBilling: true,
+  isActive: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
 export type InsertPort = z.infer<typeof insertPortSchema>;
@@ -188,3 +274,6 @@ export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema
 export type InsertEmailConfiguration = z.infer<typeof insertEmailConfigurationSchema>;
 export type UpdatePortAdminContact = z.infer<typeof updatePortAdminContactSchema>;
 export type LoginCredentials = z.infer<typeof loginSchema>;
+export type Terminal = typeof terminals.$inferSelect;
+export type InsertTerminal = z.infer<typeof insertTerminalSchema>;
+export type UpdateTerminal = z.infer<typeof updateTerminalSchema>;

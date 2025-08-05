@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -56,6 +56,14 @@ export interface IStorage {
   createEmailConfiguration(config: InsertEmailConfiguration): Promise<EmailConfiguration>;
   updateEmailConfiguration(id: number, updates: Partial<EmailConfiguration>): Promise<EmailConfiguration | undefined>;
   deleteEmailConfiguration(id: number): Promise<void>;
+
+  // Terminal operations
+  getTerminalsByPortId(portId: number): Promise<Terminal[]>;
+  getTerminalById(id: number): Promise<Terminal | undefined>;
+  createTerminal(terminal: InsertTerminal): Promise<Terminal>;
+  updateTerminal(id: number, updates: UpdateTerminal): Promise<Terminal | undefined>;
+  deleteTerminal(id: number): Promise<void>;
+  getPortAdminAssignedPort(userId: string): Promise<Port | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -328,6 +336,51 @@ export class DatabaseStorage implements IStorage {
       .update(portAdminContacts)
       .set({ userId: userId, updatedAt: new Date() })
       .where(eq(portAdminContacts.id, contactId));
+  }
+
+  // Terminal operations
+  async getTerminalsByPortId(portId: number): Promise<Terminal[]> {
+    return db.select().from(terminals).where(eq(terminals.portId, portId));
+  }
+
+  async getTerminalById(id: number): Promise<Terminal | undefined> {
+    const [terminal] = await db.select().from(terminals).where(eq(terminals.id, id));
+    return terminal || undefined;
+  }
+
+  async createTerminal(terminalData: InsertTerminal): Promise<Terminal> {
+    const [terminal] = await db
+      .insert(terminals)
+      .values(terminalData)
+      .returning();
+    return terminal;
+  }
+
+  async updateTerminal(id: number, updates: UpdateTerminal): Promise<Terminal | undefined> {
+    const [terminal] = await db
+      .update(terminals)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(terminals.id, id))
+      .returning();
+    return terminal || undefined;
+  }
+
+  async deleteTerminal(id: number): Promise<void> {
+    await db.delete(terminals).where(eq(terminals.id, id));
+  }
+
+  async getPortAdminAssignedPort(userId: string): Promise<Port | undefined> {
+    // Get port admin contact by user ID, then get associated port
+    const [contact] = await db
+      .select()
+      .from(portAdminContacts)
+      .where(eq(portAdminContacts.userId, userId));
+    
+    if (!contact) {
+      return undefined;
+    }
+
+    return this.getPortById(contact.portId);
   }
 }
 

@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, type InsertUser } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -807,6 +807,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Email configuration deleted successfully" });
     } catch (error) {
       console.error("Delete email configuration error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Terminal routes
+  app.get("/api/terminals/my-port", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Get port admin's assigned port
+      const assignedPort = await storage.getPortAdminAssignedPort(req.user.id);
+      if (!assignedPort) {
+        return res.status(404).json({ message: "No port assigned to this user" });
+      }
+      res.json(assignedPort);
+    } catch (error) {
+      console.error("Get assigned port error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/ports/:portId/terminals", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const portId = parseInt(req.params.portId);
+      const terminals = await storage.getTerminalsByPortId(portId);
+      res.json(terminals);
+    } catch (error) {
+      console.error("Get terminals error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/ports/:portId/terminals", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const portId = parseInt(req.params.portId);
+      const terminalData = insertTerminalSchema.parse({ 
+        ...req.body, 
+        portId,
+        createdBy: req.user.id
+      });
+      
+      const terminal = await storage.createTerminal(terminalData);
+      res.status(201).json(terminal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create terminal error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/terminals/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = updateTerminalSchema.parse(req.body);
+      
+      const terminal = await storage.updateTerminal(id, updates);
+      if (!terminal) {
+        return res.status(404).json({ message: "Terminal not found" });
+      }
+      
+      res.json(terminal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Update terminal error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/terminals/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTerminal(id);
+      res.json({ message: "Terminal deleted successfully" });
+    } catch (error) {
+      console.error("Delete terminal error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

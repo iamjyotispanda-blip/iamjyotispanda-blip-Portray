@@ -64,8 +64,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         setLocation("/dashboard");
         break;
       case "terminals":
-        // For Port Admin - redirect to their dashboard with terminals view
-        setLocation("/port-admin-dashboard");
+        // For Port Admin - redirect to terminals page
+        setLocation("/terminals");
         break;
       case "email":
         setLocation("/configuration/email");

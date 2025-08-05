@@ -19,6 +19,8 @@ import EmailConfigurationPage from "@/pages/email-configuration";
 import OrganizationsPage from "@/pages/organizations";
 import VerifyPage from "@/pages/verify";
 import SetupPasswordPage from "@/pages/setup-password";
+import TerminalsPage from "@/pages/terminals";
+import TerminalFormPage from "@/pages/terminal-form";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -107,6 +109,15 @@ function Router() {
       </Route>
       <Route path="/configuration/email">
         {() => <ProtectedRoute component={EmailConfigurationPage} />}
+      </Route>
+      <Route path="/terminals/new">
+        {() => <ProtectedRoute component={TerminalFormPage} />}
+      </Route>
+      <Route path="/terminals/edit/:id">
+        {() => <ProtectedRoute component={TerminalFormPage} />}
+      </Route>
+      <Route path="/terminals">
+        {() => <ProtectedRoute component={TerminalsPage} />}
       </Route>
       <Route path="/">
         {() => <ProtectedRoute component={DashboardPage} />}
