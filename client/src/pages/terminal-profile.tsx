@@ -167,79 +167,86 @@ export default function TerminalProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Terminal Name</label>
-                      <p className="text-lg font-semibold">{terminal.terminalName}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <label className="text-sm font-medium text-gray-500 block mb-2">Terminal Name</label>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">{terminal.terminalName}</p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Short Code</label>
-                      <p className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded inline-block">
+                    
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <label className="text-sm font-medium text-gray-500 block mb-2">Short Code</label>
+                      <p className="font-mono text-lg font-semibold bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded inline-block">
                         {terminal.shortCode}
                       </p>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">GST</label>
-                      <p>{terminal.gst || "Not provided"}</p>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-2">GST</label>
+                        <p className="text-gray-900 dark:text-white">{terminal.gst || "Not provided"}</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-2">PAN</label>
+                        <p className="text-gray-900 dark:text-white">{terminal.pan || "Not provided"}</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">PAN</label>
-                      <p>{terminal.pan || "Not provided"}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Currency</label>
-                      <p>{terminal.currency}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Timezone</label>
-                      <p>{terminal.timezone}</p>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-2">Currency</label>
+                        <p className="text-gray-900 dark:text-white">{terminal.currency}</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                        <label className="text-sm font-medium text-gray-500 block mb-2">Timezone</label>
+                        <p className="text-gray-900 dark:text-white">{terminal.timezone}</p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Billing Address</label>
-                      <div className="space-y-1">
-                        <p>{terminal.billingAddress}</p>
-                        <p>{terminal.billingCity}, {terminal.billingPinCode}</p>
-                        <p className="flex items-center space-x-2">
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <label className="text-sm font-medium text-gray-500 block mb-3">Billing Address</label>
+                      <div className="space-y-2">
+                        <p className="text-gray-900 dark:text-white">{terminal.billingAddress}</p>
+                        <p className="text-gray-700 dark:text-gray-300">{terminal.billingCity}, {terminal.billingPinCode}</p>
+                        <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
                           <Phone className="h-4 w-4" />
                           <span>{terminal.billingPhone}</span>
-                        </p>
+                        </div>
                         {terminal.billingFax && (
-                          <p>Fax: {terminal.billingFax}</p>
+                          <p className="text-gray-600 dark:text-gray-400">Fax: {terminal.billingFax}</p>
                         )}
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Shipping Address</label>
-                      <div className="space-y-1">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <label className="text-sm font-medium text-gray-500 block mb-3">Shipping Address</label>
+                      <div className="space-y-2">
                         {terminal.sameAsBilling ? (
                           <p className="text-gray-500 italic">Same as billing address</p>
                         ) : (
                           <>
-                            <p>{terminal.shippingAddress}</p>
-                            <p>{terminal.shippingCity}, {terminal.shippingPinCode}</p>
-                            <p className="flex items-center space-x-2">
+                            <p className="text-gray-900 dark:text-white">{terminal.shippingAddress}</p>
+                            <p className="text-gray-700 dark:text-gray-300">{terminal.shippingCity}, {terminal.shippingPinCode}</p>
+                            <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
                               <Phone className="h-4 w-4" />
                               <span>{terminal.shippingPhone}</span>
-                            </p>
+                            </div>
                             {terminal.shippingFax && (
-                              <p>Fax: {terminal.shippingFax}</p>
+                              <p className="text-gray-600 dark:text-gray-400">Fax: {terminal.shippingFax}</p>
                             )}
                           </>
                         )}
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Created</label>
-                      <p className="flex items-center space-x-2">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <label className="text-sm font-medium text-gray-500 block mb-2">Created</label>
+                      <div className="flex items-center space-x-2 text-gray-900 dark:text-white">
                         <Calendar className="h-4 w-4" />
                         <span>{new Date(terminal.createdAt).toLocaleDateString()}</span>
-                      </p>
+                      </div>
                     </div>
                   </div>
                 </div>
