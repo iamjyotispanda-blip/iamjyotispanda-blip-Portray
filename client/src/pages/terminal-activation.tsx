@@ -371,44 +371,47 @@ export default function TerminalActivationPage() {
               {/* Activation Form */}
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onActivationSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="activationStartDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Activation Start From</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="subscriptionTypeId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Subscription Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                  {/* Primary activation fields - side by side */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="activationStartDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Activation Start From</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select subscription type" />
-                            </SelectTrigger>
+                            <Input type="date" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            {subscriptionTypes.map((type: SubscriptionType) => (
-                              <SelectItem key={type.id} value={type.id.toString()}>
-                                {type.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="subscriptionTypeId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Subscription Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select subscription type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {subscriptionTypes.map((type: SubscriptionType) => (
+                                <SelectItem key={type.id} value={type.id.toString()}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   {/* Show calculated end date */}
                   {calculateEndDate() && (
@@ -419,39 +422,41 @@ export default function TerminalActivationPage() {
                     </div>
                   )}
 
-                  {/* Work Order fields (required for non-1-month subscriptions) */}
+                  {/* Work Order fields (required for non-1-month subscriptions) - side by side */}
                   {getSelectedSubscriptionType()?.months !== 1 && getSelectedSubscriptionType()?.months && (
                     <div className="space-y-4 p-4 border rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
                       <div className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
                         Work Order Required for {getSelectedSubscriptionType()?.name} subscription
                       </div>
-                      <FormField
-                        control={form.control}
-                        name="workOrderNo"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Work Order No *</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter work order number" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="workOrderNo"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Work Order No *</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Enter work order number" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="workOrderDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Work Order Date *</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="workOrderDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Work Order Date *</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                   )}
 
