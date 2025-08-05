@@ -97,7 +97,6 @@ export const terminals = pgTable("terminals", {
   portId: integer("port_id").notNull().references(() => ports.id),
   terminalName: text("terminal_name").notNull(),
   shortCode: varchar("short_code", { length: 6 }).notNull().unique(),
-  terminalType: text("terminal_type").notNull(), // Dry Bulk, Break Bulk, Container
   gst: text("gst"),
   pan: text("pan"),
   currency: text("currency").notNull().default("INR"),
@@ -226,7 +225,6 @@ export const insertTerminalSchema = createInsertSchema(terminals).pick({
   portId: true,
   terminalName: true,
   shortCode: true,
-  terminalType: true,
   gst: true,
   pan: true,
   currency: true,
@@ -248,7 +246,6 @@ export const insertTerminalSchema = createInsertSchema(terminals).pick({
 export const updateTerminalSchema = createInsertSchema(terminals).pick({
   terminalName: true,
   shortCode: true,
-  terminalType: true,
   gst: true,
   pan: true,
   currency: true,

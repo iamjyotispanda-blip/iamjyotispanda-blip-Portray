@@ -43,6 +43,7 @@ export interface IStorage {
   getPortAdminContactById(id: number): Promise<PortAdminContact | undefined>;
   getPortAdminContactByEmail(email: string): Promise<PortAdminContact | undefined>;
   getPortAdminContactByToken(token: string): Promise<PortAdminContact | undefined>;
+  getPortAdminContactByUserId(userId: string): Promise<PortAdminContact | undefined>;
   createPortAdminContact(contact: InsertPortAdminContact): Promise<PortAdminContact>;
   updatePortAdminContact(id: number, updates: UpdatePortAdminContact): Promise<PortAdminContact | undefined>;
   togglePortAdminContactStatus(id: number): Promise<PortAdminContact | undefined>;
@@ -228,6 +229,11 @@ export class DatabaseStorage implements IStorage {
 
   async getPortAdminContactByToken(token: string): Promise<PortAdminContact | undefined> {
     const [contact] = await db.select().from(portAdminContacts).where(eq(portAdminContacts.verificationToken, token));
+    return contact || undefined;
+  }
+
+  async getPortAdminContactByUserId(userId: string): Promise<PortAdminContact | undefined> {
+    const [contact] = await db.select().from(portAdminContacts).where(eq(portAdminContacts.userId, userId));
     return contact || undefined;
   }
 
@@ -713,6 +719,12 @@ export class MemStorage implements IStorage {
   async getPortAdminContactByToken(token: string): Promise<PortAdminContact | undefined> {
     return Array.from(this.portAdminContacts.values()).find(
       (contact) => contact.verificationToken === token
+    );
+  }
+
+  async getPortAdminContactByUserId(userId: string): Promise<PortAdminContact | undefined> {
+    return Array.from(this.portAdminContacts.values()).find(
+      (contact) => contact.userId === userId
     );
   }
 

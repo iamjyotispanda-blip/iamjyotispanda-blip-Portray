@@ -30,7 +30,6 @@ const terminalFormSchema = z.object({
   
   terminalName: z.string().min(1, "Terminal name is required"),
   shortCode: z.string().min(1, "Short code is required").max(6, "Short code must be 6 characters or less"),
-  terminalType: z.string().min(1, "Terminal type is required"),
   gst: z.string().optional(),
   pan: z.string().optional(),
   currency: z.string().default("INR"),
@@ -55,12 +54,7 @@ const terminalFormSchema = z.object({
 
 type TerminalFormData = z.infer<typeof terminalFormSchema>;
 
-// Terminal types
-const terminalTypes = [
-  { value: "Dry Bulk", label: "Dry Bulk" },
-  { value: "Break Bulk", label: "Break Bulk" },
-  { value: "Container", label: "Container" },
-];
+
 
 // Timezone options for India
 const timezones = [
@@ -111,7 +105,6 @@ export default function TerminalFormPage() {
       country: "India",
       terminalName: "",
       shortCode: "",
-      terminalType: "",
       gst: "",
       pan: "",
       currency: "INR",
@@ -130,15 +123,29 @@ export default function TerminalFormPage() {
     },
   });
 
-  // Update form with port data when available
+  // Get current user's contact details
+  const { data: userContact } = useQuery({
+    queryKey: ["/api/contacts/my-contact"],
+    enabled: !!user && user.role === "PortAdmin",
+  });
+
+  // Update form with port and contact data when available
   useEffect(() => {
     if (assignedPort) {
+      // Auto-fill port information from port admin assignment
       form.setValue("portName", (assignedPort as any).portName || "");
       form.setValue("organization", (assignedPort as any).organizationName || "");
       form.setValue("state", (assignedPort as any).state || "");
       form.setValue("country", (assignedPort as any).country || "India");
     }
-  }, [assignedPort, form]);
+    
+    if (userContact && !isEditing) {
+      // Auto-fill contact information from port admin contact details for new terminals
+      const contactName = (userContact as any).contactName || "";
+      form.setValue("billingPhone", (userContact as any).mobileNumber || "");
+      form.setValue("shippingPhone", (userContact as any).mobileNumber || "");
+    }
+  }, [assignedPort, userContact, form, isEditing]);
 
   // Watch for terminal name changes to auto-generate short code
   const terminalName = form.watch("terminalName");
@@ -172,7 +179,6 @@ export default function TerminalFormPage() {
       form.reset({
         terminalName: (terminal as any).terminalName,
         shortCode: (terminal as any).shortCode,
-        terminalType: (terminal as any).terminalType,
         gst: (terminal as any).gst || "",
         pan: (terminal as any).pan || "",
         currency: (terminal as any).currency,
@@ -390,31 +396,6 @@ export default function TerminalFormPage() {
                             <FormControl>
                               <Input placeholder="Auto-generated" maxLength={6} {...field} />
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="terminalType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Terminal Type</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select terminal type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {terminalTypes.map((type) => (
-                                  <SelectItem key={type.value} value={type.value}>
-                                    {type.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}

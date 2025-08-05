@@ -579,6 +579,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's contact details (for Port Admin users)
+  app.get("/api/contacts/my-contact", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      if (req.user.role !== "PortAdmin") {
+        return res.status(403).json({ message: "Access denied. Only Port Admins can access their contact details." });
+      }
+
+      const contact = await storage.getPortAdminContactByUserId(req.user.id);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found for this user" });
+      }
+      
+      res.json(contact);
+    } catch (error) {
+      console.error("Get my contact error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Port Admin verification and registration endpoints
   app.get("/api/verify", async (req: Request, res: Response) => {
     try {
