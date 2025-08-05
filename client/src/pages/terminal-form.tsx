@@ -201,10 +201,16 @@ export default function TerminalFormPage() {
   // Create/Update terminal mutation
   const terminalMutation = useMutation({
     mutationFn: async (data: TerminalFormData) => {
+      // Include status field for all submissions
+      const submissionData = {
+        ...data,
+        status: "Processing for activation" // Always set to processing when updating/creating
+      };
+      
       if (isEditing) {
-        return apiRequest("PUT", `/api/terminals/${id}`, data);
+        return apiRequest("PUT", `/api/terminals/${id}`, submissionData);
       } else {
-        return apiRequest("POST", `/api/ports/${(assignedPort as any)?.id}/terminals`, data);
+        return apiRequest("POST", `/api/ports/${(assignedPort as any)?.id}/terminals`, submissionData);
       }
     },
     onSuccess: () => {
