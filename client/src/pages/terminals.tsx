@@ -64,7 +64,7 @@ export default function TerminalsPage() {
   // Get assigned port for Port Admin users
   const { data: assignedPort, isLoading: portLoading } = useQuery({
     queryKey: ["/api/terminals/my-port"],
-    enabled: !!user && user.role === "PortAdmin",
+    enabled: !!user && (user as any).role === "PortAdmin",
   });
 
   // Get terminals for the assigned port
@@ -87,7 +87,7 @@ export default function TerminalsPage() {
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ports", assignedPort?.id, "terminals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ports", (assignedPort as any)?.id, "terminals"] });
       toast({
         title: "Success",
         description: "Terminal deleted successfully",
@@ -218,18 +218,52 @@ export default function TerminalsPage() {
                                 {terminal.shortCode}
                               </Badge>
                               <Badge
-                                variant={terminal.isActive ? "default" : "outline"}
-                                className={terminal.isActive ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
+                                variant={terminal.status === "Active" ? "default" : "outline"}
+                                className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
                               >
-                                {terminal.isActive ? "Active" : "Processing for activation"}
+                                {terminal.status || "Processing for activation"}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              Terminal ID: {terminal.id}
-                            </p>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                              <span>{terminal.billingCity}</span>
-                              <span>{terminal.currency}</span>
+                            <div className="space-y-2">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Terminal ID: {terminal.id}
+                              </p>
+                              
+                              {/* Show activation details if terminal is active */}
+                              {terminal.status === "Active" && terminal.activationStartDate && (
+                                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border">
+                                  <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                                    Activation Details
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 text-xs text-green-700 dark:text-green-300">
+                                    <div>
+                                      <span className="font-medium">Period:</span>
+                                      <br />
+                                      {format(new Date(terminal.activationStartDate), "MMM d, yyyy")} - 
+                                      {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Subscription:</span>
+                                      <br />
+                                      {terminal.subscriptionTypeId === 1 ? "1 Month" : 
+                                       terminal.subscriptionTypeId === 2 ? "12 Months" :
+                                       terminal.subscriptionTypeId === 3 ? "24 Months" :
+                                       terminal.subscriptionTypeId === 4 ? "48 Months" : "Unknown"}
+                                    </div>
+                                    {terminal.workOrderNo && (
+                                      <div className="col-span-2">
+                                        <span className="font-medium">Work Order:</span> {terminal.workOrderNo}
+                                        {terminal.workOrderDate && ` (${format(new Date(terminal.workOrderDate), "MMM d, yyyy")})`}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                                <span>{terminal.billingCity}</span>
+                                <span>{terminal.currency}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
