@@ -10,6 +10,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { AuthService } from "@/lib/auth";
+import { format } from "date-fns";
 
 import type { Terminal, Port } from "@shared/schema";
 
@@ -69,8 +70,8 @@ export default function TerminalsPage() {
 
   // Get terminals for the assigned port
   const { data: terminals = [], isLoading: isLoadingTerminals } = useQuery({
-    queryKey: ["/api/ports", assignedPort?.id, "terminals"],
-    enabled: !!assignedPort?.id,
+    queryKey: ["/api/ports", (assignedPort as any)?.id, "terminals"],
+    enabled: !!(assignedPort as any)?.id,
   });
 
   // Filter terminals based on search term
