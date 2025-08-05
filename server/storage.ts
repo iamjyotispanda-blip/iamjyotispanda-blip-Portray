@@ -391,10 +391,12 @@ export class MemStorage implements IStorage {
   private ports: Map<number, Port>;
   private portAdminContacts: Map<number, PortAdminContact>;
   private emailConfigurations: Map<number, EmailConfiguration>;
+  private terminals: Map<number, Terminal>;
   private nextOrgId: number = 1;
   private nextPortId: number = 1;
   private nextContactId: number = 1;
   private nextEmailConfigId: number = 1;
+  private nextTerminalId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -403,6 +405,7 @@ export class MemStorage implements IStorage {
     this.ports = new Map();
     this.portAdminContacts = new Map();
     this.emailConfigurations = new Map();
+    this.terminals = new Map();
     
     // Create a default admin user for testing
     this.initializeDefaultUser();
@@ -867,6 +870,61 @@ export class MemStorage implements IStorage {
 
   async deleteEmailConfiguration(id: number): Promise<void> {
     this.emailConfigurations.delete(id);
+  }
+
+  // Terminal operations for MemStorage
+  async getTerminalsByPortId(portId: number): Promise<Terminal[]> {
+    return Array.from(this.terminals.values()).filter(
+      (terminal) => terminal.portId === portId
+    );
+  }
+
+  async getTerminalById(id: number): Promise<Terminal | undefined> {
+    return this.terminals.get(id);
+  }
+
+  async createTerminal(terminalData: InsertTerminal): Promise<Terminal> {
+    const id = this.nextTerminalId++;
+    const terminal: Terminal = {
+      ...terminalData,
+      id,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.terminals.set(id, terminal);
+    return terminal;
+  }
+
+  async updateTerminal(id: number, updates: UpdateTerminal): Promise<Terminal | undefined> {
+    const terminal = this.terminals.get(id);
+    if (!terminal) return undefined;
+
+    const updatedTerminal: Terminal = {
+      ...terminal,
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+    this.terminals.set(id, updatedTerminal);
+    return updatedTerminal;
+  }
+
+  async deleteTerminal(id: number): Promise<void> {
+    this.terminals.delete(id);
+  }
+
+  async getPortAdminAssignedPort(userId: string): Promise<Port | undefined> {
+    // Get port admin contact by user ID, then get associated port
+    const contact = Array.from(this.portAdminContacts.values()).find(
+      (c) => c.userId === userId
+    );
+    
+    if (!contact) {
+      return undefined;
+    }
+
+    return this.getPortById(contact.portId);
   }
 }
 

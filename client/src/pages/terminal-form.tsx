@@ -247,16 +247,13 @@ export default function TerminalFormPage() {
               className="h-8"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Terminals
+              Back
             </Button>
             
             <div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                 {isEditing ? "Edit Terminal" : "New Terminal"}
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {isEditing ? "Update terminal details" : "Create a new terminal"} for {(assignedPort as any).portName}
-              </p>
             </div>
           </div>
         </div>
