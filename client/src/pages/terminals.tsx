@@ -234,24 +234,13 @@ export default function TerminalsPage() {
                                 )}
                               </div>
                               
-                              {/* Show activation details below active badge */}
+                              {/* Show subscription details alongside organization info */}
                               {terminal.status === "Active" && terminal.activationStartDate && (
-                                <div className="flex flex-col space-y-1 mt-2 text-sm text-gray-700 dark:text-gray-300">
-                                  <span>Terminal ID: {terminal.id}</span>
+                                <div className="flex items-center space-x-1 mt-2 text-sm text-green-700 dark:text-green-300">
+                                  <Calendar className="h-3 w-3" />
                                   <span>
-                                    {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                    {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")} {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}{terminal.workOrderNo && ` WO: ${terminal.workOrderNo}`}
                                   </span>
-                                  <div className="flex items-center space-x-1">
-                                    <Calendar className="h-3 w-3" />
-                                    <span>
-                                      {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
-                                    </span>
-                                  </div>
-                                  {terminal.workOrderNo && (
-                                    <span>
-                                      WO: {terminal.workOrderNo}
-                                    </span>
-                                  )}
                                 </div>
                               )}
                             </div>
