@@ -406,8 +406,8 @@ export default function GlinkPage() {
   };
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
-    <div className="space-y-6 mt-2 pb-8 max-w-none">
-      {/* Menu Type - First Field */}
+    <div className="space-y-6 pb-8 max-w-none">
+      {/* FIRST FIELD: Menu Type - Must be at the top */}
       <div className="space-y-2">
         <Label htmlFor="menuType">Menu Type *</Label>
         <Select
