@@ -317,7 +317,8 @@ export function ObjectUploader({
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="max-w-full max-h-64 object-contain rounded border"
+                  className="max-w-full object-contain rounded border"
+                  style={{ height: '300px' }}
                 />
               </div>
             )}
@@ -335,7 +336,8 @@ export function ObjectUploader({
                     src={previewUrl}
                     alt="Crop preview"
                     onLoad={onImageLoad}
-                    className="max-w-full max-h-96 object-contain"
+                    className="max-w-full object-contain"
+                    style={{ height: '300px' }}
                   />
                 </ReactCrop>
               </div>
