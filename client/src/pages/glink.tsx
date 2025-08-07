@@ -71,13 +71,18 @@ export default function GlinkPage() {
     queryKey: ["/api/menus", "glink"],
     queryFn: async (): Promise<Menu[]> => {
       try {
-        return await apiRequest("GET", "/api/menus?type=glink");
+        const response = await apiRequest("GET", "/api/menus?type=glink");
+        // Ensure we always return an array
+        return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error("Failed to fetch GLink menus:", error);
         return [];
       }
     },
   });
+
+  // Ensure glinkMenus is always an array
+  const safeGlinkMenus = Array.isArray(glinkMenus) ? glinkMenus : [];
 
   // Save menu mutation
   const saveMenuMutation = useMutation({
@@ -341,7 +346,7 @@ export default function GlinkPage() {
                 <span>GLink Menus</span>
               </CardTitle>
               <Badge variant="outline" data-testid="text-menu-count">
-                {(glinkMenus || []).length} menu{(glinkMenus || []).length !== 1 ? 's' : ''}
+                {safeGlinkMenus.length} menu{safeGlinkMenus.length !== 1 ? 's' : ''}
               </Badge>
             </div>
           </CardHeader>
@@ -350,7 +355,7 @@ export default function GlinkPage() {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
-            ) : (glinkMenus || []).length === 0 ? (
+            ) : safeGlinkMenus.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <LinkIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>No GLink menus found</p>
@@ -370,7 +375,7 @@ export default function GlinkPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(glinkMenus || [])
+                  {safeGlinkMenus
                     .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
                     .map((menu: Menu) => {
                       const IconComponent = getIconComponent(menu.icon);
