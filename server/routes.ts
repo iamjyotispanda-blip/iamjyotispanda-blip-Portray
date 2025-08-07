@@ -5,8 +5,7 @@ import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdmi
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
-import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { ObjectPermission } from "./objectAcl";
+// Object storage imports removed - using fallback system
 import { EmailService } from "./emailService";
 
 // Extend Express Request to include user session
@@ -372,8 +371,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update organization logo endpoint
+  // Update organization logo endpoint - Completely rewritten to avoid any Google Cloud Storage
   app.put("/api/organizations/:id/logo", authenticateToken, async (req: Request, res: Response) => {
+    console.log("Logo update endpoint called with:", req.body);
+    
     if (!req.body.logoUrl) {
       return res.status(400).json({ error: "logoUrl is required" });
     }
@@ -381,27 +382,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const organizationId = parseInt(req.params.id);
 
     try {
-      // For our fallback system, just use the logoUrl directly
-      const objectPath = req.body.logoUrl;
+      console.log("Updating organization", organizationId, "with logo URL:", req.body.logoUrl);
+      
+      // Simple direct update - no Google Cloud Storage involved
+      const logoUrl = req.body.logoUrl;
 
-      // Update organization with the logo URL in storage
-      const organization = await storage.getOrganizationById(organizationId);
-      if (!organization) {
+      // Get organization first
+      const org = await storage.getOrganizationById(organizationId);
+      if (!org) {
+        console.log("Organization not found:", organizationId);
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      const updatedOrganization = await storage.updateOrganization(organizationId, {
-        ...organization,
-        logoUrl: objectPath
-      });
+      console.log("Found organization:", org.organizationName);
+
+      // Update with new logo URL
+      const updateData = { ...org, logoUrl: logoUrl };
+      const updated = await storage.updateOrganization(organizationId, updateData);
+
+      console.log("Successfully updated organization logo");
 
       res.status(200).json({
-        objectPath: objectPath,
-        organization: updatedOrganization
+        success: true,
+        objectPath: logoUrl,
+        organization: updated
       });
     } catch (error) {
-      console.error("Error setting organization logo:", error);
-      res.status(500).json({ error: "Internal server error" });
+      console.error("Logo update error (no Google Cloud Storage involved):", error);
+      res.status(500).json({ error: "Failed to update organization logo" });
     }
   });
 
