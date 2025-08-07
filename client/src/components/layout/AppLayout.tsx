@@ -70,7 +70,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     queryFn: async () => {
       try {
         const response = await apiRequest("GET", "/api/menus?type=glink");
-        return Array.isArray(response) ? response : [];
+        const data = await response.json();
+        console.log("GLink menus fetched:", data);
+        return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error("Failed to fetch glink menus:", error);
         return [];
@@ -188,13 +190,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         { id: "terminals", label: "Terminals", icon: Ship, route: "/terminals" }
       ];
     } else {
-      // System Admin sees navigation - use dynamic if available, fallback to default
-      const hasDynamicMenus = Array.isArray(glinkMenus) && glinkMenus.length > 0;
+      // System Admin sees navigation - always use database menus if available
+      const hasMenuData = Array.isArray(allMenus) && allMenus.length > 0;
+      console.log("Navigation check - hasMenuData:", hasMenuData, "allMenus length:", allMenus.length);
       
-      if (hasDynamicMenus) {
+      if (hasMenuData) {
         // Separate GLink and PLink menus
         const parentMenus = allMenus.filter((menu: Menu) => menu.menuType === 'glink' && menu.isActive);
         const childMenus = allMenus.filter((menu: Menu) => menu.menuType === 'plink' && menu.isActive);
+        
+        console.log("Parent menus:", parentMenus.length, "Child menus:", childMenus.length);
         
         // Dynamic GLink menus with their PLink children
         const dynamicItems: NavigationItem[] = parentMenus
@@ -210,6 +215,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 route: plink.route
               }));
             
+            console.log(`Menu ${menu.label} has ${children.length} children:`, children.map(c => c.label));
+            
             return {
               id: menu.name,
               label: menu.label,
@@ -219,34 +226,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             };
           });
 
+        console.log("Final navigation items:", dynamicItems);
         return dynamicItems;
       } else {
-        // Fallback to default navigation structure
-        return [
-          { id: "dashboard", label: "Dashboard", icon: Home, route: "/dashboard" },
-          { 
-            id: "users-access", 
-            label: "Users & Access", 
-            icon: Users,
-            children: [
-              { id: "glink", label: "GLink", icon: Link, route: "/users-access/glink" },
-              { id: "plink", label: "PLink", icon: Link, route: "/users-access/plink" },
-              { id: "roles", label: "Roles", icon: Shield, route: "/users-access/roles" },
-              { id: "groups", label: "Groups", icon: UserCheck, route: "/users-access/groups" },
-            ]
-          },
-          { 
-            id: "configuration", 
-            label: "Configuration", 
-            icon: Settings,
-            children: [
-              { id: "organization", label: "Organizations", icon: Building2, route: "/organizations" },
-              { id: "ports", label: "Ports", icon: Ship, route: "/ports" },
-              { id: "terminal-activation", label: "Terminal Activation", icon: CheckCircle, route: "/terminal-activation" },
-            ]
-          },
-          { id: "menu-management", label: "Menu Management", icon: MenuIcon, route: "/menu-management" },
-        ];
+        // Loading state or no menus available
+        console.log("No menu data available, showing loading state");
+        return [];
       }
     }
   };
@@ -393,7 +378,13 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         {/* Navigation */}
         <nav className="mt-5 px-2 flex-1">
           <div className="space-y-1">
-            {navigationItems.map((item) => (
+            {navigationItems.length === 0 && user?.role === "SystemAdmin" ? (
+              <div className="px-2 py-4 text-center text-gray-500 dark:text-gray-400">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-xs">Loading menus...</p>
+              </div>
+            ) : (
+              navigationItems.map((item) => (
               <div key={item.id}>
                 <button
                   onClick={(e) => {
@@ -500,7 +491,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   )}
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </nav>
 
