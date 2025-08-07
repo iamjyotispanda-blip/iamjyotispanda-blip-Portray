@@ -765,12 +765,24 @@ export default function OrganizationPage() {
                               src={org.logoUrl} 
                               alt={`${org.displayName} logo`}
                               className="w-10 h-10 object-cover rounded border"
+                              onLoad={() => console.log('Logo loaded successfully:', org.logoUrl)}
+                              onError={(e) => {
+                                console.error('Logo failed to load:', org.logoUrl);
+                                console.error('Error details:', e);
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
                             />
                           ) : (
                             <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded border flex items-center justify-center">
                               <Building2 className="w-5 h-5 text-gray-400" />
                             </div>
                           )}
+                          <div className="w-10 h-10 bg-red-100 rounded border flex items-center justify-center" style={{ display: 'none' }}>
+                            <Building2 className="w-5 h-5 text-red-400" />
+                          </div>
                           <div>
                             <div className="font-medium">{org.displayName}</div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
