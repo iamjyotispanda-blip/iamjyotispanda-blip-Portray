@@ -1150,8 +1150,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       console.log("Terminal update request body:", JSON.stringify(req.body, null, 2));
-      const updates = updateTerminalSchema.parse(req.body);
-      console.log("Parsed updates:", JSON.stringify(updates, null, 2));
+      
+      // Get existing terminal to check if it's activated
+      const existingTerminal = await storage.getTerminalById(id);
+      if (!existingTerminal) {
+        return res.status(404).json({ message: "Terminal not found" });
+      }
+      
+      // Check if terminal is activated
+      const isActivated = existingTerminal.status === "Active";
+      
+      let updates;
+      if (isActivated) {
+        // For activated terminals, only allow basic field updates
+        const allowedUpdates = {
+          terminalName: req.body.terminalName,
+          shortCode: req.body.shortCode,
+          gst: req.body.gst,
+          pan: req.body.pan,
+          currency: req.body.currency,
+          timezone: req.body.timezone,
+          billingAddress: req.body.billingAddress,
+          billingCity: req.body.billingCity,
+          billingPinCode: req.body.billingPinCode,
+          billingPhone: req.body.billingPhone,
+          billingFax: req.body.billingFax,
+          shippingAddress: req.body.shippingAddress,
+          shippingCity: req.body.shippingCity,
+          shippingPinCode: req.body.shippingPinCode,
+          shippingPhone: req.body.shippingPhone,
+          shippingFax: req.body.shippingFax,
+          sameAsBilling: req.body.sameAsBilling,
+        };
+        // Remove undefined values
+        updates = Object.fromEntries(Object.entries(allowedUpdates).filter(([_, v]) => v !== undefined));
+        console.log("Terminal is activated, only updating basic fields:", JSON.stringify(updates, null, 2));
+      } else {
+        // For non-activated terminals, allow all updates
+        updates = updateTerminalSchema.parse(req.body);
+        console.log("Terminal not activated, allowing all updates:", JSON.stringify(updates, null, 2));
+      }
       
       const terminal = await storage.updateTerminal(id, updates);
       if (!terminal) {
@@ -1162,16 +1200,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Checking if status is 'Processing for activation':", updates.status === "Processing for activation");
       
       // Create activation log entry for terminal update
+      const logDescription = isActivated 
+        ? `Terminal "${terminal.terminalName}" (${terminal.shortCode}) basic details were updated (terminal already activated)`
+        : `Terminal "${terminal.terminalName}" (${terminal.shortCode}) was updated${updates.status ? ` - Status: ${updates.status}` : ''}`;
+      
       await storage.createActivationLog({
         terminalId: terminal.id,
         action: "updated",
-        description: `Terminal "${terminal.terminalName}" (${terminal.shortCode}) was updated${updates.status ? ` - Status: ${updates.status}` : ''}`,
+        description: logDescription,
         performedBy: req.user.id,
         data: JSON.stringify(updates)
       });
       
-      // Create notification for system admin only if status is "Processing for activation"
-      if (updates.status === "Processing for activation") {
+      // Create notification for system admin only if status is "Processing for activation" and not already activated
+      if (!isActivated && updates.status === "Processing for activation") {
         console.log("Creating notification for terminal activation request");
         try {
           await storage.createNotification({

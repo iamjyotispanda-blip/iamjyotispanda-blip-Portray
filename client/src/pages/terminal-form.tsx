@@ -207,11 +207,39 @@ export default function TerminalFormPage() {
   // Create/Update terminal mutation
   const terminalMutation = useMutation({
     mutationFn: async (data: TerminalFormData) => {
-      // Include status field for all submissions
-      const submissionData = {
-        ...data,
-        status: "Processing for activation" // Always set to processing when updating/creating
-      };
+      // Check if terminal is already activated
+      const isActivated = terminal && (terminal as any).status === "Active";
+      
+      let submissionData;
+      if (isEditing && isActivated) {
+        // If terminal is activated, only update basic fields, preserve activation data
+        submissionData = {
+          terminalName: data.terminalName,
+          shortCode: data.shortCode,
+          gst: data.gst,
+          pan: data.pan,
+          currency: data.currency,
+          timezone: data.timezone,
+          billingAddress: data.billingAddress,
+          billingCity: data.billingCity,
+          billingPinCode: data.billingPinCode,
+          billingPhone: data.billingPhone,
+          billingFax: data.billingFax,
+          shippingAddress: data.shippingAddress,
+          shippingCity: data.shippingCity,
+          shippingPinCode: data.shippingPinCode,
+          shippingPhone: data.shippingPhone,
+          shippingFax: data.shippingFax,
+          sameAsBilling: data.sameAsBilling,
+          // Do not change status for activated terminals
+        };
+      } else {
+        // For new terminals or non-activated terminals, include status
+        submissionData = {
+          ...data,
+          status: "Processing for activation"
+        };
+      }
       
       if (isEditing) {
         return apiRequest("PUT", `/api/terminals/${id}`, submissionData);
