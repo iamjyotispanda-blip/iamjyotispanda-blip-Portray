@@ -761,25 +761,12 @@ export default function OrganizationPage() {
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           {org.logoUrl ? (
-                            <div className="flex items-center space-x-2">
+                            <div>
                               <img 
                                 src={org.logoUrl} 
                                 alt={`${org.displayName} logo`}
                                 className="w-10 h-10 object-cover rounded border"
-                                onLoad={() => console.log('Logo loaded successfully:', org.logoUrl)}
-                                onError={(e) => {
-                                  console.error('Logo failed to load:', org.logoUrl);
-                                  console.error('Error details:', e);
-                                }}
                               />
-                              <a 
-                                href={org.logoUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-500 hover:underline"
-                              >
-                                Test URL
-                              </a>
                             </div>
                           ) : (
                             <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded border flex items-center justify-center">
