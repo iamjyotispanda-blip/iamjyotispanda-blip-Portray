@@ -220,27 +220,27 @@ export default function TerminalsPage() {
                               </Badge>
                               <Badge
                                 variant={terminal.status === "Active" ? "default" : "outline"}
-                                className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
+                                className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center space-x-3" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
                               >
-                                {terminal.status || "Processing for activation"}
-                              </Badge>
-                              
-                              {/* Show activation details inline with badge if terminal is active */}
-                              {terminal.status === "Active" && terminal.activationStartDate && (
-                                <div className="flex items-center space-x-3 text-xs text-green-700 dark:text-green-300">
-                                  <span>
-                                    {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
-                                  </span>
-                                  <span>
-                                    {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
-                                  </span>
-                                  {terminal.workOrderNo && (
+                                {terminal.status === "Active" && terminal.activationStartDate ? (
+                                  <div className="flex items-center space-x-3">
+                                    <span>{terminal.status}</span>
                                     <span>
-                                      WO: {terminal.workOrderNo}
+                                      {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
                                     </span>
-                                  )}
-                                </div>
-                              )}
+                                    <span>
+                                      {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
+                                    </span>
+                                    {terminal.workOrderNo && (
+                                      <span>
+                                        WO: {terminal.workOrderNo}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  terminal.status || "Processing for activation"
+                                )}
+                              </Badge>
                             </div>
                             <div className="space-y-2">
                               <p className="text-sm text-gray-600 dark:text-gray-400">
