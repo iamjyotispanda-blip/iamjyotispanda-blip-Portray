@@ -18,14 +18,14 @@ export default function TerminalProfile() {
 
   // Get port details for the terminal
   const { data: port, isLoading: portLoading } = useQuery({
-    queryKey: ["/api/ports", terminal?.portId],
-    enabled: !!terminal?.portId,
+    queryKey: ["/api/ports", (terminal as any)?.portId],
+    enabled: !!(terminal as any)?.portId,
   });
 
   // Get organization details
   const { data: organization, isLoading: orgLoading } = useQuery({
-    queryKey: ["/api/organizations", port?.organizationId],
-    enabled: !!port?.organizationId,
+    queryKey: ["/api/organizations", (port as any)?.organizationId],
+    enabled: !!(port as any)?.organizationId,
   });
 
   if (terminalLoading || portLoading || orgLoading) {
@@ -87,24 +87,34 @@ export default function TerminalProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Building2 className="h-5 w-5" />
-                    <span>Organization: <span className="text-blue-600 dark:text-blue-400">{organization.organizationName}</span></span>
+                    <span>Organization: <span className="text-blue-600 dark:text-blue-400">{(organization as any).organizationName}</span></span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-6 h-[120px]">
                     {/* Logo Section */}
                     <div className="flex-shrink-0 text-center">
-                      {organization.logoUrl ? (
+                      {(organization as any).logoUrl ? (
                         <img 
-                          src={organization.logoUrl} 
-                          alt={organization.organizationName}
+                          src={(organization as any).logoUrl} 
+                          alt={(organization as any).organizationName}
                           className="h-20 w-20 object-contain rounded-lg mx-auto"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) {
+                              fallback.style.display = 'flex';
+                            }
+                          }}
                         />
-                      ) : (
-                        <div className="h-20 w-20 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto">
-                          <Building2 className="w-10 h-10 text-blue-600 dark:text-blue-400" />
-                        </div>
-                      )}
+                      ) : null}
+                      <div 
+                        className={`h-20 w-20 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto ${(organization as any).logoUrl ? 'hidden' : ''}`}
+                        style={{ display: (organization as any).logoUrl ? 'none' : 'flex' }}
+                      >
+                        <Building2 className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                      </div>
                     </div>
                     
                     {/* Organization Details Grid */}
@@ -112,7 +122,7 @@ export default function TerminalProfile() {
                       {/* Organization Code */}
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex flex-col justify-center">
                         <p className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400 text-center">
-                          {organization.organizationCode}
+                          {(organization as any).organizationCode}
                         </p>
                       </div>
                       
@@ -120,34 +130,34 @@ export default function TerminalProfile() {
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-center">
                         <div className="flex items-center space-x-2">
                           <Globe className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          <span className="text-sm font-medium">{organization.country}</span>
+                          <span className="text-sm font-medium">{(organization as any).country}</span>
                         </div>
                       </div>
                       
                       {/* Telephone */}
-                      {organization.telephone && (
+                      {(organization as any).telephone && (
                         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-center">
                           <div className="flex items-center space-x-2">
                             <Phone className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                            <span className="text-sm font-medium">{organization.telephone}</span>
+                            <span className="text-sm font-medium">{(organization as any).telephone}</span>
                           </div>
                         </div>
                       )}
                       
                       {/* Website or Register Office */}
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex items-center justify-center">
-                        {organization.website ? (
+                        {(organization as any).website ? (
                           <div className="flex items-center space-x-2">
                             <Globe className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                             <span className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer truncate">
-                              {organization.website}
+                              {(organization as any).website}
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center space-x-2">
                             <MapPin className="h-4 w-4 text-red-600 dark:text-red-400" />
-                            <span className="text-sm font-medium truncate" title={organization.registerOffice}>
-                              {organization.registerOffice}
+                            <span className="text-sm font-medium truncate" title={(organization as any).registerOffice}>
+                              {(organization as any).registerOffice}
                             </span>
                           </div>
                         )}
@@ -167,7 +177,35 @@ export default function TerminalProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Terminal Logo Section */}
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                      <label className="text-sm font-medium text-gray-500 block mb-3">Terminal Logo</label>
+                      {(terminal as any).logoUrl ? (
+                        <img 
+                          src={(terminal as any).logoUrl} 
+                          alt={(terminal as any).terminalName}
+                          className="h-20 w-20 object-contain rounded-lg mx-auto"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) {
+                              fallback.style.display = 'flex';
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className={`h-20 w-20 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto ${(terminal as any).logoUrl ? 'hidden' : ''}`}
+                        style={{ display: (terminal as any).logoUrl ? 'none' : 'flex' }}
+                      >
+                        <Ship className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="space-y-6">
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                       <label className="text-sm font-medium text-gray-500 block mb-2">Terminal Name</label>
