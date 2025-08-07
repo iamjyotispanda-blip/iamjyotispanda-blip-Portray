@@ -630,7 +630,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             firstName,
             lastName,
             role: "PortAdmin",
-            isActive: false, // Will be activated after password setup
           };
           
           user = await storage.createUser(userData);
@@ -643,7 +642,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             firstName,
             lastName,
             role: "PortAdmin",
-            isActive: false, // Reset to inactive, will be activated after password setup
             password: "TEMP_PASSWORD_NEEDS_SETUP" // Reset password for security
           });
           
