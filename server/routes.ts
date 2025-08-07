@@ -6,6 +6,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
 import { EmailService } from "./emailService";
 
 // Extend Express Request to include user session
@@ -314,6 +315,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Update organization logo endpoint
+  app.put("/api/organizations/:id/logo", authenticateToken, async (req: Request, res: Response) => {
+    if (!req.body.logoUrl) {
+      return res.status(400).json({ error: "logoUrl is required" });
+    }
+
+    const organizationId = parseInt(req.params.id);
+    const userId = (req as any).user?.id;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.logoUrl,
+        {
+          owner: userId,
+          // Organization logos should be public so they can be viewed by everyone
+          visibility: "public",
+        },
+      );
+
+      // Update organization with the logo URL in storage
+      const organizations = await storage.getAllOrganizations();
+      const orgIndex = organizations.findIndex((org: any) => org.id === organizationId);
+      if (orgIndex === -1) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+
+      organizations[orgIndex].logoUrl = objectPath;
+      await storage.updateOrganization(organizationId, organizations[orgIndex]);
+
+      res.status(200).json({
+        objectPath: objectPath,
+      });
+    } catch (error) {
+      console.error("Error setting organization logo:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 

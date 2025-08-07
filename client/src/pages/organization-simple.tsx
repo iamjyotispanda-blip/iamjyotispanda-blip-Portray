@@ -361,6 +361,28 @@ export default function OrganizationPage() {
     },
   });
 
+  // Logo update mutation
+  const updateLogoMutation = useMutation({
+    mutationFn: async ({ organizationId, logoUrl }: { organizationId: number; logoUrl: string }) => {
+      const response = await apiRequest("PUT", `/api/organizations/${organizationId}/logo`, { logoUrl });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/organizations"] });
+      toast({
+        title: "Success",
+        description: "Organization logo updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update organization logo",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Toggle organization status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -638,7 +660,17 @@ export default function OrganizationPage() {
                 <Label htmlFor="logo">Organization Logo</Label>
                 <ObjectUploader
                   value={formData.logoUrl}
-                  onChange={(value) => handleInputChange('logoUrl', value)}
+                  onChange={(value) => {
+                    handleInputChange('logoUrl', value);
+                    // If we're editing an existing organization and a logo was uploaded,
+                    // update the logo ACL policies
+                    if (isEditMode && selectedOrganization && value) {
+                      updateLogoMutation.mutate({
+                        organizationId: selectedOrganization.id,
+                        logoUrl: value
+                      });
+                    }
+                  }}
                   accept="image/*"
                   maxSize={5}
                 />
