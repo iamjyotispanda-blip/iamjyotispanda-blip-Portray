@@ -398,17 +398,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                       handleNavigation(item);
                     }
                   }}
-                  className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-200 ${
+                  className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
                     activeSection === item.id || (isParentActive(item) && expandedItems.includes(item.id))
                       ? 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/30 text-green-900 dark:text-green-100 border-l-4 border-green-500'
                       : expandedItems.includes(item.id) && item.children && item.children.length > 0
                       ? 'bg-gray-50 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border-l-2 border-gray-300 dark:border-gray-600'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white hover:shadow-sm'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
                   title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
                 >
                   <div className="flex items-center">
-                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 transition-colors ${
+                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
                       activeSection === item.id || isParentActive(item) ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                     }`} />
                     {(!sidebarCollapsed || sidebarHovered) && (
@@ -419,71 +419,52 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   </div>
                   {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && (
                     <div className="ml-2 flex items-center space-x-1">
-                      <span className="text-xs text-gray-500 mr-1 font-medium">({item.children.length})</span>
-                      
-                      {/* Dynamic folder icon */}
+                      {/* Simple chevron without animations */}
                       {expandedItems.includes(item.id) ? (
-                        <FolderOpen className="h-4 w-4 text-green-500 group-hover:text-green-600 dark:group-hover:text-green-400 transition-all duration-300 transform" />
+                        <ChevronDown className="h-4 w-4 text-green-500" />
                       ) : (
-                        <Folder className="h-4 w-4 text-gray-500 group-hover:text-green-500 dark:group-hover:text-green-400 transition-all duration-300 transform group-hover:scale-110" />
+                        <ChevronRight className="h-4 w-4 text-gray-500" />
                       )}
-                      
-                      {/* Animated chevron */}
-                      <div className={`transition-all duration-300 ease-in-out transform ${
-                        expandedItems.includes(item.id) 
-                          ? 'rotate-180 text-green-500' 
-                          : 'rotate-0 text-gray-500 group-hover:text-green-500'
-                      }`}>
-                        <ChevronDown className="h-4 w-4 transition-colors duration-300" />
-                      </div>
                     </div>
                   )}
                 </button>
                 
-                {/* Expanded children with enhanced smooth animation */}
-                <div className={`overflow-hidden transition-all duration-500 ease-in-out transform ${
+                {/* Expanded children */}
+                <div className={`overflow-hidden ${
                   item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id)
-                    ? 'max-h-96 opacity-100 translate-y-0 scale-y-100'
-                    : 'max-h-0 opacity-0 -translate-y-2 scale-y-95'
+                    ? 'block'
+                    : 'hidden'
                 }`}>
                   {item.children && item.children.length > 0 && expandedItems.includes(item.id) && (
                     <div className="ml-6 mt-2 space-y-1 border-l-2 border-green-200 dark:border-green-800 bg-gradient-to-r from-green-50/30 to-transparent dark:from-green-900/20 rounded-r-lg">
-                      {item.children.map((child: NavigationItem, index) => (
-                        <div key={child.id} className={`relative transition-all duration-300 ease-out transform ${
-                          expandedItems.includes(item.id) 
-                            ? `opacity-100 translate-x-0 delay-[${index * 50}ms]` 
-                            : 'opacity-0 -translate-x-4'
-                        }`}>
-                          {/* Enhanced animated tree line connector */}
-                          <div className={`absolute left-0 top-0 h-6 w-px bg-green-200 dark:bg-green-700 transition-all duration-300 transform ${
-                            expandedItems.includes(item.id) ? 'scale-y-100' : 'scale-y-0'
-                          }`}></div>
-                          <div className={`absolute left-0 top-3 w-4 h-px bg-green-200 dark:bg-green-700 transition-all duration-300 transform ${
-                            expandedItems.includes(item.id) ? 'scale-x-100' : 'scale-x-0'
-                          }`}></div>
+                      {item.children.map((child: NavigationItem) => (
+                        <div key={child.id} className="relative">
+                          {/* Simple tree line connector */}
+                          <div className="absolute left-0 top-0 h-6 w-px bg-green-200 dark:bg-green-700"></div>
+                          <div className="absolute left-0 top-3 w-4 h-px bg-green-200 dark:bg-green-700"></div>
                           
                           <button
                             onClick={() => handleNavigation(child)}
-                            className={`group flex items-center px-3 py-2 ml-4 text-sm rounded-md w-full text-left transition-all duration-200 relative ${
+                            className={`group flex items-center px-3 py-2 ml-4 text-sm rounded-md w-full text-left relative ${
                               activeSection === child.id
-                                ? 'bg-gradient-to-r from-green-100 to-green-50 dark:from-green-800/40 dark:to-green-900/20 text-green-800 dark:text-green-200 border-l-4 border-green-600 font-medium transform scale-[1.02]'
+                                ? 'bg-gradient-to-r from-green-100 to-green-50 dark:from-green-800/40 dark:to-green-900/20 text-green-800 dark:text-green-200 border-l-4 border-green-600 font-medium'
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-green-50/50 dark:hover:bg-green-900/30 hover:border-l-2 hover:border-green-300 dark:hover:border-green-600'
                             }`}
                           >
-                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-300 ease-in-out ${
+                            <child.icon className={`mr-3 h-4 w-4 ${
                               activeSection === child.id 
-                                ? 'text-green-600 dark:text-green-400 transform scale-110 rotate-3' 
-                                : 'text-gray-400 group-hover:text-green-500 dark:group-hover:text-green-400 group-hover:scale-105'
+                                ? 'text-green-600 dark:text-green-400' 
+                                : 'text-gray-400 group-hover:text-green-500 dark:group-hover:text-green-400'
                             }`} />
-                            <span className={`transition-all duration-200 ${
-                              activeSection === child.id ? 'font-semibold' : 'group-hover:font-medium'
+                            <span className={`${
+                              activeSection === child.id ? 'font-semibold' : ''
                             }`}>
                               {child.label}
                             </span>
                             {activeSection === child.id && (
                               <div className="ml-auto flex items-center space-x-1">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <div className="text-xs text-green-500 font-medium animate-fade-in">•</div>
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <div className="text-xs text-green-500 font-medium">•</div>
                               </div>
                             )}
                           </button>
