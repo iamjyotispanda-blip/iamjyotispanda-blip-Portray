@@ -236,14 +236,13 @@ export default function EmailConfigurationPage() {
                 <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Configurations</h3>
                 <p className="text-gray-500 dark:text-gray-400 mb-4">No email configurations available</p>
-                <div className="flex space-x-2">
-                  <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
-                    <SheetTrigger asChild>
-                      <Button className="h-8">
-                        <Plus className="h-4 w-4 mr-2" />
-                        New mail configuration
-                      </Button>
-                    </SheetTrigger>
+                <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+                  <SheetTrigger asChild>
+                    <Button className="h-8">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New mail configuration
+                    </Button>
+                  </SheetTrigger>
                   <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
                     <SheetHeader>
                       <SheetTitle>Add Email Configuration</SheetTitle>
@@ -381,154 +380,6 @@ export default function EmailConfigurationPage() {
                     </div>
                   </SheetContent>
                   </Sheet>
-                </div>
-
-                {/* Edit Form Sheet */}
-                <Sheet open={showEditForm} onOpenChange={(open) => {
-                  setShowEditForm(open);
-                  if (!open) {
-                    setEditingConfig(null);
-                    resetForm();
-                  }
-                }}>
-                  <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
-                    <SheetHeader>
-                      <SheetTitle>Edit Email Configuration</SheetTitle>
-                      <SheetDescription>
-                        Modify SMTP settings for email configuration
-                      </SheetDescription>
-                    </SheetHeader>
-                    
-                    <div className="space-y-4 mt-6 pb-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="editPortId">Port *</Label>
-                        <Select
-                          value={formData.portId.toString()}
-                          onValueChange={(value: string) => setFormData({ ...formData, portId: parseInt(value) })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a port" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(ports as any[]).map((port: any) => (
-                              <SelectItem key={port.id} value={port.id.toString()}>
-                                <div className="flex items-center">
-                                  <Ship className="h-4 w-4 mr-2" />
-                                  {port.portName}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="editSmtpHost">SMTP Host *</Label>
-                        <Input
-                          id="editSmtpHost"
-                          value={formData.smtpHost}
-                          onChange={(e) => setFormData({ ...formData, smtpHost: e.target.value })}
-                          placeholder="smtp.gmail.com"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="editSmtpPort">SMTP Port *</Label>
-                        <Input
-                          id="editSmtpPort"
-                          type="number"
-                          value={formData.smtpPort}
-                          onChange={(e) => setFormData({ ...formData, smtpPort: parseInt(e.target.value) || 587 })}
-                          placeholder="587"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="editSmtpUser">SMTP Username *</Label>
-                        <Input
-                          id="editSmtpUser"
-                          type="email"
-                          value={formData.smtpUser}
-                          onChange={(e) => setFormData({ ...formData, smtpUser: e.target.value })}
-                          placeholder="your-email@gmail.com"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="editSmtpPassword">SMTP Password *</Label>
-                        <div className="relative">
-                          <Input
-                            id="editSmtpPassword"
-                            type={showPassword ? "text" : "password"}
-                            value={formData.smtpPassword}
-                            onChange={(e) => setFormData({ ...formData, smtpPassword: e.target.value })}
-                            placeholder={editingConfig ? "Enter new password or leave blank to keep existing" : "Enter password or app password"}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="editFromEmail">From Email *</Label>
-                        <Input
-                          id="editFromEmail"
-                          type="email"
-                          value={formData.fromEmail}
-                          onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
-                          placeholder="noreply@yourcompany.com"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="editFromName">From Name *</Label>
-                        <Input
-                          id="editFromName"
-                          value={formData.fromName}
-                          onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
-                          placeholder="PortRay Support"
-                        />
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="editEnableTLS"
-                          checked={formData.enableTLS}
-                          onCheckedChange={(checked) => setFormData({ ...formData, enableTLS: checked })}
-                        />
-                        <Label htmlFor="editEnableTLS">Enable TLS/SSL</Label>
-                      </div>
-
-                      <div className="flex space-x-3 pt-6 sticky bottom-0 bg-white dark:bg-slate-950 border-t pt-4 mt-6">
-                        <Button 
-                          onClick={handleSaveConfig}
-                          disabled={saveConfigMutation.isPending}
-                          className="flex-1 h-10"
-                        >
-                          {saveConfigMutation.isPending ? "Updating..." : "Update Configuration"}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setShowEditForm(false);
-                            setEditingConfig(null);
-                            resetForm();
-                          }}
-                          className="flex-1 h-10"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
               </div>
             ) : (
               <Table>
@@ -638,8 +489,155 @@ export default function EmailConfigurationPage() {
                 </TableBody>
               </Table>
             )}
-              </CardContent>
+            </CardContent>
             </Card>
+            
+            {/* Edit Form Sheet */}
+            <Sheet open={showEditForm} onOpenChange={(open) => {
+              setShowEditForm(open);
+              if (!open) {
+                setEditingConfig(null);
+                resetForm();
+              }
+            }}>
+              <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Edit Email Configuration</SheetTitle>
+                  <SheetDescription>
+                    Modify SMTP settings for email configuration
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="space-y-4 mt-6 pb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="editPortId">Port *</Label>
+                    <Select
+                      value={formData.portId.toString()}
+                      onValueChange={(value: string) => setFormData({ ...formData, portId: parseInt(value) })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a port" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(ports as any[]).map((port: any) => (
+                          <SelectItem key={port.id} value={port.id.toString()}>
+                            <div className="flex items-center">
+                              <Ship className="h-4 w-4 mr-2" />
+                              {port.portName}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editSmtpHost">SMTP Host *</Label>
+                    <Input
+                      id="editSmtpHost"
+                      value={formData.smtpHost}
+                      onChange={(e) => setFormData({ ...formData, smtpHost: e.target.value })}
+                      placeholder="smtp.gmail.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editSmtpPort">SMTP Port *</Label>
+                    <Input
+                      id="editSmtpPort"
+                      type="number"
+                      value={formData.smtpPort}
+                      onChange={(e) => setFormData({ ...formData, smtpPort: parseInt(e.target.value) || 587 })}
+                      placeholder="587"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editSmtpUser">SMTP Username *</Label>
+                    <Input
+                      id="editSmtpUser"
+                      type="email"
+                      value={formData.smtpUser}
+                      onChange={(e) => setFormData({ ...formData, smtpUser: e.target.value })}
+                      placeholder="your-email@gmail.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editSmtpPassword">SMTP Password *</Label>
+                    <div className="relative">
+                      <Input
+                        id="editSmtpPassword"
+                        type={showPassword ? "text" : "password"}
+                        value={formData.smtpPassword}
+                        onChange={(e) => setFormData({ ...formData, smtpPassword: e.target.value })}
+                        placeholder={editingConfig ? "Enter new password or leave blank to keep existing" : "Enter password or app password"}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editFromEmail">From Email *</Label>
+                    <Input
+                      id="editFromEmail"
+                      type="email"
+                      value={formData.fromEmail}
+                      onChange={(e) => setFormData({ ...formData, fromEmail: e.target.value })}
+                      placeholder="noreply@yourcompany.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="editFromName">From Name *</Label>
+                    <Input
+                      id="editFromName"
+                      value={formData.fromName}
+                      onChange={(e) => setFormData({ ...formData, fromName: e.target.value })}
+                      placeholder="PortRay Support"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="editEnableTLS"
+                      checked={formData.enableTLS}
+                      onCheckedChange={(checked) => setFormData({ ...formData, enableTLS: checked })}
+                    />
+                    <Label htmlFor="editEnableTLS">Enable TLS/SSL</Label>
+                  </div>
+
+                  <div className="flex space-x-3 pt-6 sticky bottom-0 bg-white dark:bg-slate-950 border-t pt-4 mt-6">
+                    <Button 
+                      onClick={handleSaveConfig}
+                      disabled={saveConfigMutation.isPending}
+                      className="flex-1 h-10"
+                    >
+                      {saveConfigMutation.isPending ? "Updating..." : "Update Configuration"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowEditForm(false);
+                        setEditingConfig(null);
+                        resetForm();
+                      }}
+                      className="flex-1 h-10"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </main>
       </div>
