@@ -705,30 +705,43 @@ export default function MenuManagementPage() {
 
       <div className="space-y-2">
         <Label htmlFor="icon">Icon</Label>
-        <div className="flex items-center space-x-2">
-          <select
-            id="icon"
-            value={formData.icon}
-            onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            data-testid="select-icon"
-          >
-            <option value="">Select an icon</option>
-            {iconOptions.map((icon) => (
-              <option key={icon.name} value={icon.name}>
-                {icon.name}
-              </option>
-            ))}
-          </select>
-          {formData.icon && (
-            <div className="flex items-center justify-center w-10 h-10 border rounded-md bg-gray-50">
-              {(() => {
-                const IconComponent = getIconComponent(formData.icon);
-                return <IconComponent className="h-5 w-5" />;
-              })()}
-            </div>
-          )}
-        </div>
+        <Select
+          value={formData.icon}
+          onValueChange={(value: string) => setFormData({ ...formData, icon: value })}
+        >
+          <SelectTrigger data-testid="select-icon">
+            <SelectValue placeholder="Select an icon">
+              {formData.icon && (
+                <div className="flex items-center space-x-2">
+                  {(() => {
+                    const IconComponent = getIconComponent(formData.icon);
+                    return <IconComponent className="h-4 w-4" />;
+                  })()}
+                  <span>{formData.icon}</span>
+                </div>
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-64 overflow-y-auto">
+            <SelectItem value="">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4"></div>
+                <span>No icon</span>
+              </div>
+            </SelectItem>
+            {iconOptions.map((icon) => {
+              const IconComponent = icon.component;
+              return (
+                <SelectItem key={icon.name} value={icon.name}>
+                  <div className="flex items-center space-x-2">
+                    <IconComponent className="h-4 w-4" />
+                    <span>{icon.name}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
         <p className="text-xs text-gray-500">Choose an icon for the navigation menu</p>
       </div>
 
