@@ -85,15 +85,52 @@ export function RolesContent() {
     queryKey: ["/api/menus"],
   });
 
-  // Filter GLinks (parent menus)
-  const gLinks = (menus as Menu[]).filter(menu => menu.menuType === 'glink' && menu.isActive);
+  // Get already assigned menu combinations
+  const getAssignedMenuCombinations = () => {
+    return formData.permissions.map(permission => {
+      const parts = permission.split(':');
+      if (parts.length >= 2) {
+        return `${parts[0]}:${parts[1]}`; // GLink:PLink combination
+      }
+      return '';
+    }).filter(combo => combo !== '');
+  };
 
-  // Filter PLinks (child menus) based on selected GLink
-  const pLinks = (menus as Menu[]).filter(menu => 
-    menu.menuType === 'plink' && 
-    menu.isActive && 
-    menu.parentId?.toString() === selectedGLink
-  );
+  const assignedCombinations = getAssignedMenuCombinations();
+
+  // Filter GLinks (parent menus) - only show GLinks that have available PLinks
+  const availableGLinks = (menus as Menu[]).filter(menu => {
+    if (menu.menuType !== 'glink' || !menu.isActive) return false;
+    
+    // Check if this GLink has any available PLinks (not already assigned)
+    const childPLinks = (menus as Menu[]).filter(childMenu => 
+      childMenu.menuType === 'plink' && 
+      childMenu.isActive && 
+      childMenu.parentId === menu.id
+    );
+    
+    // Check if any child PLink is not already assigned
+    return childPLinks.some(plink => {
+      const combination = `${menu.name}:${plink.name}`;
+      return !assignedCombinations.includes(combination);
+    });
+  });
+
+  // Filter PLinks (child menus) based on selected GLink - exclude already assigned
+  const availablePLinks = (menus as Menu[]).filter(menu => {
+    if (menu.menuType !== 'plink' || 
+        !menu.isActive || 
+        menu.parentId?.toString() !== selectedGLink) {
+      return false;
+    }
+    
+    // Get the selected GLink name
+    const selectedGLinkMenu = availableGLinks.find(g => g.id.toString() === selectedGLink);
+    if (!selectedGLinkMenu) return false;
+    
+    const combination = `${selectedGLinkMenu.name}:${menu.name}`;
+    return !assignedCombinations.includes(combination);
+  });
 
   // Filter roles based on search term
   const filteredRoles = (roles as Role[]).filter((role: Role) =>
@@ -230,8 +267,8 @@ export function RolesContent() {
       return;
     }
 
-    const gLinkMenu = gLinks.find(g => g.id.toString() === selectedGLink);
-    const pLinkMenu = pLinks.find(p => p.id.toString() === selectedPLink);
+    const gLinkMenu = availableGLinks.find(g => g.id.toString() === selectedGLink);
+    const pLinkMenu = availablePLinks.find(p => p.id.toString() === selectedPLink);
     
     if (!gLinkMenu || !pLinkMenu) {
       toast({
@@ -689,7 +726,7 @@ export function RolesContent() {
                       <SelectValue placeholder="Select a parent menu" />
                     </SelectTrigger>
                     <SelectContent>
-                      {gLinks.map((glink) => (
+                      {availableGLinks.map((glink) => (
                         <SelectItem key={glink.id} value={glink.id.toString()}>
                           <div className="flex items-center">
                             <span className="font-medium">{glink.label}</span>
@@ -712,7 +749,7 @@ export function RolesContent() {
                       <SelectValue placeholder={selectedGLink ? "Select a child menu" : "First select a parent menu"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {pLinks.map((plink) => (
+                      {availablePLinks.map((plink) => (
                         <SelectItem key={plink.id} value={plink.id.toString()}>
                           <div className="flex items-center">
                             <span className="font-medium">{plink.label}</span>
