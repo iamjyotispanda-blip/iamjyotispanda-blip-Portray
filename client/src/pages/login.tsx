@@ -181,28 +181,6 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-          
-          {/* Live Port Status - Keep this */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 mb-6">
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-white text-sm font-medium">Live Port Status</span>
-            </div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-blue-200">Container Ship Alpha</span>
-                <span className="text-green-400">Arriving 14:30</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-blue-200">Bulk Carrier Beta</span>
-                <span className="text-yellow-400">Loading 67%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-blue-200">Tanker Gamma</span>
-                <span className="text-blue-400">Departing 16:45</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
