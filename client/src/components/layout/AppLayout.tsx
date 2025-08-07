@@ -254,11 +254,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const navigationItems = getNavigationItems();
 
   const toggleExpandedItem = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId) 
+    console.log('Toggling item:', itemId, 'Current expanded:', expandedItems);
+    setExpandedItems(prev => {
+      const newExpanded = prev.includes(itemId) 
         ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    );
+        : [...prev, itemId];
+      console.log('New expanded state:', newExpanded);
+      return newExpanded;
+    });
   };
 
   const expandItem = (itemId: string) => {
@@ -274,20 +277,23 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         .filter(item => item.children && item.children.length > 0)
         .map(item => item.id);
       
+      console.log('Initializing expanded menus:', parentMenuIds);
       setExpandedItems(parentMenuIds);
       setInitialized(true);
     }
   }, [navigationItems, initialized]);
 
-  // Auto-expand parent menu when child is active (but don't override user choices)
+  // Auto-expand parent menu when child is active
   React.useEffect(() => {
-    if (initialized) {
+    if (initialized && activeSection) {
       const activeParent = getActiveParent();
+      console.log('Active section:', activeSection, 'Active parent:', activeParent);
       if (activeParent && !expandedItems.includes(activeParent)) {
+        console.log('Expanding parent for active child:', activeParent);
         expandItem(activeParent);
       }
     }
-  }, [activeSection, initialized]);
+  }, [activeSection, initialized, expandedItems, navigationItems]);
 
   const handleNavigation = (item: NavigationItem) => {
     if (item.route) {
@@ -375,7 +381,15 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
-                  onClick={() => item.children && item.children.length > 0 ? toggleExpandedItem(item.id) : handleNavigation(item)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    console.log('Clicked item:', item.id, 'Has children:', !!(item.children && item.children.length > 0));
+                    if (item.children && item.children.length > 0) {
+                      toggleExpandedItem(item.id);
+                    } else {
+                      handleNavigation(item);
+                    }
+                  }}
                   className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-200 ${
                     activeSection === item.id || isParentActive(item)
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
