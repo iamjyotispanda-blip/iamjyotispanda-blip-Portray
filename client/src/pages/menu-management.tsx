@@ -219,6 +219,40 @@ export default function MenuManagementPage() {
         </Select>
       </div>
 
+      {/* SECOND FIELD: Parent Menu Selection - Only for PLink */}
+      {formData.menuType === 'plink' && (
+        <div className="space-y-2">
+          <Label htmlFor="parentId">Parent Menu *</Label>
+          <Select
+            value={formData.parentId?.toString() || ""}
+            onValueChange={(value: string) => setFormData({ ...formData, parentId: value ? parseInt(value) : null })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select parent menu" />
+            </SelectTrigger>
+            <SelectContent>
+              {(() => {
+                console.log("Parent dropdown rendering, glinkMenus:", glinkMenus);
+                const availableGLinks = glinkMenus
+                  .filter(menu => menu.isActive && menu.menuType === 'glink')
+                  .sort((a, b) => a.sortOrder - b.sortOrder);
+                console.log("Filtered active GLinks:", availableGLinks);
+                return availableGLinks.map((menu: Menu) => (
+                  <SelectItem key={menu.id} value={menu.id.toString()}>
+                    <div className="flex items-center">
+                      <GitBranch className="h-4 w-4 mr-2" />
+                      {menu.label}
+                      <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
+                    </div>
+                  </SelectItem>
+                ));
+              })()}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500">All GLink menus are bound as parent options for PLink</p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <Input
@@ -259,38 +293,6 @@ export default function MenuManagementPage() {
           placeholder="/dashboard"
         />
       </div>
-
-      {formData.menuType === 'plink' && (
-        <div className="space-y-2">
-          <Label htmlFor="parentId">Parent Menu</Label>
-          <Select
-            value={formData.parentId?.toString() || ""}
-            onValueChange={(value: string) => setFormData({ ...formData, parentId: value ? parseInt(value) : null })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select parent menu" />
-            </SelectTrigger>
-            <SelectContent>
-              {(() => {
-                console.log("Parent dropdown rendering, glinkMenus:", glinkMenus);
-                const availableGLinks = glinkMenus
-                  .filter(menu => menu.isActive && menu.menuType === 'glink')
-                  .sort((a, b) => a.sortOrder - b.sortOrder);
-                console.log("Filtered active GLinks:", availableGLinks);
-                return availableGLinks.map((menu: Menu) => (
-                  <SelectItem key={menu.id} value={menu.id.toString()}>
-                    <div className="flex items-center">
-                      <GitBranch className="h-4 w-4 mr-2" />
-                      {menu.label}
-                      <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
-                    </div>
-                  </SelectItem>
-                ));
-              })()}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
 
       <div className="space-y-2">
         <Label htmlFor="sortOrder">Sort Order</Label>
