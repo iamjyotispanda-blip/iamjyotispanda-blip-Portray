@@ -646,7 +646,7 @@ export default function GlinkPage() {
                     Create a new {selectedMenuType === 'glink' ? 'main menu item' : 'sub menu item'}
                   </SheetDescription>
                 </SheetHeader>
-                <div className="flex-1 overflow-y-auto px-1 py-4">
+                <div className="flex-1 overflow-y-auto px-1 pb-4">
                   <MenuForm />
                 </div>
               </SheetContent>
