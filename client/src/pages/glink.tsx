@@ -206,7 +206,7 @@ export default function GlinkPage() {
   };
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
-    <div className="space-y-4 mt-6 pb-6">
+    <div className="space-y-6 mt-2 pb-8 max-w-none">
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <Input
@@ -285,7 +285,7 @@ export default function GlinkPage() {
         <p className="text-xs text-gray-500">Display order in navigation (lower numbers appear first)</p>
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4">
+      <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700 mt-8">
         <Button
           variant="outline"
           onClick={() => {
@@ -326,14 +326,14 @@ export default function GlinkPage() {
                 <span>Add GLink Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+            <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
               <SheetHeader>
                 <SheetTitle>Add New GLink Menu</SheetTitle>
                 <SheetDescription>
                   Create a new main navigation menu item
                 </SheetDescription>
               </SheetHeader>
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto px-1 py-4">
                 <MenuForm />
               </div>
             </SheetContent>
@@ -466,14 +466,14 @@ export default function GlinkPage() {
 
         {/* Edit Sheet */}
         <Sheet open={showEditForm} onOpenChange={setShowEditForm}>
-          <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+          <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
             <SheetHeader>
               <SheetTitle>Edit GLink Menu</SheetTitle>
               <SheetDescription>
                 Update the main navigation menu item
               </SheetDescription>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-1 py-4">
               <MenuForm isEdit={true} />
             </div>
           </SheetContent>
