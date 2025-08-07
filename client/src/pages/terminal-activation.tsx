@@ -274,10 +274,17 @@ export default function TerminalActivationPage() {
                               >
                                 {terminal.status}
                               </Badge>
-                              
-                              {/* Show activation details separately if terminal is active */}
-                              {terminal.status === "Active" && terminal.activationStartDate && (
-                                <div className="flex flex-col space-y-2 mt-2">
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                  <Building className="w-4 h-4" />
+                                  <span>{terminal.organization?.organizationName}</span>
+                                  <span className="text-gray-400">•</span>
+                                  <span>{terminal.organization?.organizationCode}</span>
+                                </div>
+                                {/* Subscription details aligned to the right */}
+                                {terminal.status === "Active" && terminal.activationStartDate && (
                                   <div className="flex items-center space-x-3 text-sm text-gray-700 dark:text-gray-300">
                                     <span>
                                       {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
@@ -294,21 +301,16 @@ export default function TerminalActivationPage() {
                                       </span>
                                     )}
                                   </div>
-                                  {terminal.activationEndDate && (
-                                    <h5 className="text-lg font-bold text-green-700 dark:text-green-300">
-                                      {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                    </h5>
-                                  )}
+                                )}
+                              </div>
+                              {/* Remaining days below subscription details */}
+                              {terminal.status === "Active" && terminal.activationEndDate && (
+                                <div className="flex justify-end">
+                                  <h5 className="text-lg font-bold text-green-700 dark:text-green-300">
+                                    {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
+                                  </h5>
                                 </div>
                               )}
-                            </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <Building className="w-4 h-4" />
-                                <span>{terminal.organization?.organizationName}</span>
-                                <span className="text-gray-400">•</span>
-                                <span>{terminal.organization?.organizationCode}</span>
-                              </div>
                               <div className="flex items-center space-x-2">
                                 <MapPin className="w-4 h-4" />
                                 <span>{terminal.port?.portName}</span>
