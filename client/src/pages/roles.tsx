@@ -87,17 +87,13 @@ export function RolesContent() {
 
   // Get already assigned menu combinations
   const getAssignedMenuCombinations = () => {
-    console.log('DEBUG: Current formData.permissions:', formData.permissions);
-    const combinations = formData.permissions.map(permission => {
+    return formData.permissions.map(permission => {
       const parts = permission.split(':');
-      console.log('DEBUG: Permission parts:', parts);
       if (parts.length >= 2) {
         return `${parts[0]}:${parts[1]}`; // GLink:PLink combination
       }
       return '';
     }).filter(combo => combo !== '');
-    console.log('DEBUG: Assigned combinations:', combinations);
-    return combinations;
   };
 
   const assignedCombinations = getAssignedMenuCombinations();
@@ -132,21 +128,12 @@ export function RolesContent() {
     // Get the selected GLink name from all menus
     const selectedGLinkMenu = (menus as Menu[]).find(g => g.id.toString() === selectedGLink);
     if (!selectedGLinkMenu) {
-      console.log('DEBUG: No GLink found for ID:', selectedGLink);
       return false;
     }
     
     // Check if this PLink is already assigned to the selected GLink
     const combination = `${selectedGLinkMenu.name}:${menu.name}`;
     const isAlreadyAssigned = assignedCombinations.includes(combination);
-    
-    console.log('DEBUG: Checking PLink:', {
-      plinkName: menu.name,
-      glinkName: selectedGLinkMenu.name,
-      combination: combination,
-      isAlreadyAssigned: isAlreadyAssigned,
-      assignedCombinations: assignedCombinations
-    });
     
     return !isAlreadyAssigned;
   }) : [];
@@ -765,7 +752,7 @@ export function RolesContent() {
                     disabled={!selectedGLink}
                   >
                     <SelectTrigger data-testid="select-plink">
-                      <SelectValue placeholder={selectedGLink ? `Select a child menu (${availablePLinks.length} available, ${assignedCombinations.length} assigned)` : "First select a parent menu"} />
+                      <SelectValue placeholder={selectedGLink ? `Select a child menu (${availablePLinks.length} available)` : "First select a parent menu"} />
                     </SelectTrigger>
                     <SelectContent>
                       {availablePLinks.length === 0 && selectedGLink ? (

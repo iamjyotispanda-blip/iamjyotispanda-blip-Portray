@@ -64,7 +64,51 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     queryFn: AuthService.getCurrentUser,
   });
 
-  // Get dynamic GLink menus from API for System Admin
+  // Get user's role with permissions
+  const { data: userRole } = useQuery({
+    queryKey: ["/api/roles", user?.roleId],
+    queryFn: async () => {
+      if (!user?.roleId) return null;
+      try {
+        const response = await apiRequest("GET", `/api/roles/${user.roleId}`);
+        return await response.json();
+      } catch (error) {
+        console.error("Failed to fetch user role:", error);
+        return null;
+      }
+    },
+    enabled: !!user?.roleId,
+  });
+
+  // Helper function to check if user has permission for a menu item
+  const hasMenuPermission = (menuName: string, parentMenuName?: string) => {
+    if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
+      return false;
+    }
+    
+    // For SystemAdmin, allow all access (backward compatibility)
+    if (user?.role === "SystemAdmin") {
+      return true;
+    }
+    
+    // Check if user has permission for this menu
+    return userRole.permissions.some((permission: string) => {
+      const parts = permission.split(':');
+      if (parts.length >= 2) {
+        const [gLink, pLink] = parts;
+        if (parentMenuName) {
+          // For child menu items, check both parent and child
+          return gLink === parentMenuName && pLink === menuName;
+        } else {
+          // For parent menu items, check if any child is accessible
+          return gLink === menuName;
+        }
+      }
+      return false;
+    });
+  };
+
+  // Get dynamic GLink menus from API for all authenticated users
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
     queryFn: async () => {
@@ -78,10 +122,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         return [];
       }
     },
-    enabled: user?.role === "SystemAdmin",
+    enabled: !!user,
   });
 
-  // Get ALL dynamic menus from API for System Admin
+  // Get ALL dynamic menus from API for all authenticated users
   const { data: allMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus"],
     queryFn: async () => {
@@ -94,7 +138,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         return [];
       }
     },
-    enabled: user?.role === "SystemAdmin",
+    enabled: !!user,
   });
 
   // Get system configuration menus (Plink items with isSystemConfig flag)
@@ -102,16 +146,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     menu.menuType === 'plink' && (menu as any).isSystemConfig && menu.isActive
   ).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
 
-  // Get notifications only for system admins
+  // Get notifications for authenticated users (can be controlled by permissions later)
   const queryClient = useQueryClient();
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
-    enabled: user?.role === "SystemAdmin",
+    enabled: !!user,
   });
 
   const { data: unreadCount = { count: 0 } } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
-    enabled: user?.role === "SystemAdmin",
+    enabled: !!user,
     refetchInterval: 30000, // Poll every 30 seconds
   });
 
@@ -190,17 +234,68 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   // Role-based navigation items
   const getNavigationItems = (): NavigationItem[] => {
     if (user?.role === "PortAdmin") {
-      // Port Admin only sees Terminals
-      return [
-        { id: "terminals", label: "Terminals", icon: Ship, route: "/terminals" }
-      ];
+      // Port Admin sees menus based on their role permissions
+      const hasMenuData = Array.isArray(allMenus) && allMenus.length > 0;
+      
+      if (!hasMenuData) {
+        // Fallback for Port Admin if no menu data
+        return [
+          { id: "terminals", label: "Terminals", icon: Ship, route: "/terminals" }
+        ];
+      }
+      
+      // Filter menus based on PortAdmin permissions
+      const parentMenus = allMenus.filter((menu: Menu) => 
+        menu.menuType === 'glink' && 
+        menu.isActive && 
+        hasMenuPermission(menu.name)
+      );
+      
+      const childMenus = allMenus.filter((menu: Menu) => 
+        menu.menuType === 'plink' && 
+        menu.isActive && 
+        !(menu as any).isSystemConfig
+      );
+      
+      const filteredItems: NavigationItem[] = parentMenus
+        .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
+        .map((menu: Menu): NavigationItem | null => {
+          const children = childMenus
+            .filter((plink: Menu) => 
+              plink.parentId === menu.id && 
+              hasMenuPermission(plink.name, menu.name)
+            )
+            .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
+            .map((plink: Menu): NavigationItem => ({
+              id: plink.name,
+              label: plink.label,
+              icon: getIconComponent(plink.icon),
+              route: plink.route
+            }));
+          
+          // Only include parent if it has accessible children or direct route
+          if (children.length > 0 || menu.route) {
+            return {
+              id: menu.name,
+              label: menu.label,
+              icon: getIconComponent(menu.icon),
+              route: menu.route,
+              children: children.length > 0 ? children : undefined
+            };
+          }
+          return null;
+        })
+        .filter((item): item is NavigationItem => item !== null);
+      
+      return filteredItems;
+      
     } else {
-      // System Admin sees navigation - always use database menus if available
+      // System Admin sees all navigation (backward compatibility)
       const hasMenuData = Array.isArray(allMenus) && allMenus.length > 0;
       console.log("Navigation check - hasMenuData:", hasMenuData, "allMenus length:", allMenus.length);
       
       if (hasMenuData) {
-        // Separate GLink and PLink menus
+        // For SystemAdmin, show all menus (existing behavior)
         const parentMenus = allMenus.filter((menu: Menu) => menu.menuType === 'glink' && menu.isActive);
         const childMenus = allMenus.filter((menu: Menu) => menu.menuType === 'plink' && menu.isActive);
         
@@ -383,7 +478,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         {/* Navigation */}
         <nav className="mt-5 px-2 flex-1">
           <div className="space-y-1">
-            {navigationItems.length === 0 && user?.role === "SystemAdmin" ? (
+            {navigationItems.length === 0 && !!user ? (
               <div className="px-2 py-4 text-center text-gray-500 dark:text-gray-400">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
                 <p className="text-xs">Loading menus...</p>
