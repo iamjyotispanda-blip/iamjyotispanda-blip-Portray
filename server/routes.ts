@@ -952,19 +952,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const menuType = req.query.type as string;
       const parentId = req.query.parentId ? parseInt(req.query.parentId as string) : undefined;
       
-      console.log("GET /api/menus - menuType:", menuType, "parentId:", parentId);
-      
       if (menuType) {
         const menus = await storage.getMenusByType(menuType as 'glink' | 'plink');
-        console.log(`Found ${menus.length} menus for type '${menuType}':`, menus);
         res.json(menus);
       } else if (parentId !== undefined) {
         const menus = await storage.getMenusByParentId(parentId === 0 ? null : parentId);
-        console.log(`Found ${menus.length} menus for parentId '${parentId}':`, menus);
         res.json(menus);
       } else {
         const menus = await storage.getAllMenus();
-        console.log(`Found ${menus.length} total menus:`, menus);
         res.json(menus);
       }
     } catch (error) {
@@ -1110,6 +1105,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(menu);
     } catch (error) {
       console.error("Toggle menu status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Bulk update menu order endpoint
+  app.patch("/api/menus/bulk-update-order", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { updates } = req.body;
+      
+      if (!Array.isArray(updates)) {
+        return res.status(400).json({ message: "Updates must be an array" });
+      }
+      
+      // Update each menu's sort order
+      const updatePromises = updates.map(({ id, sortOrder }: { id: number; sortOrder: number }) => 
+        storage.updateMenu(id, { sortOrder })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      res.json({ message: "Menu order updated successfully" });
+    } catch (error) {
+      console.error("Bulk update menu order error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
