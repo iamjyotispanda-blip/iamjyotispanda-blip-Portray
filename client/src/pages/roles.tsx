@@ -87,6 +87,7 @@ export function RolesContent() {
 
   // Get already assigned menu combinations
   const getAssignedMenuCombinations = () => {
+    console.log('Current permissions:', formData.permissions);
     const combinations = formData.permissions.map(permission => {
       const parts = permission.split(':');
       if (parts.length >= 2) {
@@ -102,6 +103,8 @@ export function RolesContent() {
   };
 
   const assignedCombinations = getAssignedMenuCombinations();
+  console.log('Available menus:', menus);
+  console.log('Selected GLink:', selectedGLink);
 
   // Filter GLinks (parent menus) - only show GLinks that have available PLinks
   const availableGLinks = (menus as Menu[]).filter(menu => {
@@ -122,26 +125,36 @@ export function RolesContent() {
   });
 
   // Filter PLinks (child menus) based on selected GLink - exclude already assigned
-  const availablePLinks = (menus as Menu[]).filter(menu => {
+  const availablePLinks = selectedGLink ? (menus as Menu[]).filter(menu => {
+    // First check basic criteria
     if (menu.menuType !== 'plink' || 
         !menu.isActive || 
         menu.parentId?.toString() !== selectedGLink) {
       return false;
     }
     
-    // Get the selected GLink name from all menus (not just available ones)
+    // Get the selected GLink name from all menus
     const selectedGLinkMenu = (menus as Menu[]).find(g => g.id.toString() === selectedGLink);
-    if (!selectedGLinkMenu) return false;
+    if (!selectedGLinkMenu) {
+      console.log('No GLink found for ID:', selectedGLink);
+      return false;
+    }
     
     // Check if this PLink is already assigned to the selected GLink
     const combination = `${selectedGLinkMenu.name}:${menu.name}`;
     const isAlreadyAssigned = assignedCombinations.includes(combination);
     
     // Debug log to see what's happening
-    console.log('Checking PLink:', menu.name, 'Combination:', combination, 'Already assigned:', isAlreadyAssigned);
+    console.log('Checking PLink:', {
+      name: menu.name,
+      parentId: menu.parentId,
+      combination: combination,
+      isAlreadyAssigned: isAlreadyAssigned,
+      assignedCombinations: assignedCombinations
+    });
     
     return !isAlreadyAssigned;
-  });
+  }) : [];
 
   // Filter roles based on search term
   const filteredRoles = (roles as Role[]).filter((role: Role) =>
@@ -757,17 +770,21 @@ export function RolesContent() {
                     disabled={!selectedGLink}
                   >
                     <SelectTrigger data-testid="select-plink">
-                      <SelectValue placeholder={selectedGLink ? "Select a child menu" : "First select a parent menu"} />
+                      <SelectValue placeholder={selectedGLink ? `Select a child menu (${availablePLinks.length} available)` : "First select a parent menu"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {availablePLinks.map((plink) => (
-                        <SelectItem key={plink.id} value={plink.id.toString()}>
-                          <div className="flex items-center">
-                            <span className="font-medium">{plink.label}</span>
-                            <span className="ml-2 text-sm text-gray-500">({plink.name})</span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {availablePLinks.length === 0 && selectedGLink ? (
+                        <div className="p-2 text-sm text-gray-500">No available menus (all assigned)</div>
+                      ) : (
+                        availablePLinks.map((plink) => (
+                          <SelectItem key={plink.id} value={plink.id.toString()}>
+                            <div className="flex items-center">
+                              <span className="font-medium">{plink.label}</span>
+                              <span className="ml-2 text-sm text-gray-500">({plink.name})</span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
