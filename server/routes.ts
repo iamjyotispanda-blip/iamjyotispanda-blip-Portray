@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, type InsertUser } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, insertUserSchema, updateUserSchema, insertRoleSchema, updateRoleSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -1139,6 +1139,329 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Menu deleted successfully" });
     } catch (error) {
       console.error("Delete menu error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Role management endpoints
+  app.get("/api/roles", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const roles = await storage.getAllRoles();
+      res.json(roles);
+    } catch (error) {
+      console.error("Get roles error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/roles/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const role = await storage.getRoleById(id);
+      
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      res.json(role);
+    } catch (error) {
+      console.error("Get role error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/roles", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can create roles
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can create roles." });
+      }
+
+      const roleData = insertRoleSchema.parse(req.body);
+      
+      // Check if role name already exists
+      const existingRole = await storage.getRoleByName(roleData.name);
+      if (existingRole) {
+        return res.status(400).json({ message: "Role name already exists" });
+      }
+      
+      const role = await storage.createRole(roleData);
+      res.status(201).json(role);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create role error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/roles/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can update roles
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can update roles." });
+      }
+
+      const id = parseInt(req.params.id);
+      const updates = updateRoleSchema.parse(req.body);
+      
+      // Check if role name already exists (excluding current role)
+      if (updates.name) {
+        const existingRole = await storage.getRoleByName(updates.name);
+        if (existingRole && existingRole.id !== id) {
+          return res.status(400).json({ message: "Role name already exists" });
+        }
+      }
+      
+      const role = await storage.updateRole(id, updates);
+      
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      res.json(role);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Update role error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/roles/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can toggle role status
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can toggle role status." });
+      }
+
+      const id = parseInt(req.params.id);
+      const role = await storage.toggleRoleStatus(id);
+      
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      res.json(role);
+    } catch (error) {
+      console.error("Toggle role status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/roles/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can delete roles
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can delete roles." });
+      }
+
+      const id = parseInt(req.params.id);
+      
+      // Check if role exists
+      const role = await storage.getRoleById(id);
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      // Prevent deletion of system roles
+      if (role.name === "SystemAdmin" || role.name === "PortAdmin") {
+        return res.status(400).json({ message: "Cannot delete system roles" });
+      }
+      
+      await storage.deleteRole(id);
+      res.json({ message: "Role deleted successfully" });
+    } catch (error) {
+      console.error("Delete role error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // User management endpoints
+  app.get("/api/users", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can view all users
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can view users." });
+      }
+
+      const users = await storage.getAllUsers();
+      // Remove password from response
+      const safeUsers = users.map(({ password, ...user }) => user);
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Get users error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/users/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can view user details
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can view user details." });
+      }
+
+      const id = req.params.id;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/users", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can create users
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can create users." });
+      }
+
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if email already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
+      const user = await storage.createUser({
+        ...userData,
+        id: randomUUID(),
+        password: hashedPassword
+      });
+      
+      // Remove password from response
+      const { password, ...safeUser } = user;
+      res.status(201).json(safeUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create user error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/users/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can update users
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can update users." });
+      }
+
+      const id = req.params.id;
+      const updates = updateUserSchema.parse(req.body);
+      
+      // Check if email already exists (excluding current user)
+      if (updates.email) {
+        const existingUser = await storage.getUserByEmail(updates.email);
+        if (existingUser && existingUser.id !== id) {
+          return res.status(400).json({ message: "Email already exists" });
+        }
+      }
+      
+      const user = await storage.updateUser(id, updates);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Update user error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/users/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can toggle user status
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can toggle user status." });
+      }
+
+      const id = req.params.id;
+      
+      // Prevent deactivating the current user
+      if (id === req.user?.id) {
+        return res.status(400).json({ message: "Cannot toggle your own status" });
+      }
+      
+      const user = await storage.toggleUserStatus(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Toggle user status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/users/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can delete users
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can delete users." });
+      }
+
+      const id = req.params.id;
+      
+      // Prevent deleting the current user
+      if (id === req.user?.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Prevent deletion of system admin
+      if (user.id === "admin-001") {
+        return res.status(400).json({ message: "Cannot delete system administrator" });
+      }
+      
+      await storage.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Delete user error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus } from "@shared/schema";
+import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -9,9 +9,12 @@ export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  updateUser(id: string, updates: UpdateUser): Promise<User | undefined>;
+  toggleUserStatus(id: string): Promise<User | undefined>;
   updateUserLastLogin(id: string): Promise<void>;
+  deleteUser(id: string): Promise<void>;
   
   // Authentication operations
   validateUserCredentials(email: string, password: string): Promise<User | null>;
@@ -101,6 +104,15 @@ export interface IStorage {
   updateMenu(id: number, updates: UpdateMenu): Promise<Menu | undefined>;
   deleteMenu(id: number): Promise<void>;
   toggleMenuStatus(id: number): Promise<Menu | undefined>;
+  
+  // Role operations
+  getAllRoles(): Promise<Role[]>;
+  getRoleById(id: number): Promise<Role | undefined>;
+  getRoleByName(name: string): Promise<Role | undefined>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: number, updates: UpdateRole): Promise<Role | undefined>;
+  toggleRoleStatus(id: number): Promise<Role | undefined>;
+  deleteRole(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -373,13 +385,36 @@ export class DatabaseStorage implements IStorage {
     await db.delete(emailConfigurations).where(eq(emailConfigurations.id, id));
   }
 
-  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
+  async updateUser(id: string, updates: UpdateUser): Promise<User | undefined> {
     const [user] = await db
       .update(users)
-      .set(updates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  async toggleUserStatus(id: string): Promise<User | undefined> {
+    const currentUser = await this.getUser(id);
+    if (!currentUser) return undefined;
+    
+    const [user] = await db
+      .update(users)
+      .set({ 
+        isActive: !currentUser.isActive,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async linkContactToUser(contactId: number, userId: string): Promise<void> {
@@ -725,6 +760,61 @@ export class DatabaseStorage implements IStorage {
       .where(eq(menus.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  // Role operations
+  async getAllRoles(): Promise<Role[]> {
+    return db.select().from(roles);
+  }
+
+  async getRoleById(id: number): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.id, id));
+    return role || undefined;
+  }
+
+  async getRoleByName(name: string): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.name, name));
+    return role || undefined;
+  }
+
+  async createRole(roleData: InsertRole): Promise<Role> {
+    const [role] = await db
+      .insert(roles)
+      .values({
+        ...roleData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return role;
+  }
+
+  async updateRole(id: number, updates: UpdateRole): Promise<Role | undefined> {
+    const [role] = await db
+      .update(roles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(roles.id, id))
+      .returning();
+    return role || undefined;
+  }
+
+  async toggleRoleStatus(id: number): Promise<Role | undefined> {
+    const currentRole = await this.getRoleById(id);
+    if (!currentRole) return undefined;
+    
+    const [role] = await db
+      .update(roles)
+      .set({ 
+        isActive: !currentRole.isActive,
+        updatedAt: new Date()
+      })
+      .where(eq(roles.id, id))
+      .returning();
+    return role || undefined;
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    await db.delete(roles).where(eq(roles.id, id));
   }
 }
 

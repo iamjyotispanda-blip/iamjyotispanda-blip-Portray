@@ -9,10 +9,12 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
-  role: text("role").notNull().default("user"),
+  role: text("role").notNull().default("PortAdmin"), // Will reference roles.name
+  roleId: integer("role_id").references(() => roles.id),
   isActive: boolean("is_active").notNull().default(true),
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
 export const sessions = pgTable("sessions", {
@@ -187,7 +189,19 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   role: true,
+  roleId: true,
 });
+
+export const updateUserSchema = createInsertSchema(users).pick({
+  email: true,
+  firstName: true,
+  lastName: true,
+  role: true,
+  roleId: true,
+  isActive: true,
+}).partial();
+
+export type UpdateUser = z.infer<typeof updateUserSchema>;
 
 export const insertPortAdminContactSchema = createInsertSchema(portAdminContacts).pick({
   portId: true,
@@ -309,7 +323,9 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
 });
 
 // Type definitions
-export type User = typeof users.$inferSelect;
+export type User = typeof users.$inferSelect & {
+  role?: Role;
+};
 export type Session = typeof sessions.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Port = typeof ports.$inferSelect;
@@ -318,6 +334,7 @@ export type EmailConfiguration = typeof emailConfigurations.$inferSelect;
 export type Terminal = typeof terminals.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SelectUser = typeof users.$inferSelect;
 export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
 export type InsertPort = z.infer<typeof insertPortSchema>;
 export type InsertPortAdminContact = z.infer<typeof insertPortAdminContactSchema>;
@@ -390,9 +407,42 @@ export const subscriptionTypes = pgTable("subscription_types", {
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
+// Roles table
+export const roles = pgTable("roles", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull().unique(), // "SystemAdmin", "PortAdmin"
+  displayName: text("display_name").notNull(), // "System Administrator", "Port Administrator"
+  description: text("description"),
+  permissions: text("permissions").array(), // Array of permission strings
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 export const insertSubscriptionTypeSchema = createInsertSchema(subscriptionTypes);
 export type InsertSubscriptionType = z.infer<typeof insertSubscriptionTypeSchema>;
 export type SubscriptionType = typeof subscriptionTypes.$inferSelect;
+
+// Roles schemas
+export const insertRoleSchema = createInsertSchema(roles).pick({
+  name: true,
+  displayName: true,
+  description: true,
+  permissions: true,
+  isActive: true,
+});
+
+export const updateRoleSchema = createInsertSchema(roles).pick({
+  name: true,
+  displayName: true,
+  description: true,
+  permissions: true,
+  isActive: true,
+}).partial();
+
+export type Role = typeof roles.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type UpdateRole = z.infer<typeof updateRoleSchema>;
 
 // Activation Logs Table
 export const activationLogs = pgTable("activation_logs", {
@@ -413,6 +463,17 @@ export const activationLogsRelations = relations(activationLogs, ({ one }) => ({
   user: one(users, {
     fields: [activationLogs.performedBy],
     references: [users.id],
+  }),
+}));
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  users: many(users),
+}));
+
+export const usersRelations = relations(users, ({ one }) => ({
+  role: one(roles, {
+    fields: [users.roleId],
+    references: [roles.id],
   }),
 }));
 

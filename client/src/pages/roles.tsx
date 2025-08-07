@@ -1,0 +1,596 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Shield, Edit, ToggleLeft, ToggleRight, Trash2, Search } from "lucide-react";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { Role } from "@shared/schema";
+
+interface RoleFormData {
+  name: string;
+  displayName: string;
+  description: string;
+  permissions: string[];
+  isActive: boolean;
+}
+
+export function RolesContent() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [formData, setFormData] = useState<RoleFormData>({
+    name: "",
+    displayName: "",
+    description: "",
+    permissions: [],
+    isActive: true,
+  });
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Get all roles
+  const { data: roles = [], isLoading: rolesLoading } = useQuery({
+    queryKey: ["/api/roles"],
+  });
+
+  // Filter roles based on search term
+  const filteredRoles = (roles as Role[]).filter((role: Role) =>
+    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    role.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // Save role mutation
+  const saveRoleMutation = useMutation({
+    mutationFn: async (data: RoleFormData) => {
+      if (editingRole) {
+        return apiRequest("PUT", `/api/roles/${editingRole.id}`, data);
+      } else {
+        return apiRequest("POST", "/api/roles", data);
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `Role ${editingRole ? 'updated' : 'created'} successfully`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+      setShowAddForm(false);
+      setShowEditForm(false);
+      setEditingRole(null);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || `Failed to ${editingRole ? 'update' : 'create'} role`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Toggle role status mutation
+  const toggleRoleStatusMutation = useMutation({
+    mutationFn: async (roleId: number) => {
+      return apiRequest("PATCH", `/api/roles/${roleId}/toggle-status`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+      toast({
+        title: "Success",
+        description: "Role status updated successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update role status",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: number) => {
+      return apiRequest("DELETE", `/api/roles/${roleId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Role deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete role",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      displayName: "",
+      description: "",
+      permissions: [],
+      isActive: true,
+    });
+  };
+
+  const handleEdit = (role: Role) => {
+    setEditingRole(role);
+    setFormData({
+      name: role.name,
+      displayName: role.displayName,
+      description: role.description || "",
+      permissions: role.permissions || [],
+      isActive: role.isActive,
+    });
+    setShowEditForm(true);
+  };
+
+  const handleSaveRole = () => {
+    if (!formData.name.trim() || !formData.displayName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    saveRoleMutation.mutate(formData);
+  };
+
+  const handleToggleRoleStatus = (roleId: number) => {
+    toggleRoleStatusMutation.mutate(roleId);
+  };
+
+  const handleDeleteRole = (roleId: number) => {
+    deleteRoleMutation.mutate(roleId);
+  };
+
+  const handleAddPermission = () => {
+    const newPermission = prompt("Enter permission (e.g., users:read, ports:write):");
+    if (newPermission && !formData.permissions.includes(newPermission)) {
+      setFormData({
+        ...formData,
+        permissions: [...formData.permissions, newPermission]
+      });
+    }
+  };
+
+  const handleRemovePermission = (permission: string) => {
+    setFormData({
+      ...formData,
+      permissions: formData.permissions.filter(p => p !== permission)
+    });
+  };
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Roles</span>
+      </div>
+      
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search roles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-roles"
+              />
+            </div>
+            <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+              <SheetTrigger asChild>
+                <Button className="h-8" data-testid="button-add-role">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Role
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Add Role</SheetTitle>
+                  <SheetDescription>
+                    Create a new role with specific permissions
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="space-y-4 mt-6 pb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Role Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="e.g., Manager"
+                      data-testid="input-role-name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Display Name *</Label>
+                    <Input
+                      id="displayName"
+                      value={formData.displayName}
+                      onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                      placeholder="e.g., Department Manager"
+                      data-testid="input-role-display-name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Describe the role responsibilities..."
+                      data-testid="textarea-role-description"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Permissions</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleAddPermission}
+                        data-testid="button-add-permission"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Permission
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.permissions.map((permission, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="outline" 
+                          className="cursor-pointer"
+                          onClick={() => handleRemovePermission(permission)}
+                          data-testid={`badge-permission-${index}`}
+                        >
+                          {permission} ×
+                        </Badge>
+                      ))}
+                      {formData.permissions.length === 0 && (
+                        <span className="text-sm text-gray-500">No permissions added</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isActive"
+                      checked={formData.isActive}
+                      onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                      data-testid="switch-role-active"
+                    />
+                    <Label htmlFor="isActive">Active</Label>
+                  </div>
+
+                  <div className="flex space-x-3 pt-6 sticky bottom-0 bg-white dark:bg-slate-950 border-t pt-4 mt-6">
+                    <Button 
+                      onClick={handleSaveRole}
+                      disabled={saveRoleMutation.isPending}
+                      className="flex-1 h-10"
+                      data-testid="button-save-role"
+                    >
+                      {saveRoleMutation.isPending ? "Creating..." : "Create Role"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowAddForm(false);
+                        resetForm();
+                      }}
+                      className="flex-1 h-10"
+                      data-testid="button-cancel-role"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Roles List */}
+          <div className="grid gap-4">
+            {rolesLoading ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center text-gray-500">Loading roles...</div>
+                </CardContent>
+              </Card>
+            ) : filteredRoles.length === 0 ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center text-gray-500">
+                    {searchTerm ? "No roles found matching your search." : "No roles found."}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              filteredRoles.map((role: Role) => (
+                <Card key={role.id} className="hover:shadow-md transition-shadow" data-testid={`card-role-${role.id}`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                          <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white" data-testid={`text-role-name-${role.id}`}>
+                              {role.displayName}
+                            </h3>
+                            <Badge variant="outline" data-testid={`badge-role-key-${role.id}`}>
+                              {role.name}
+                            </Badge>
+                            <Badge
+                              variant={role.isActive ? "default" : "secondary"}
+                              data-testid={`badge-role-status-${role.id}`}
+                            >
+                              {role.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
+                          {role.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400" data-testid={`text-role-description-${role.id}`}>
+                              {role.description}
+                            </p>
+                          )}
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center space-x-1">
+                              <span data-testid={`text-role-permissions-${role.id}`}>
+                                Permissions: {role.permissions?.length || 0}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <span data-testid={`text-role-created-${role.id}`}>
+                                Created: {format(new Date(role.createdAt), "MMM dd, yyyy")}
+                              </span>
+                            </div>
+                          </div>
+                          {role.permissions && role.permissions.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {role.permissions.slice(0, 5).map((permission, index) => (
+                                <Badge key={index} variant="outline" className="text-xs" data-testid={`badge-permission-preview-${role.id}-${index}`}>
+                                  {permission}
+                                </Badge>
+                              ))}
+                              {role.permissions.length > 5 && (
+                                <Badge variant="outline" className="text-xs" data-testid={`badge-permission-more-${role.id}`}>
+                                  +{role.permissions.length - 5} more
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleRoleStatus(role.id)}
+                          disabled={toggleRoleStatusMutation.isPending || role.name === "SystemAdmin" || role.name === "PortAdmin"}
+                          className="h-8"
+                          data-testid={`button-toggle-role-${role.id}`}
+                        >
+                          {role.isActive ? (
+                            <ToggleRight className="w-4 h-4" />
+                          ) : (
+                            <ToggleLeft className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(role)}
+                          className="h-8"
+                          data-testid={`button-edit-role-${role.id}`}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        {role.name !== "SystemAdmin" && role.name !== "PortAdmin" && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm" className="h-8" data-testid={`button-delete-role-${role.id}`}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Role</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete the "{role.displayName}" role? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteRole(role.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                  data-testid="button-confirm-delete"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Edit Form Sheet */}
+          <Sheet open={showEditForm} onOpenChange={(open) => {
+            setShowEditForm(open);
+            if (!open) {
+              setEditingRole(null);
+              resetForm();
+            }
+          }}>
+            <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Edit Role</SheetTitle>
+                <SheetDescription>
+                  Modify role details and permissions
+                </SheetDescription>
+              </SheetHeader>
+              
+              <div className="space-y-4 mt-6 pb-6">
+                <div className="space-y-2">
+                  <Label htmlFor="editName">Role Name *</Label>
+                  <Input
+                    id="editName"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Manager"
+                    disabled={editingRole?.name === "SystemAdmin" || editingRole?.name === "PortAdmin"}
+                    data-testid="input-edit-role-name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="editDisplayName">Display Name *</Label>
+                  <Input
+                    id="editDisplayName"
+                    value={formData.displayName}
+                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                    placeholder="e.g., Department Manager"
+                    data-testid="input-edit-role-display-name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="editDescription">Description</Label>
+                  <Textarea
+                    id="editDescription"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Describe the role responsibilities..."
+                    data-testid="textarea-edit-role-description"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Permissions</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleAddPermission}
+                      data-testid="button-edit-add-permission"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Permission
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.permissions.map((permission, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="outline" 
+                        className="cursor-pointer"
+                        onClick={() => handleRemovePermission(permission)}
+                        data-testid={`badge-edit-permission-${index}`}
+                      >
+                        {permission} ×
+                      </Badge>
+                    ))}
+                    {formData.permissions.length === 0 && (
+                      <span className="text-sm text-gray-500">No permissions added</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="editIsActive"
+                    checked={formData.isActive}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                    disabled={editingRole?.name === "SystemAdmin" || editingRole?.name === "PortAdmin"}
+                    data-testid="switch-edit-role-active"
+                  />
+                  <Label htmlFor="editIsActive">Active</Label>
+                </div>
+
+                <div className="flex space-x-3 pt-6 sticky bottom-0 bg-white dark:bg-slate-950 border-t pt-4 mt-6">
+                  <Button 
+                    onClick={handleSaveRole}
+                    disabled={saveRoleMutation.isPending}
+                    className="flex-1 h-10"
+                    data-testid="button-save-edit-role"
+                  >
+                    {saveRoleMutation.isPending ? "Updating..." : "Update Role"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowEditForm(false);
+                      setEditingRole(null);
+                      resetForm();
+                    }}
+                    className="flex-1 h-10"
+                    data-testid="button-cancel-edit-role"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Full page component with AppLayout wrapper for standalone routing
+export default function RolesPage() {
+  return (
+    <AppLayout title="Roles" activeSection="roles">
+      <RolesContent />
+    </AppLayout>
+  );
+}
