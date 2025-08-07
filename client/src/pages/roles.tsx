@@ -87,13 +87,18 @@ export function RolesContent() {
 
   // Get already assigned menu combinations
   const getAssignedMenuCombinations = () => {
-    return formData.permissions.map(permission => {
+    const combinations = formData.permissions.map(permission => {
       const parts = permission.split(':');
       if (parts.length >= 2) {
-        return `${parts[0]}:${parts[1]}`; // GLink:PLink combination
+        const combo = `${parts[0]}:${parts[1]}`; // GLink:PLink combination
+        console.log('Found assigned combination:', combo);
+        return combo;
       }
       return '';
     }).filter(combo => combo !== '');
+    
+    console.log('All assigned combinations:', combinations);
+    return combinations;
   };
 
   const assignedCombinations = getAssignedMenuCombinations();
@@ -124,12 +129,18 @@ export function RolesContent() {
       return false;
     }
     
-    // Get the selected GLink name
-    const selectedGLinkMenu = availableGLinks.find(g => g.id.toString() === selectedGLink);
+    // Get the selected GLink name from all menus (not just available ones)
+    const selectedGLinkMenu = (menus as Menu[]).find(g => g.id.toString() === selectedGLink);
     if (!selectedGLinkMenu) return false;
     
+    // Check if this PLink is already assigned to the selected GLink
     const combination = `${selectedGLinkMenu.name}:${menu.name}`;
-    return !assignedCombinations.includes(combination);
+    const isAlreadyAssigned = assignedCombinations.includes(combination);
+    
+    // Debug log to see what's happening
+    console.log('Checking PLink:', menu.name, 'Combination:', combination, 'Already assigned:', isAlreadyAssigned);
+    
+    return !isAlreadyAssigned;
   });
 
   // Filter roles based on search term
