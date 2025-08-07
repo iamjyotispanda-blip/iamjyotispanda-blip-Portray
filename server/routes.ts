@@ -396,23 +396,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Found organization:", org.organizationName);
 
-      // Update with new logo URL (exclude ID to avoid database error)
-      const { id, createdAt, updatedAt, ...orgWithoutIdAndTimestamps } = org;
-      const updateData = { 
-        organizationName: org.organizationName,
-        displayName: org.displayName,
-        organizationCode: org.organizationCode,
-        registerOffice: org.registerOffice,
-        country: org.country,
-        telephone: org.telephone,
-        fax: org.fax,
-        website: org.website,
-        isActive: org.isActive,
-        logoUrl: logoUrl
-      };
-      
-      console.log("Update data (should not contain ID):", updateData);
-      const updated = await storage.updateOrganization(organizationId, updateData);
+      // Simple direct database update - only update logoUrl field to avoid ID issues
+      console.log("Directly updating only logoUrl field");
+      const updated = await storage.updateOrganizationLogo(organizationId, logoUrl);
 
       console.log("Successfully updated organization logo");
 

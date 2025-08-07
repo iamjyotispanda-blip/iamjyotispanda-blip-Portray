@@ -177,6 +177,15 @@ export class DatabaseStorage implements IStorage {
     return org || undefined;
   }
 
+  async updateOrganizationLogo(id: number, logoUrl: string): Promise<Organization | undefined> {
+    const [org] = await db
+      .update(organizations)
+      .set({ logoUrl: logoUrl, updatedAt: new Date() })
+      .where(eq(organizations.id, id))
+      .returning();
+    return org || undefined;
+  }
+
   async toggleOrganizationStatus(id: number): Promise<Organization | undefined> {
     const org = await this.getOrganizationById(id);
     if (!org) return undefined;
