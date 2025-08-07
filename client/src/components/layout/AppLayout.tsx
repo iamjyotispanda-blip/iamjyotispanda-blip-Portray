@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
@@ -31,6 +31,22 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Helper function to check if any child of an item is active
+  const isParentActive = (item: any) => {
+    if (!item.children) return false;
+    return item.children.some((child: any) => activeSection === child.id);
+  };
+
+  // Helper function to get the parent of the active section
+  const getActiveParent = () => {
+    for (const item of navigationItems) {
+      if (item.children?.some((child: any) => child.id === activeSection)) {
+        return item.id;
+      }
+    }
+    return null;
+  };
 
   // Get current user
   const { data: user } = useQuery({
@@ -168,6 +184,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
+  // Auto-expand parent menu when child is active
+  React.useEffect(() => {
+    const activeParent = getActiveParent();
+    if (activeParent && !expandedItems.includes(activeParent)) {
+      expandItem(activeParent);
+    }
+  }, [activeSection]);
+
   const handleNavigation = (itemId: string) => {
     switch (itemId) {
       case "dashboard":
@@ -247,16 +271,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               <div key={item.id}>
                 <button
                   onClick={() => item.children ? expandItem(item.id) : handleNavigation(item.id)}
-                  className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
-                    activeSection === item.id
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
+                  className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-200 ${
+                    activeSection === item.id || isParentActive(item)
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white hover:shadow-sm'
                   }`}
                   title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
                 >
                   <div className="flex items-center">
-                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
-                      activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
+                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 transition-colors ${
+                      activeSection === item.id || isParentActive(item) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                     }`} />
                     {(!sidebarCollapsed || sidebarHovered) && item.label}
                   </div>
@@ -277,14 +301,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                       <button
                         key={child.id}
                         onClick={() => handleNavigation(child.id)}
-                        className={`group flex items-center px-2 py-1 text-sm rounded-md w-full text-left ${
+                        className={`group flex items-center px-2 py-1.5 text-sm rounded-md w-full text-left transition-all duration-200 ${
                           activeSection === child.id
-                            ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700'
+                            ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 shadow-sm border-l-2 border-blue-500 ml-1 pl-1'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 hover:shadow-sm hover:ml-0.5 hover:border-l-2 hover:border-gray-300 dark:hover:border-gray-600 hover:pl-1'
                         }`}
                       >
-                        <child.icon className={`mr-2 h-4 w-4 ${
-                          activeSection === child.id ? 'text-blue-500' : 'text-gray-400'
+                        <child.icon className={`mr-2 h-4 w-4 transition-colors ${
+                          activeSection === child.id ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                         }`} />
                         {child.label}
                       </button>
