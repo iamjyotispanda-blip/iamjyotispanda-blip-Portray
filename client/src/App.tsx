@@ -25,7 +25,6 @@ import TerminalFormPage from "@/pages/terminal-form";
 import TerminalProfilePage from "@/pages/terminal-profile";
 import TerminalActivationPage from "@/pages/terminal-activation";
 import NotificationsPage from "@/pages/notifications";
-import GlinkPage from "@/pages/glink";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -135,9 +134,6 @@ function Router() {
       </Route>
       <Route path="/notifications">
         {() => <ProtectedRoute component={NotificationsPage} />}
-      </Route>
-      <Route path="/users-access/glink">
-        {() => <ProtectedRoute component={GlinkPage} />}
       </Route>
       <Route path="/menu-management">
         {() => <ProtectedRoute component={MenuManagementPage} />}
