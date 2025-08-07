@@ -131,7 +131,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
           label: "Configuration", 
           icon: Settings,
           children: [
-            { id: "email", label: "Email Configuration", icon: Mail },
             { id: "organization", label: "Organizations", icon: Building2 },
             { id: "ports", label: "Ports", icon: Ship },
             { id: "terminal-activation", label: "Terminal Activation", icon: CheckCircle },
