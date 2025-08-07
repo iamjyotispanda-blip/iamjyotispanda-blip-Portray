@@ -68,7 +68,10 @@ export default function MenuManagementPage() {
   // Get GLink menus (parent menus)
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
-    queryFn: () => apiRequest("GET", "/api/menus?type=glink"),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/menus?type=glink");
+      return await response.json();
+    },
   });
 
   // Filter menus based on selected type

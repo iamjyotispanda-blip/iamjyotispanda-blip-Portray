@@ -1,7 +1,7 @@
 import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu } from "@shared/schema";
 import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -639,42 +639,6 @@ export class DatabaseStorage implements IStorage {
     return terminal || undefined;
   }
 
-  async getNotificationsByUserId(userId: string): Promise<Notification[]> {
-    return db.select().from(notifications).where(eq(notifications.userId, userId));
-  }
-
-  async getUnreadNotificationsCount(userId: string): Promise<number> {
-    const result = await db.select({ count: notifications.id })
-      .from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
-    return result.length;
-  }
-
-  async createNotification(notificationData: InsertNotification): Promise<Notification> {
-    const [notification] = await db
-      .insert(notifications)
-      .values(notificationData)
-      .returning();
-    return notification;
-  }
-
-  async markNotificationAsRead(id: number): Promise<void> {
-    await db
-      .update(notifications)
-      .set({ isRead: true })
-      .where(eq(notifications.id, id));
-  }
-
-  async markAllNotificationsAsRead(userId: string): Promise<void> {
-    await db
-      .update(notifications)
-      .set({ isRead: true })
-      .where(eq(notifications.userId, userId));
-  }
-
-  async deleteNotification(id: number): Promise<void> {
-    await db.delete(notifications).where(eq(notifications.id, id));
-  }
 
   // Activation Log operations
   async getActivationLogsByTerminalId(terminalId: number): Promise<ActivationLog[]> {
@@ -725,7 +689,7 @@ export class DatabaseStorage implements IStorage {
 
   async getMenusByParentId(parentId: number | null): Promise<Menu[]> {
     if (parentId === null) {
-      return db.select().from(menus).where(eq(menus.parentId, null));
+      return db.select().from(menus).where(isNull(menus.parentId));
     }
     return db.select().from(menus).where(eq(menus.parentId, parentId));
   }
@@ -820,6 +784,7 @@ export class MemStorage implements IStorage {
       telephone: "+91-22-4286-1000",
       fax: "+91-22-4286-3000",
       website: "https://www.jsw.in",
+      logoUrl: null,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -835,8 +800,6 @@ export class MemStorage implements IStorage {
       address: "Paradeep, Odisha",
       country: "India",
       state: "Odisha",
-      pan: "AAACJ1234P",
-      gstn: "21AAACJ1234P1ZA",
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -852,8 +815,6 @@ export class MemStorage implements IStorage {
       address: "Dharamtar, Maharashtra",
       country: "India",
       state: "Maharashtra",
-      pan: "AAACJ5678Q",
-      gstn: "27AAACJ5678Q1ZB",
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -880,7 +841,7 @@ export class MemStorage implements IStorage {
       ...insertUser,
       id,
       role: insertUser.role || "user",
-      isActive: insertUser.isActive ?? true,
+      isActive: true,
       lastLogin: null,
       createdAt: new Date(),
     };
@@ -958,7 +919,7 @@ export class MemStorage implements IStorage {
   }
 
   async deleteUserSessions(userId: string): Promise<void> {
-    for (const [token, session] of this.sessions.entries()) {
+    for (const [token, session] of Array.from(this.sessions.entries())) {
       if (session.userId === userId) {
         this.sessions.delete(token);
       }
@@ -979,7 +940,11 @@ export class MemStorage implements IStorage {
     const organization: Organization = {
       ...insertOrganization,
       id,
-      isActive: insertOrganization.isActive ?? true,
+      telephone: insertOrganization.telephone ?? null,
+      fax: insertOrganization.fax ?? null,
+      website: insertOrganization.website ?? null,
+      logoUrl: insertOrganization.logoUrl ?? null,
+      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1034,7 +999,7 @@ export class MemStorage implements IStorage {
     const port: Port = {
       ...insertPort,
       id,
-      isActive: insertPort.isActive ?? true,
+      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1231,6 +1196,7 @@ export class MemStorage implements IStorage {
     const newConfig: EmailConfiguration = {
       id: this.nextEmailConfigId++,
       ...config,
+      enableTLS: config.enableTLS ?? true,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -1274,7 +1240,16 @@ export class MemStorage implements IStorage {
     const terminal: Terminal = {
       ...terminalData,
       id,
+      gst: terminalData.gst ?? null,
+      pan: terminalData.pan ?? null,
+      status: terminalData.status ?? "Processing for activation",
       isActive: true,
+      subscriptionTypeId: null,
+      activationStartDate: null,
+      activationEndDate: null,
+      workOrderNo: null,
+      workOrderDate: null,
+      createdBy: "system",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
