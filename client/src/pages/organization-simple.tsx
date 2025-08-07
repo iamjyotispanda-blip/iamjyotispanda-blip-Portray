@@ -368,7 +368,9 @@ export default function OrganizationPage() {
       return response.json();
     },
     onSuccess: () => {
+      // Force refresh the organizations cache
       queryClient.invalidateQueries({ queryKey: ["/api/organizations"] });
+      queryClient.refetchQueries({ queryKey: ["/api/organizations"] });
       toast({
         title: "Success",
         description: "Organization logo updated successfully",
