@@ -175,8 +175,14 @@ export default function TerminalFormPage() {
 
   // Populate form when editing
   useEffect(() => {
-    if (terminal && isEditing) {
+    if (terminal && isEditing && assignedPort) {
       form.reset({
+        // Port-related fields from assignedPort
+        portName: (assignedPort as any).portName || "",
+        organization: (assignedPort as any).organizationName || "",
+        state: (assignedPort as any).state || "",
+        country: (assignedPort as any).country || "India",
+        // Terminal-specific fields from terminal data
         terminalName: (terminal as any).terminalName,
         shortCode: (terminal as any).shortCode,
         gst: (terminal as any).gst || "",
@@ -196,7 +202,7 @@ export default function TerminalFormPage() {
         sameAsBilling: (terminal as any).sameAsBilling,
       });
     }
-  }, [terminal, form, isEditing]);
+  }, [terminal, assignedPort, form, isEditing]);
 
   // Create/Update terminal mutation
   const terminalMutation = useMutation({
