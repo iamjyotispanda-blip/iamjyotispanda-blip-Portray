@@ -1,12 +1,12 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   Table, 
   TableBody, 
@@ -27,129 +27,136 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Menu as MenuIcon, Trash2, Edit, ToggleLeft, ToggleRight, Settings, GitBranch, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon, GripVertical, List, LayoutGrid, GitBranch, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu, InsertMenu, UpdateMenu } from "@shared/schema";
 
-interface MenuFormData {
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import {CSS} from '@dnd-kit/utilities';
+
+interface GlinkFormData {
   name: string;
   label: string;
   icon: string;
   route: string;
-  parentId: number | null;
   sortOrder: number;
   menuType: 'glink' | 'plink';
+  parentId: number | null;
 }
+
+const iconOptions = [
+  { name: "Home", component: Home },
+  { name: "Settings", component: Settings },
+  { name: "Building2", component: Building2 },
+  { name: "Ship", component: Ship },
+  { name: "Users", component: Users },
+  { name: "Shield", component: Shield },
+  { name: "UserCheck", component: UserCheck },
+  { name: "Menu", component: MenuIcon },
+  { name: "Link", component: LinkIcon },
+];
 
 export default function MenuManagementPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [selectedMenuType, setSelectedMenuType] = useState<'glink' | 'plink'>('glink');
-  const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
-  const [formData, setFormData] = useState<MenuFormData>({
+  const [viewMode, setViewMode] = useState<'table' | 'builder'>('table');
+  const [builderMenus, setBuilderMenus] = useState<Menu[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [formData, setFormData] = useState<GlinkFormData>({
     name: "",
     label: "",
     icon: "",
     route: "",
-    parentId: null,
     sortOrder: 0,
     menuType: 'glink',
+    parentId: null,
   });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get all menus
-  const { data: allMenus = [], isLoading } = useQuery<Menu[]>({
+  // Get ALL menus for comprehensive parent dropdown
+  const { data: allMenusData = [], isLoading } = useQuery<Menu[]>({
     queryKey: ["/api/menus"],
   });
 
-  // Get GLink menus (parent menus) - Load ALL GLink menus for parent dropdown
+  // Get GLink menus only for parent dropdown
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
     queryFn: async () => {
-      console.log("Fetching GLink menus for parent dropdown...");
+      console.log("[Menu Management Page] Fetching GLink menus for parent dropdown...");
       const response = await apiRequest("GET", "/api/menus?type=glink");
       const data = await response.json();
-      console.log("GLink menus loaded:", data);
+      console.log("[Menu Management Page] GLink menus loaded:", data);
       return Array.isArray(data) ? data : [];
     },
   });
 
-  // Toggle parent menu expansion
-  const toggleParentExpansion = (parentId: number) => {
-    setExpandedParents(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(parentId)) {
-        newSet.delete(parentId);
-      } else {
-        newSet.add(parentId);
-      }
-      return newSet;
-    });
-  };
+  // Ensure allMenusData is always an array
+  const safeAllMenus = Array.isArray(allMenusData) ? allMenusData : [];
+  // Ensure glinkMenus is always an array for parent dropdown
+  const safeGlinkMenus = Array.isArray(glinkMenus) ? glinkMenus : [];
 
-  // Organize menus into hierarchical structure with expansion state
-  const organizeMenusHierarchically = () => {
-    const parentMenus = allMenus.filter(menu => menu.menuType === 'glink');
-    const childMenus = allMenus.filter(menu => menu.menuType === 'plink');
-    
-    const hierarchicalMenus: any[] = [];
-    
-    // Add parent menus with their children (only if expanded)
-    parentMenus.sort((a, b) => a.sortOrder - b.sortOrder).forEach(parent => {
-      const isExpanded = expandedParents.has(parent.id);
-      const children = childMenus
-        .filter(child => child.parentId === parent.id)
-        .sort((a, b) => a.sortOrder - b.sortOrder);
-      
-      hierarchicalMenus.push({ 
-        ...parent, 
-        isParent: true, 
-        isExpanded, 
-        childCount: children.length 
-      });
-      
-      // Add children only if parent is expanded
-      if (isExpanded) {
-        children.forEach(child => {
-          hierarchicalMenus.push({ ...child, isChild: true, parentMenu: parent });
-        });
-      }
-    });
-    
-    // Add orphaned child menus (PLinks without valid parent)
-    const orphanedChildren = childMenus.filter(child => 
-      !parentMenus.find(parent => parent.id === child.parentId)
-    );
-    if (orphanedChildren.length > 0) {
-      orphanedChildren.forEach(orphan => {
-        hierarchicalMenus.push({ ...orphan, isOrphan: true });
-      });
+  // Filter menus based on selected type
+  const filteredMenus = safeAllMenus.filter(menu => menu.menuType === selectedMenuType);
+
+  // Initialize builder menus when data is loaded
+  React.useEffect(() => {
+    if (safeAllMenus.length > 0 && builderMenus.length === 0) {
+      setBuilderMenus([...safeAllMenus].sort((a, b) => a.sortOrder - b.sortOrder));
     }
-    
-    return hierarchicalMenus;
-  };
+  }, [safeAllMenus]);
 
-  const hierarchicalMenus = organizeMenusHierarchically();
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
 
   // Save menu mutation
   const saveMenuMutation = useMutation({
-    mutationFn: async (data: MenuFormData) => {
+    mutationFn: async (data: GlinkFormData) => {
+      const menuData = {
+        ...data,
+        parentId: data.menuType === 'glink' ? null : data.parentId,
+      };
+      
       if (editingMenu) {
-        return apiRequest("PUT", `/api/menus/${editingMenu.id}`, data);
+        return apiRequest("PUT", `/api/menus/${editingMenu.id}`, menuData);
       } else {
-        return apiRequest("POST", "/api/menus", data);
+        return apiRequest("POST", "/api/menus", menuData);
       }
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: `Menu ${editingMenu ? 'updated' : 'created'} successfully`,
+        description: `GLink menu ${editingMenu ? 'updated' : 'created'} successfully`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
       setShowAddForm(false);
       setShowEditForm(false);
       setEditingMenu(null);
@@ -158,7 +165,7 @@ export default function MenuManagementPage() {
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || `Failed to ${editingMenu ? 'update' : 'create'} menu`,
+        description: error.message || "Failed to save menu",
         variant: "destructive",
       });
     },
@@ -172,9 +179,10 @@ export default function MenuManagementPage() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Menu deleted successfully",
+        description: "GLink menu deleted successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
     },
     onError: (error: any) => {
       toast({
@@ -185,25 +193,46 @@ export default function MenuManagementPage() {
     },
   });
 
-  // Toggle menu status mutation
-  const toggleMenuStatusMutation = useMutation({
+  // Toggle status mutation
+  const toggleStatusMutation = useMutation({
     mutationFn: async (menuId: number) => {
       return apiRequest("PATCH", `/api/menus/${menuId}/toggle-status`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
       toast({
         title: "Success",
-        description: "Menu status updated successfully"
+        description: "GLink menu status updated successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
+    },
+  });
+
+  // Bulk save menu order mutation
+  const saveBulkOrderMutation = useMutation({
+    mutationFn: async (menus: Menu[]) => {
+      const updates = menus.map((menu, index) => ({
+        id: menu.id,
+        sortOrder: index + 1
+      }));
+      return apiRequest("PATCH", "/api/menus/bulk-update-order", { updates });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Menu order updated successfully",
+      });
+      setHasUnsavedChanges(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update menu status",
-        variant: "destructive"
+        description: error.message || "Failed to update menu order",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const resetForm = () => {
@@ -212,9 +241,9 @@ export default function MenuManagementPage() {
       label: "",
       icon: "",
       route: "",
-      parentId: null,
       sortOrder: 0,
-      menuType: 'glink',
+      menuType: selectedMenuType, // Set based on current filter selection
+      parentId: null,
     });
   };
 
@@ -225,44 +254,178 @@ export default function MenuManagementPage() {
       label: menu.label,
       icon: menu.icon || "",
       route: menu.route || "",
-      parentId: menu.parentId,
       sortOrder: menu.sortOrder,
       menuType: menu.menuType as 'glink' | 'plink',
+      parentId: menu.parentId,
     });
     setShowEditForm(true);
   };
 
-  const handleSaveMenu = () => {
+  const handleDelete = (menuId: number) => {
+    deleteMenuMutation.mutate(menuId);
+  };
+
+  const handleToggleStatus = (menuId: number) => {
+    toggleStatusMutation.mutate(menuId);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setBuilderMenus((items) => {
+        const oldIndex = items.findIndex((item) => item.id.toString() === active.id);
+        const newIndex = items.findIndex((item) => item.id.toString() === over.id);
+        
+        const newItems = arrayMove(items, oldIndex, newIndex);
+        setHasUnsavedChanges(true);
+        return newItems;
+      });
+    }
+  };
+
+  const handleSaveBulkOrder = () => {
+    saveBulkOrderMutation.mutate(builderMenus);
+  };
+
+  const handleDiscardChanges = () => {
+    setBuilderMenus([...safeAllMenus].sort((a, b) => a.sortOrder - b.sortOrder));
+    setHasUnsavedChanges(false);
+  };
+
+  const handleSubmit = () => {
     if (!formData.name || !formData.label || !formData.menuType) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Name, Label, and Menu Type are required",
         variant: "destructive",
       });
       return;
     }
-
+    
+    if (formData.menuType === 'plink' && !formData.parentId) {
+      toast({
+        title: "Error",
+        description: "Parent GLink menu is required for PLink menus",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     saveMenuMutation.mutate(formData);
   };
 
-  const handleToggleStatus = (menuId: number) => {
-    toggleMenuStatusMutation.mutate(menuId);
+  const getIconComponent = (iconName: string | null) => {
+    if (!iconName) return LinkIcon;
+    const iconOption = iconOptions.find(option => option.name === iconName);
+    return iconOption ? iconOption.component : LinkIcon;
   };
 
-  const getParentMenuName = (parentId: number | null) => {
-    if (!parentId) return "None";
-    const parent = allMenus.find(menu => menu.id === parentId);
-    return parent ? parent.label : "Unknown";
+  // Sortable menu item component for drag-and-drop builder
+  const SortableMenuItem = ({ menu }: { menu: Menu }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: menu.id.toString() });
+  
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+  
+    const IconComponent = getIconComponent(menu.icon);
+  
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-3 shadow-sm hover:shadow-md transition-shadow ${
+          isDragging ? 'ring-2 ring-blue-500' : ''
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {/* Drag handle */}
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              data-testid={`drag-handle-${menu.id}`}
+            >
+              <GripVertical className="h-5 w-5" />
+            </div>
+            
+            {/* Icon */}
+            <div className="flex items-center justify-center w-10 h-10 border rounded-md bg-gray-50 dark:bg-gray-700">
+              <IconComponent className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </div>
+            
+            {/* Menu details */}
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-white" data-testid={`builder-label-${menu.id}`}>
+                {menu.label}
+              </h4>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {menu.name} • Sort: {menu.sortOrder}
+              </p>
+              {menu.route && (
+                <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  {menu.route}
+                </code>
+              )}
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="flex items-center space-x-2">
+            <Badge variant={menu.isActive ? "default" : "secondary"} data-testid={`builder-status-${menu.id}`}>
+              {menu.isActive ? "Active" : "Inactive"}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleToggleStatus(menu.id)}
+              disabled={toggleStatusMutation.isPending}
+              data-testid={`builder-toggle-${menu.id}`}
+            >
+              {menu.isActive ? (
+                <ToggleRight className="h-4 w-4" />
+              ) : (
+                <ToggleLeft className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEdit(menu)}
+              data-testid={`builder-edit-${menu.id}`}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
-    <div className="space-y-4 mt-6 pb-6">
+    <div className="space-y-6 pb-8 max-w-none">
       {/* FIRST FIELD: Menu Type - Must be at the top */}
       <div className="space-y-2">
         <Label htmlFor="menuType">Menu Type *</Label>
         <Select
           value={formData.menuType}
-          onValueChange={(value: 'glink' | 'plink') => setFormData({ ...formData, menuType: value })}
+          onValueChange={(value: 'glink' | 'plink') => setFormData({ 
+            ...formData, 
+            menuType: value,
+            parentId: value === 'glink' ? null : formData.parentId
+          })}
+          data-testid="select-menu-type"
         >
           <SelectTrigger>
             <SelectValue placeholder="Select menu type" />
@@ -272,35 +435,45 @@ export default function MenuManagementPage() {
             <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-gray-500">
+          GLink: Main navigation items | PLink: Sub-menu items under GLink
+        </p>
       </div>
 
-      {/* SECOND FIELD: Parent Menu Selection - Only for PLink */}
+      {/* Parent Menu Selection - Only for PLink */}
       {formData.menuType === 'plink' && (
         <div className="space-y-2">
-          <Label htmlFor="parentId">Parent Menu *</Label>
+          <Label htmlFor="parentId">Parent GLink Menu *</Label>
           <Select
             value={formData.parentId?.toString() || ""}
-            onValueChange={(value: string) => setFormData({ ...formData, parentId: value ? parseInt(value) : null })}
+            onValueChange={(value: string) => setFormData({ 
+              ...formData, 
+              parentId: value ? parseInt(value) : null 
+            })}
+            data-testid="select-parent-menu"
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select parent menu" />
+              <SelectValue placeholder="Select parent GLink menu" />
             </SelectTrigger>
             <SelectContent>
               {(() => {
-                console.log("Parent dropdown rendering, glinkMenus:", glinkMenus);
-                const availableGLinks = glinkMenus
+                console.log("[Menu Management Page] Parent dropdown rendering, safeGlinkMenus:", safeGlinkMenus);
+                const availableGLinks = safeGlinkMenus
                   .filter(menu => menu.isActive && menu.menuType === 'glink')
                   .sort((a, b) => a.sortOrder - b.sortOrder);
-                console.log("Filtered active GLinks:", availableGLinks);
-                return availableGLinks.map((menu: Menu) => (
-                  <SelectItem key={menu.id} value={menu.id.toString()}>
-                    <div className="flex items-center">
-                      <GitBranch className="h-4 w-4 mr-2" />
-                      {menu.label}
-                      <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
-                    </div>
-                  </SelectItem>
-                ));
+                console.log("[Menu Management Page] Filtered active GLinks:", availableGLinks);
+                return availableGLinks.map((menu) => {
+                  const IconComponent = getIconComponent(menu.icon);
+                  return (
+                    <SelectItem key={menu.id} value={menu.id.toString()}>
+                      <div className="flex items-center space-x-2">
+                        <IconComponent className="h-4 w-4" />
+                        <span>{menu.label}</span>
+                        <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
+                      </div>
+                    </SelectItem>
+                  );
+                });
               })()}
             </SelectContent>
           </Select>
@@ -308,14 +481,17 @@ export default function MenuManagementPage() {
         </div>
       )}
 
+      {/* Name Field */}
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="dashboard"
+          placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
+          data-testid="input-name"
         />
+        <p className="text-xs text-gray-500">Used as the unique identifier (lowercase, no spaces)</p>
       </div>
 
       <div className="space-y-2">
@@ -325,18 +501,38 @@ export default function MenuManagementPage() {
           value={formData.label}
           onChange={(e) => setFormData({ ...formData, label: e.target.value })}
           placeholder="Dashboard"
+          data-testid="input-label"
         />
+        <p className="text-xs text-gray-500">Display name shown in navigation</p>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="icon">Icon</Label>
-        <Input
-          id="icon"
-          value={formData.icon}
-          onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-          placeholder="Home"
-        />
-        <p className="text-xs text-gray-500">Use Lucide icon names (e.g., Home, User, Settings)</p>
+        <div className="flex items-center space-x-2">
+          <select
+            id="icon"
+            value={formData.icon}
+            onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            data-testid="select-icon"
+          >
+            <option value="">Select an icon</option>
+            {iconOptions.map((icon) => (
+              <option key={icon.name} value={icon.name}>
+                {icon.name}
+              </option>
+            ))}
+          </select>
+          {formData.icon && (
+            <div className="flex items-center justify-center w-10 h-10 border rounded-md bg-gray-50">
+              {(() => {
+                const IconComponent = getIconComponent(formData.icon);
+                return <IconComponent className="h-5 w-5" />;
+              })()}
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-gray-500">Choose an icon for the navigation menu</p>
       </div>
 
       <div className="space-y-2">
@@ -346,7 +542,9 @@ export default function MenuManagementPage() {
           value={formData.route}
           onChange={(e) => setFormData({ ...formData, route: e.target.value })}
           placeholder="/dashboard"
+          data-testid="input-route"
         />
+        <p className="text-xs text-gray-500">URL path for this menu item</p>
       </div>
 
       <div className="space-y-2">
@@ -357,31 +555,30 @@ export default function MenuManagementPage() {
           value={formData.sortOrder}
           onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
           placeholder="0"
+          data-testid="input-sort-order"
         />
+        <p className="text-xs text-gray-500">Display order in navigation (lower numbers appear first)</p>
       </div>
 
-      <div className="flex space-x-3 pt-6 sticky bottom-0 bg-white dark:bg-slate-950 border-t pt-4 mt-6">
-        <Button 
-          onClick={handleSaveMenu}
-          disabled={saveMenuMutation.isPending}
-          className="flex-1 h-10"
-        >
-          {saveMenuMutation.isPending ? "Saving..." : `${isEdit ? 'Update' : 'Create'} Menu`}
-        </Button>
-        <Button 
-          variant="outline" 
+      <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700 mt-8">
+        <Button
+          variant="outline"
           onClick={() => {
-            if (isEdit) {
-              setShowEditForm(false);
-              setEditingMenu(null);
-            } else {
-              setShowAddForm(false);
-            }
+            setShowAddForm(false);
+            setShowEditForm(false);
+            setEditingMenu(null);
             resetForm();
           }}
-          className="flex-1 h-10"
+          data-testid="button-cancel"
         >
           Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={saveMenuMutation.isPending}
+          data-testid="button-save"
+        >
+          {saveMenuMutation.isPending ? "Saving..." : (isEdit ? "Update" : "Create")}
         </Button>
       </div>
     </div>
@@ -389,213 +586,321 @@ export default function MenuManagementPage() {
 
   return (
     <AppLayout title="Menu Management" activeSection="menu-management">
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Menu Management</span>
-        </div>
-        
-        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
-          <div className="space-y-2">
-            {/* Header and Add Button */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-3">
-                <Badge variant="outline">
-                  {allMenus.length} total menu{allMenus.length !== 1 ? 's' : ''}
-                </Badge>
-              </div>
-              
-              <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
-                <SheetTrigger asChild>
-                  <Button className="h-8">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Menu
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Add Menu</SheetTitle>
-                    <SheetDescription>
-                      Create a new {selectedMenuType === 'glink' ? 'main menu item' : 'sub menu item'}
-                    </SheetDescription>
-                  </SheetHeader>
-                  <MenuForm />
-                </SheetContent>
-              </Sheet>
-            </div>
-
-            {/* Menus List */}
-            <Card>
-              <CardContent className="p-6">
-                {isLoading ? (
-                  <div className="text-center py-4">Loading menus...</div>
-                ) : hierarchicalMenus.length === 0 ? (
-                  <div className="text-center py-8">
-                    <MenuIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Menus</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">No menus available</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Menu Hierarchy</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Icon</TableHead>
-                        <TableHead>Route</TableHead>
-                        <TableHead>Sort Order</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {hierarchicalMenus.map((menu) => (
-                        <TableRow key={menu.id} className={menu.isChild ? "bg-gray-50 dark:bg-gray-800/50" : ""}>
-                          <TableCell>
-                            <div className={`flex items-center ${menu.isChild ? 'ml-8' : ''}`}>
-                              {menu.isChild && (
-                                <div className="mr-2 text-gray-400">
-                                  <span className="text-sm">└─</span>
-                                </div>
-                              )}
-                              
-                              {/* Parent menu with expand/collapse functionality */}
-                              {menu.isParent && (
-                                <div className="flex items-center">
-                                  <button
-                                    onClick={() => toggleParentExpansion(menu.id)}
-                                    className="mr-1 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                                    data-testid={`expand-toggle-${menu.id}`}
-                                  >
-                                    {menu.isExpanded ? (
-                                      <ChevronDown className="h-4 w-4 text-gray-500" />
-                                    ) : (
-                                      <ChevronRight className="h-4 w-4 text-gray-500" />
-                                    )}
-                                  </button>
-                                  <Settings className="h-4 w-4 mr-2 text-blue-600" />
-                                </div>
-                              )}
-                              
-                              {menu.isChild && <GitBranch className="h-4 w-4 mr-2 text-green-600" />}
-                              {menu.isOrphan && <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />}
-                              
-                              <div>
-                                <div className="flex items-center">
-                                  <span className="font-medium">{menu.label}</span>
-                                  {menu.isParent && menu.childCount > 0 && (
-                                    <Badge variant="outline" className="ml-2 text-xs">
-                                      {menu.childCount} sub-menu{menu.childCount !== 1 ? 's' : ''}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="text-sm text-gray-500">{menu.name}</div>
-                                {menu.isChild && menu.parentMenu && (
-                                  <div className="text-xs text-gray-400">Under: {menu.parentMenu.label}</div>
-                                )}
-                                {menu.isOrphan && (
-                                  <div className="text-xs text-red-500">Orphaned PLink</div>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={menu.menuType === 'glink' ? 'default' : 'secondary'}>
-                              {menu.menuType === 'glink' ? 'GLink' : 'PLink'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{menu.icon || "None"}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                              {menu.route || "No route"}
-                            </code>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{menu.sortOrder}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={menu.isActive ? "default" : "secondary"}>
-                              {menu.isActive ? "Active" : "Inactive"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleToggleStatus(menu.id)}
-                                disabled={toggleMenuStatusMutation.isPending}
-                                className="h-8"
-                              >
-                                {menu.isActive ? (
-                                  <ToggleRight className="w-4 h-4" />
-                                ) : (
-                                  <ToggleLeft className="w-4 h-4" />
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEdit(menu)}
-                                className="h-8"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="sm" className="h-8">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Menu</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete "{menu.label}"? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => deleteMenuMutation.mutate(menu.id)}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Menu Management</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Manage main navigation menu items with drag-and-drop builder
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            {/* Menu Type Filter */}
+            <Select
+              value={selectedMenuType}
+              onValueChange={(value: 'glink' | 'plink') => setSelectedMenuType(value)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="glink">GLink (Main Menu)</SelectItem>
+                <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Badge variant="outline">
+              {filteredMenus.length} menu{filteredMenus.length !== 1 ? 's' : ''}
+            </Badge>
             
-            {/* Edit Form Sheet */}
-            <Sheet open={showEditForm} onOpenChange={(open) => {
-              setShowEditForm(open);
-              if (!open) {
-                setEditingMenu(null);
-                resetForm();
-              }
-            }}>
-              <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+            {/* View toggle buttons */}
+            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className="h-8 px-3"
+                data-testid="button-table-view"
+              >
+                <List className="h-4 w-4 mr-1" />
+                Table
+              </Button>
+              <Button
+                variant={viewMode === 'builder' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('builder')}
+                className="h-8 px-3"
+                data-testid="button-builder-view"
+              >
+                <LayoutGrid className="h-4 w-4 mr-1" />
+                Builder
+              </Button>
+            </div>
+            
+            {/* Add menu button */}
+            <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+              <SheetTrigger asChild>
+                <Button className="flex items-center space-x-2" data-testid="button-add-menu" onClick={() => {
+                  resetForm(); // Pre-populate form with selected menu type
+                }}>
+                  <Plus className="h-4 w-4" />
+                  <span>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
                 <SheetHeader>
-                  <SheetTitle>Edit Menu</SheetTitle>
+                  <SheetTitle>Add Menu</SheetTitle>
                   <SheetDescription>
-                    Modify menu settings and configuration
+                    Create a new menu item for navigation
                   </SheetDescription>
                 </SheetHeader>
-                <MenuForm isEdit={true} />
+                <div className="flex-1 overflow-y-auto px-1 py-4">
+                  <MenuForm />
+                </div>
               </SheetContent>
             </Sheet>
           </div>
-        </main>
+        </div>
+
+        {/* Table View */}
+        {viewMode === 'table' && (
+          <Card>
+            <CardContent className="p-6">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : filteredMenus.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <MenuIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    No {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menus
+                  </h3>
+                  <p className="mb-4">Create your first {selectedMenuType === 'glink' ? 'main navigation menu' : 'sub-menu'} item</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Menu Details</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Icon</TableHead>
+                      <TableHead>Route</TableHead>
+                      <TableHead>Sort Order</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredMenus
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .map((menu) => {
+                        const IconComponent = getIconComponent(menu.icon);
+                        return (
+                          <TableRow key={menu.id} data-testid={`table-row-${menu.id}`}>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center justify-center w-8 h-8 border rounded-md bg-gray-50 dark:bg-gray-700">
+                                  <IconComponent className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-gray-900 dark:text-white" data-testid={`table-label-${menu.id}`}>
+                                    {menu.label}
+                                  </div>
+                                  <div className="text-sm text-gray-500">{menu.name}</div>
+                                  {menu.menuType === 'plink' && menu.parentId && (
+                                    <div className="text-xs text-blue-600">
+                                      Parent: {safeAllMenus.find(p => p.id === menu.parentId)?.label || 'Unknown'}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={menu.menuType === 'glink' ? 'default' : 'secondary'} data-testid={`table-type-${menu.id}`}>
+                                {menu.menuType === 'glink' ? 'GLink' : 'PLink'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{menu.icon || "None"}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                {menu.route || "No route"}
+                              </code>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" data-testid={`table-order-${menu.id}`}>{menu.sortOrder}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={menu.isActive ? "default" : "secondary"} data-testid={`table-status-${menu.id}`}>
+                                {menu.isActive ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleToggleStatus(menu.id)}
+                                  disabled={toggleStatusMutation.isPending}
+                                  className="h-8"
+                                  data-testid={`button-toggle-${menu.id}`}
+                                >
+                                  {menu.isActive ? (
+                                    <ToggleRight className="h-4 w-4" />
+                                  ) : (
+                                    <ToggleLeft className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(menu)}
+                                  className="h-8"
+                                  data-testid={`button-edit-${menu.id}`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-red-600 hover:text-red-700"
+                                      data-testid={`button-delete-${menu.id}`}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete GLink Menu</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{menu.label}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDelete(menu.id)}
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Drag-and-Drop Builder View */}
+        {viewMode === 'builder' && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2">
+                  <LayoutGrid className="h-5 w-5" />
+                  <span>Menu Builder - Drag & Drop</span>
+                </CardTitle>
+                <div className="flex items-center space-x-3">
+                  <Badge variant="outline" data-testid="text-builder-menu-count">
+                    {builderMenus.length} menu{builderMenus.length !== 1 ? 's' : ''}
+                  </Badge>
+                  {hasUnsavedChanges && (
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDiscardChanges}
+                        data-testid="button-discard-changes"
+                      >
+                        Discard
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveBulkOrder}
+                        disabled={saveBulkOrderMutation.isPending}
+                        data-testid="button-save-order"
+                      >
+                        {saveBulkOrderMutation.isPending ? 'Saving...' : 'Save Order'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : builderMenus.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <LayoutGrid className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No menus found</p>
+                  <p className="text-sm">Create your first navigation menu item</p>
+                </div>
+              ) : (
+                <div>
+                  {hasUnsavedChanges && (
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                          <span className="text-sm text-amber-700 dark:text-amber-300">
+                            You have unsaved changes to the menu order
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={builderMenus.map(menu => menu.id.toString())}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-3" data-testid="builder-container">
+                        {builderMenus.map((menu) => (
+                          <SortableMenuItem key={menu.id} menu={menu} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Edit Sheet */}
+        <Sheet open={showEditForm} onOpenChange={setShowEditForm}>
+          <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
+            <SheetHeader>
+              <SheetTitle>Edit Menu</SheetTitle>
+              <SheetDescription>
+                Update the menu item details
+              </SheetDescription>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-1 py-4">
+              <MenuForm isEdit={true} />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </AppLayout>
   );
