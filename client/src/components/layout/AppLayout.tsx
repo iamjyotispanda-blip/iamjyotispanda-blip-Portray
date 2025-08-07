@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users
+  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -126,7 +126,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       // System Admin sees all navigation
       return [
         { id: "dashboard", label: "Dashboard", icon: Home },
-        { id: "users-access", label: "Users & Access", icon: Users },
+        { 
+          id: "users-access", 
+          label: "Users & Access", 
+          icon: Users,
+          children: [
+            { id: "glink", label: "GLink", icon: Link },
+            { id: "plink", label: "PLink", icon: Link },
+            { id: "roles", label: "Roles", icon: Shield },
+            { id: "groups", label: "Groups", icon: UserCheck },
+          ]
+        },
         { 
           id: "configuration", 
           label: "Configuration", 
@@ -150,6 +160,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         break;
       case "users-access":
         setLocation("/users-access");
+        break;
+      case "glink":
+        setLocation("/users-access/glink");
+        break;
+      case "plink":
+        setLocation("/users-access/plink");
+        break;
+      case "roles":
+        setLocation("/users-access/roles");
+        break;
+      case "groups":
+        setLocation("/users-access/groups");
         break;
       case "terminals":
         // For Port Admin - redirect to terminals page
