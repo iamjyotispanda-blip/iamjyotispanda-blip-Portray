@@ -75,38 +75,89 @@ export function ObjectUploader({
   };
 
   const getCroppedFile = async (): Promise<File | null> => {
-    if (!imgRef.current || !crop || !selectedFile) return null;
+    if (!imgRef.current || !crop || !selectedFile) {
+      console.log('getCroppedFile: Missing required data', {
+        hasImgRef: !!imgRef.current,
+        hasCrop: !!crop,
+        hasSelectedFile: !!selectedFile
+      });
+      return null;
+    }
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
+    if (!ctx) {
+      console.log('getCroppedFile: Failed to get canvas context');
+      return null;
+    }
 
     const image = imgRef.current;
+    
+    // Validate image dimensions
+    if (!image.naturalWidth || !image.naturalHeight) {
+      console.log('getCroppedFile: Image not properly loaded', {
+        naturalWidth: image.naturalWidth,
+        naturalHeight: image.naturalHeight
+      });
+      return null;
+    }
+
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
+
+    // Convert percentage crop to pixel coordinates
+    const cropX = (crop.x / 100) * image.naturalWidth;
+    const cropY = (crop.y / 100) * image.naturalHeight;
+    const cropWidth = (crop.width / 100) * image.naturalWidth;
+    const cropHeight = (crop.height / 100) * image.naturalHeight;
+
+    console.log('getCroppedFile: Crop dimensions', {
+      crop,
+      image: { width: image.width, height: image.height, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight },
+      scales: { scaleX, scaleY },
+      pixelCrop: { x: cropX, y: cropY, width: cropWidth, height: cropHeight }
+    });
+
+    // Validate crop dimensions
+    if (cropWidth <= 0 || cropHeight <= 0) {
+      console.log('getCroppedFile: Invalid crop dimensions', { cropWidth, cropHeight });
+      return null;
+    }
 
     // Set canvas to exact logo dimensions: 80x50 pixels
     canvas.width = 80;
     canvas.height = 50;
 
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      80, // Always resize to 80px width
-      50  // Always resize to 50px height
-    );
+    // Clear canvas with white background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 80, 50);
+
+    try {
+      ctx.drawImage(
+        image,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        80, // Always resize to 80px width
+        50  // Always resize to 50px height
+      );
+      console.log('getCroppedFile: Successfully drew image to canvas');
+    } catch (error) {
+      console.error('getCroppedFile: Error drawing image to canvas', error);
+      return null;
+    }
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
         if (!blob) {
+          console.log('getCroppedFile: Failed to create blob from canvas');
           resolve(null);
           return;
         }
+        console.log('getCroppedFile: Successfully created blob', { size: blob.size, type: blob.type });
         const croppedFile = new File([blob], selectedFile.name, {
           type: selectedFile.type,
         });
