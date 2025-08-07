@@ -264,21 +264,29 @@ export default function TerminalActivationPage() {
                               <Badge variant="outline">
                                 {terminal.shortCode}
                               </Badge>
-                              <Badge
-                                variant={
-                                  terminal.status === "Active" ? "default" :
-                                  terminal.status === "Processing for activation" ? "secondary" :
-                                  "outline"
-                                }
-                                className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : ""}
-                              >
-                                {terminal.status}
-                              </Badge>
+                              <div className="flex items-center space-x-3">
+                                <Badge
+                                  variant={
+                                    terminal.status === "Active" ? "default" :
+                                    terminal.status === "Processing for activation" ? "secondary" :
+                                    "outline"
+                                  }
+                                  className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : ""}
+                                >
+                                  {terminal.status}
+                                </Badge>
+                                
+                                {/* Show remaining days alongside Active badge */}
+                                {terminal.status === "Active" && terminal.activationEndDate && (
+                                  <h5 className="text-lg font-bold text-green-700 dark:text-green-300">
+                                    {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
+                                  </h5>
+                                )}
+                              </div>
                               
                               {/* Show activation details below active badge */}
                               {terminal.status === "Active" && terminal.activationStartDate && (
                                 <div className="flex flex-col space-y-1 mt-2 text-sm text-gray-700 dark:text-gray-300">
-                                  <span>{terminal.organization?.organizationCode}</span>
                                   <span>
                                     {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
                                   </span>
@@ -292,11 +300,6 @@ export default function TerminalActivationPage() {
                                     <span>
                                       WO: {terminal.workOrderNo}
                                     </span>
-                                  )}
-                                  {terminal.activationEndDate && (
-                                    <h5 className="text-lg font-bold text-green-700 dark:text-green-300 mt-2">
-                                      {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                    </h5>
                                   )}
                                 </div>
                               )}
