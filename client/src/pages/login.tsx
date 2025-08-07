@@ -185,7 +185,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500">
         <div className="w-full max-w-md">
           
           {/* Mobile Logo */}
@@ -194,12 +194,12 @@ export default function LoginPage() {
           </div>
           
           {/* Login Card */}
-          <Card className="bg-gradient-to-br from-blue-700/90 via-blue-600/80 to-blue-500/70 backdrop-blur-sm shadow-2xl border-blue-300/30">
+          <Card className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-2xl border-white/30">
             <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold text-white">
+              <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white">
                 Sign In
               </CardTitle>
-              <CardDescription className="text-blue-100">
+              <CardDescription className="text-gray-600 dark:text-gray-400">
                 Access your port management System
               </CardDescription>
             </CardHeader>
@@ -209,7 +209,7 @@ export default function LoginPage() {
                 
                 {/* Email Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white">
+                  <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
                     Email Address
                   </Label>
                   <Input
@@ -220,7 +220,7 @@ export default function LoginPage() {
                     {...form.register("email")}
                   />
                   {form.formState.errors.email && (
-                    <p className="text-sm text-red-200">
+                    <p className="text-sm text-red-600 dark:text-red-400">
                       {form.formState.errors.email.message}
                     </p>
                   )}
@@ -228,7 +228,7 @@ export default function LoginPage() {
                 
                 {/* Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">
+                  <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
                     Password
                   </Label>
                   <div className="relative">
@@ -254,7 +254,7 @@ export default function LoginPage() {
                     </Button>
                   </div>
                   {form.formState.errors.password && (
-                    <p className="text-sm text-red-200">
+                    <p className="text-sm text-red-600 dark:text-red-400">
                       {form.formState.errors.password.message}
                     </p>
                   )}
@@ -269,7 +269,7 @@ export default function LoginPage() {
                     />
                     <Label 
                       htmlFor="rememberMe"
-                      className="text-sm text-blue-100"
+                      className="text-sm text-gray-600 dark:text-gray-400"
                     >
                       Remember me
                     </Label>
@@ -277,7 +277,7 @@ export default function LoginPage() {
                   <Button
                     type="button"
                     variant="link"
-                    className="text-sm text-blue-200 hover:text-white p-0 h-8"
+                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-0 h-8"
                   >
                     Forgot password?
                   </Button>
@@ -310,7 +310,7 @@ export default function LoginPage() {
                     <div className="w-full border-t border-gray-300 dark:border-slate-600" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-blue-600 text-blue-100">
+                    <span className="px-2 bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400">
                       Or
                     </span>
                   </div>
@@ -335,13 +335,13 @@ export default function LoginPage() {
           
           {/* Footer */}
           <div className="mt-8 text-center">
-            <p className="text-sm text-blue-100">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Need help? {" "}
-              <Button variant="link" className="text-blue-200 hover:text-white p-0 h-8">
+              <Button variant="link" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-0 h-8">
                 Contact Support
               </Button>
             </p>
-            <p className="text-xs text-blue-200 mt-4">
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-4">
               © 2024 CSM PortRay. All rights reserved. | Port Management System v2.1
             </p>
           </div>
