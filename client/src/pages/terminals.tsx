@@ -245,12 +245,6 @@ export default function TerminalsPage() {
                                 )}
                               </Badge>
                               
-                              {/* Days remaining outside the badge */}
-                              {terminal.status === "Active" && terminal.activationEndDate && (
-                                <h5 className="text-lg font-bold text-left mt-2">
-                                  {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                </h5>
-                              )}
                             </div>
                             <div className="space-y-2">
                               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -264,7 +258,13 @@ export default function TerminalsPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-4">
+                          {terminal.status === "Active" && terminal.activationEndDate && (
+                            <h5 className="text-lg font-bold text-left">
+                              {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
+                            </h5>
+                          )}
+                          <div className="flex items-center space-x-2">
                           <Button
                             variant="outline"
                             onClick={() => setLocation(`/terminals/${terminal.id}`)}

@@ -295,12 +295,6 @@ export default function TerminalActivationPage() {
                                 )}
                               </Badge>
                               
-                              {/* Days remaining outside the badge */}
-                              {terminal.status === "Active" && terminal.activationEndDate && (
-                                <h5 className="text-lg font-bold text-left mt-2">
-                                  {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                </h5>
-                              )}
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                               <div className="flex items-center space-x-2">
@@ -331,15 +325,22 @@ export default function TerminalActivationPage() {
                             <Ship className="w-4 h-4 mr-2" />
                             View Profile
                           </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleActivate(terminal)}
-                            disabled={activateTerminalMutation.isPending}
-                            className="h-8"
-                          >
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Activate
-                          </Button>
+                          <div className="flex items-center space-x-4">
+                            <Button
+                              size="sm"
+                              onClick={() => handleActivate(terminal)}
+                              disabled={activateTerminalMutation.isPending}
+                              className="h-8"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Activate
+                            </Button>
+                            {terminal.status === "Active" && terminal.activationEndDate && (
+                              <h5 className="text-lg font-bold text-left">
+                                {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
+                              </h5>
+                            )}
+                          </div>
                           <Button
                             size="sm"
                             variant="outline"
