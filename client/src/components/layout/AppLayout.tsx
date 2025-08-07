@@ -40,6 +40,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [initialized, setInitialized] = useState(false);
 
   // Helper function to check if any child of an item is active
   const isParentActive = (item: NavigationItem) => {
@@ -266,29 +267,27 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
-  // Auto-expand all parent menus by default and when child is active
+  // Initialize parent menus as expanded on first load only
   React.useEffect(() => {
-    const parentMenuIds = navigationItems
-      .filter(item => item.children && item.children.length > 0)
-      .map(item => item.id);
-    
-    // Auto-expand all parent menus
-    setExpandedItems(prev => {
-      const newExpanded = [...prev];
-      parentMenuIds.forEach(id => {
-        if (!newExpanded.includes(id)) {
-          newExpanded.push(id);
-        }
-      });
-      return newExpanded;
-    });
-    
-    // Also expand specific parent if child is active
-    const activeParent = getActiveParent();
-    if (activeParent && !expandedItems.includes(activeParent)) {
-      expandItem(activeParent);
+    if (!initialized && navigationItems.length > 0) {
+      const parentMenuIds = navigationItems
+        .filter(item => item.children && item.children.length > 0)
+        .map(item => item.id);
+      
+      setExpandedItems(parentMenuIds);
+      setInitialized(true);
     }
-  }, [navigationItems, activeSection]);
+  }, [navigationItems, initialized]);
+
+  // Auto-expand parent menu when child is active (but don't override user choices)
+  React.useEffect(() => {
+    if (initialized) {
+      const activeParent = getActiveParent();
+      if (activeParent && !expandedItems.includes(activeParent)) {
+        expandItem(activeParent);
+      }
+    }
+  }, [activeSection, initialized]);
 
   const handleNavigation = (item: NavigationItem) => {
     if (item.route) {
