@@ -292,19 +292,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object storage endpoints
+  // Object storage endpoints - Fallback system
   app.get("/objects/:objectPath(*)", async (req: Request, res: Response) => {
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error checking object access:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
-      }
-      return res.sendStatus(500);
+    // For our fallback system, redirect to the file serving endpoint if it matches our pattern
+    const objectPath = req.params.objectPath;
+    
+    // Check if this looks like our uploaded file pattern
+    if (objectPath.startsWith('uploads/')) {
+      const uploadId = objectPath.replace('uploads/', '');
+      return res.redirect(`/api/objects/file/${uploadId}`);
     }
+    
+    // Otherwise return 404
+    return res.status(404).json({ error: "File not found" });
   });
 
   app.post("/api/objects/upload", authenticateToken, async (req: Request, res: Response) => {
@@ -406,18 +406,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/public-objects/:filePath(*)", async (req: Request, res: Response) => {
-    const filePath = req.params.filePath;
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const file = await objectStorageService.searchPublicObject(filePath);
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
-      }
-      objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error searching for public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
+    // For our fallback system, we don't have public objects in the same way
+    // Return 404 since we're using direct file serving now
+    return res.status(404).json({ error: "File not found - use direct file URLs" });
   });
 
   // Port endpoints
