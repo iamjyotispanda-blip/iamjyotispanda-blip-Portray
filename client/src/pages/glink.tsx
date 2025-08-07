@@ -26,7 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon } from "lucide-react";
+import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon, Download } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu, InsertMenu, UpdateMenu } from "@shared/schema";
@@ -154,6 +154,28 @@ export default function GlinkPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
       queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
+    },
+  });
+
+  // Seed default menus mutation
+  const seedDefaultMenusMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/menus/seed-defaults");
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Success",
+        description: `Successfully seeded ${data.menus?.length || 0} default menus`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to seed default menus",
+        variant: "destructive",
+      });
     },
   });
 
@@ -319,7 +341,18 @@ export default function GlinkPage() {
               Manage main navigation menu items (GLink)
             </p>
           </div>
-          <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+          <div className="flex space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => seedDefaultMenusMutation.mutate()}
+              disabled={seedDefaultMenusMutation.isPending}
+              className="flex items-center space-x-2"
+              data-testid="button-seed-defaults"
+            >
+              <Download className="h-4 w-4" />
+              <span>{seedDefaultMenusMutation.isPending ? "Seeding..." : "Seed Default Menus"}</span>
+            </Button>
+            <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
             <SheetTrigger asChild>
               <Button className="flex items-center space-x-2" data-testid="button-add-glink">
                 <Plus className="h-4 w-4" />
@@ -337,7 +370,8 @@ export default function GlinkPage() {
                 <MenuForm />
               </div>
             </SheetContent>
-          </Sheet>
+            </Sheet>
+          </div>
         </div>
 
         <Card>

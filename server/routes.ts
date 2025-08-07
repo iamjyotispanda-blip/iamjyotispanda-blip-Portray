@@ -984,6 +984,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Seed default menus endpoint
+  app.post("/api/menus/seed-defaults", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const defaultGlinkMenus = [
+        { name: "dashboard", label: "Dashboard", icon: "Home", route: "/dashboard", sortOrder: 1, menuType: "glink", parentId: null, isActive: true },
+        { name: "users-access", label: "Users & Access", icon: "Users", route: null, sortOrder: 2, menuType: "glink", parentId: null, isActive: true },
+        { name: "configuration", label: "Configuration", icon: "Settings", route: null, sortOrder: 3, menuType: "glink", parentId: null, isActive: true },
+        { name: "menu-management", label: "Menu Management", icon: "Menu", route: "/menu-management", sortOrder: 4, menuType: "glink", parentId: null, isActive: true },
+      ];
+
+      const createdMenus = [];
+      for (const menuData of defaultGlinkMenus) {
+        // Check if menu already exists
+        const existingMenus = await storage.getAllMenus();
+        const exists = existingMenus.some(menu => menu.name === menuData.name && menu.menuType === menuData.menuType);
+        
+        if (!exists) {
+          const menu = await storage.createMenu(menuData);
+          createdMenus.push(menu);
+        }
+      }
+
+      // Create default PLink menus for Users & Access and Configuration
+      const usersAccessMenu = await storage.getAllMenus().then(menus => 
+        menus.find(menu => menu.name === "users-access" && menu.menuType === "glink")
+      );
+      const configurationMenu = await storage.getAllMenus().then(menus => 
+        menus.find(menu => menu.name === "configuration" && menu.menuType === "glink")
+      );
+
+      const defaultPlinkMenus = [];
+      
+      if (usersAccessMenu) {
+        defaultPlinkMenus.push(
+          { name: "glink", label: "GLink", icon: "Link", route: "/users-access/glink", sortOrder: 1, menuType: "plink", parentId: usersAccessMenu.id, isActive: true },
+          { name: "plink", label: "PLink", icon: "Link", route: "/users-access/plink", sortOrder: 2, menuType: "plink", parentId: usersAccessMenu.id, isActive: true },
+          { name: "roles", label: "Roles", icon: "Shield", route: "/users-access/roles", sortOrder: 3, menuType: "plink", parentId: usersAccessMenu.id, isActive: true },
+          { name: "groups", label: "Groups", icon: "UserCheck", route: "/users-access/groups", sortOrder: 4, menuType: "plink", parentId: usersAccessMenu.id, isActive: true }
+        );
+      }
+
+      if (configurationMenu) {
+        defaultPlinkMenus.push(
+          { name: "organization", label: "Organizations", icon: "Building2", route: "/organizations", sortOrder: 1, menuType: "plink", parentId: configurationMenu.id, isActive: true },
+          { name: "ports", label: "Ports", icon: "Ship", route: "/ports", sortOrder: 2, menuType: "plink", parentId: configurationMenu.id, isActive: true },
+          { name: "terminal-activation", label: "Terminal Activation", icon: "CheckCircle", route: "/terminal-activation", sortOrder: 3, menuType: "plink", parentId: configurationMenu.id, isActive: true }
+        );
+      }
+
+      for (const menuData of defaultPlinkMenus) {
+        const existingMenus = await storage.getAllMenus();
+        const exists = existingMenus.some(menu => menu.name === menuData.name && menu.menuType === menuData.menuType && menu.parentId === menuData.parentId);
+        
+        if (!exists) {
+          const menu = await storage.createMenu(menuData);
+          createdMenus.push(menu);
+        }
+      }
+
+      res.json({
+        message: `Successfully seeded ${createdMenus.length} default menus`,
+        menus: createdMenus
+      });
+    } catch (error) {
+      console.error("Seed default menus error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/menus", authenticateToken, async (req: Request, res: Response) => {
     try {
       const menuData = insertMenuSchema.parse(req.body);
