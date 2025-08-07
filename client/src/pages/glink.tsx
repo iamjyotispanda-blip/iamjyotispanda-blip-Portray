@@ -67,11 +67,13 @@ export default function GlinkPage() {
   const queryClient = useQueryClient();
 
   // Get GLink menus only
-  const { data: glinkMenus = [], isLoading } = useQuery<Menu[]>({
+  const { data: glinkMenus = [], isLoading, refetch } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
     queryFn: async (): Promise<Menu[]> => {
       try {
+        console.log("Fetching GLink menus...");
         const response = await apiRequest("GET", "/api/menus?type=glink");
+        console.log("GLink menus response:", response);
         // Ensure we always return an array
         return Array.isArray(response) ? response : [];
       } catch (error) {
@@ -169,6 +171,8 @@ export default function GlinkPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
       queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
+      // Force refetch
+      refetch();
     },
     onError: (error: any) => {
       toast({
@@ -342,6 +346,16 @@ export default function GlinkPage() {
             </p>
           </div>
           <div className="flex space-x-3">
+            <Button
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="flex items-center space-x-2 mr-2"
+              data-testid="button-refresh"
+            >
+              <ToggleRight className="h-4 w-4" />
+              <span>{isLoading ? "Loading..." : "Refresh"}</span>
+            </Button>
             <Button
               variant="outline"
               onClick={() => seedDefaultMenusMutation.mutate()}
