@@ -72,6 +72,7 @@ export default function GlinkPage() {
     queryFn: async (): Promise<Menu[]> => {
       try {
         const response = await apiRequest("GET", "/api/menus?type=glink");
+        console.log("GLink API response:", response);
         // Ensure we always return an array
         return Array.isArray(response) ? response : [];
       } catch (error) {
@@ -83,6 +84,10 @@ export default function GlinkPage() {
 
   // Ensure glinkMenus is always an array
   const safeGlinkMenus = Array.isArray(glinkMenus) ? glinkMenus : [];
+  
+  // Debug logging
+  console.log("safeGlinkMenus:", safeGlinkMenus);
+  console.log("safeGlinkMenus.length:", safeGlinkMenus.length);
 
   // Save menu mutation
   const saveMenuMutation = useMutation({
