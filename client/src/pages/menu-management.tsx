@@ -28,7 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon, GripVertical, List, LayoutGrid, GitBranch, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon, GripVertical, List, LayoutGrid, GitBranch, AlertTriangle, ChevronDown, ChevronRight, Mail, Calendar, Clock, Database, File, Folder, Globe, Heart, Image, Key, Lock, MapPin, MessageCircle, Phone, Search, Tag, Target, Trophy, Truck, Wifi, Zap, Archive, Bookmark, Camera, Download, Flag, Gift, HelpCircle, Info, LogIn, LogOut, Monitor, Palette, PieChart, Play, Plus as PlusIcon, Power, RefreshCw, Save, Star, Trash, Upload, User, Video, Volume2, Wrench, AlertCircle, BarChart, Bell, Briefcase, CheckCircle, Clipboard, Cloud, Code, CreditCard, DollarSign, Eye, FileText, Filter, Grid, Hash, Layers, Layout, Lightbulb, Link2, MessageSquare, Mic, Navigation, Package, PlusCircle, Printer, Radio, Repeat, Scissors, Server, Sliders, Smartphone, Tablet, Thermometer, Umbrella, Unlock, Verified, Wallet, X, Youtube } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu, InsertMenu, UpdateMenu } from "@shared/schema";
@@ -65,15 +65,127 @@ interface GlinkFormData {
 }
 
 const iconOptions = [
+  // Navigation & Core
   { name: "Home", component: Home },
-  { name: "Settings", component: Settings },
-  { name: "Building2", component: Building2 },
-  { name: "Ship", component: Ship },
-  { name: "Users", component: Users },
-  { name: "Shield", component: Shield },
-  { name: "UserCheck", component: UserCheck },
   { name: "Menu", component: MenuIcon },
+  { name: "Navigation", component: Navigation },
   { name: "Link", component: LinkIcon },
+  { name: "Link2", component: Link2 },
+  { name: "Globe", component: Globe },
+  
+  // Settings & Configuration
+  { name: "Settings", component: Settings },
+  { name: "Sliders", component: Sliders },
+  { name: "Wrench", component: Wrench },
+  { name: "Palette", component: Palette },
+  { name: "Filter", component: Filter },
+  
+  // Users & Access
+  { name: "User", component: User },
+  { name: "Users", component: Users },
+  { name: "UserCheck", component: UserCheck },
+  { name: "Shield", component: Shield },
+  { name: "Lock", component: Lock },
+  { name: "Unlock", component: Unlock },
+  { name: "Key", component: Key },
+  { name: "LogIn", component: LogIn },
+  { name: "LogOut", component: LogOut },
+  
+  // Business & Organization
+  { name: "Building2", component: Building2 },
+  { name: "Briefcase", component: Briefcase },
+  { name: "Package", component: Package },
+  { name: "Truck", component: Truck },
+  { name: "Ship", component: Ship },
+  { name: "DollarSign", component: DollarSign },
+  { name: "CreditCard", component: CreditCard },
+  { name: "Wallet", component: Wallet },
+  
+  // Communication
+  { name: "Mail", component: Mail },
+  { name: "MessageCircle", component: MessageCircle },
+  { name: "MessageSquare", component: MessageSquare },
+  { name: "Phone", component: Phone },
+  { name: "Bell", component: Bell },
+  { name: "Mic", component: Mic },
+  
+  // Data & Analytics
+  { name: "Database", component: Database },
+  { name: "Server", component: Server },
+  { name: "BarChart", component: BarChart },
+  { name: "PieChart", component: PieChart },
+  { name: "Target", component: Target },
+  { name: "Trophy", component: Trophy },
+  
+  // Files & Documents
+  { name: "File", component: File },
+  { name: "FileText", component: FileText },
+  { name: "Folder", component: Folder },
+  { name: "Archive", component: Archive },
+  { name: "Bookmark", component: Bookmark },
+  { name: "Clipboard", component: Clipboard },
+  { name: "Code", component: Code },
+  
+  // Media & Content
+  { name: "Image", component: Image },
+  { name: "Camera", component: Camera },
+  { name: "Video", component: Video },
+  { name: "Play", component: Play },
+  { name: "Volume2", component: Volume2 },
+  { name: "Youtube", component: Youtube },
+  
+  // Actions
+  { name: "Plus", component: PlusIcon },
+  { name: "PlusCircle", component: PlusCircle },
+  { name: "Save", component: Save },
+  { name: "Download", component: Download },
+  { name: "Upload", component: Upload },
+  { name: "Search", component: Search },
+  { name: "RefreshCw", component: RefreshCw },
+  { name: "Power", component: Power },
+  { name: "Repeat", component: Repeat },
+  
+  // Status & Alerts
+  { name: "CheckCircle", component: CheckCircle },
+  { name: "AlertCircle", component: AlertCircle },
+  { name: "Info", component: Info },
+  { name: "HelpCircle", component: HelpCircle },
+  { name: "Star", component: Star },
+  { name: "Heart", component: Heart },
+  { name: "Flag", component: Flag },
+  { name: "Gift", component: Gift },
+  { name: "Verified", component: Verified },
+  
+  // Technology
+  { name: "Monitor", component: Monitor },
+  { name: "Smartphone", component: Smartphone },
+  { name: "Tablet", component: Tablet },
+  { name: "Wifi", component: Wifi },
+  { name: "Cloud", component: Cloud },
+  { name: "Zap", component: Zap },
+  { name: "Radio", component: Radio },
+  { name: "Printer", component: Printer },
+  
+  // Time & Scheduling
+  { name: "Calendar", component: Calendar },
+  { name: "Clock", component: Clock },
+  
+  // Layout & Design
+  { name: "Layout", component: Layout },
+  { name: "Grid", component: Grid },
+  { name: "Layers", component: Layers },
+  { name: "Eye", component: Eye },
+  
+  // Utilities
+  { name: "Tag", component: Tag },
+  { name: "Hash", component: Hash },
+  { name: "MapPin", component: MapPin },
+  { name: "Lightbulb", component: Lightbulb },
+  { name: "Scissors", component: Scissors },
+  { name: "Thermometer", component: Thermometer },
+  { name: "Umbrella", component: Umbrella },
+  { name: "Trash", component: Trash },
+  { name: "X", component: X },
 ];
 
 export default function MenuManagementPage() {
