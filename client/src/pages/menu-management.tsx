@@ -69,8 +69,11 @@ export default function MenuManagementPage() {
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
     queryFn: async () => {
+      console.log("Fetching GLink menus for parent dropdown...");
       const response = await apiRequest("GET", "/api/menus?type=glink");
-      return response.json();
+      const data = await response.json();
+      console.log("GLink menus loaded:", data);
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -268,18 +271,22 @@ export default function MenuManagementPage() {
               <SelectValue placeholder="Select parent menu" />
             </SelectTrigger>
             <SelectContent>
-              {glinkMenus
-                .filter(menu => menu.isActive && menu.menuType === 'glink')
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map((menu: Menu) => (
-                <SelectItem key={menu.id} value={menu.id.toString()}>
-                  <div className="flex items-center">
-                    <GitBranch className="h-4 w-4 mr-2" />
-                    {menu.label}
-                    <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
-                  </div>
-                </SelectItem>
-              ))}
+              {(() => {
+                console.log("Parent dropdown rendering, glinkMenus:", glinkMenus);
+                const availableGLinks = glinkMenus
+                  .filter(menu => menu.isActive && menu.menuType === 'glink')
+                  .sort((a, b) => a.sortOrder - b.sortOrder);
+                console.log("Filtered active GLinks:", availableGLinks);
+                return availableGLinks.map((menu: Menu) => (
+                  <SelectItem key={menu.id} value={menu.id.toString()}>
+                    <div className="flex items-center">
+                      <GitBranch className="h-4 w-4 mr-2" />
+                      {menu.label}
+                      <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
+                    </div>
+                  </SelectItem>
+                ));
+              })()}
             </SelectContent>
           </Select>
         </div>

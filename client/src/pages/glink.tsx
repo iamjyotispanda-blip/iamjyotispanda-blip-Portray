@@ -104,8 +104,11 @@ export default function GlinkPage() {
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
     queryFn: async () => {
+      console.log("[GLink Page] Fetching GLink menus for parent dropdown...");
       const response = await apiRequest("GET", "/api/menus?type=glink");
-      return response.json();
+      const data = await response.json();
+      console.log("[GLink Page] GLink menus loaded:", data);
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -453,10 +456,13 @@ export default function GlinkPage() {
               <SelectValue placeholder="Select parent GLink menu" />
             </SelectTrigger>
             <SelectContent>
-              {safeGlinkMenus
-                .filter(menu => menu.isActive && menu.menuType === 'glink')
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map((menu) => {
+              {(() => {
+                console.log("[GLink Page] Parent dropdown rendering, safeGlinkMenus:", safeGlinkMenus);
+                const availableGLinks = safeGlinkMenus
+                  .filter(menu => menu.isActive && menu.menuType === 'glink')
+                  .sort((a, b) => a.sortOrder - b.sortOrder);
+                console.log("[GLink Page] Filtered active GLinks:", availableGLinks);
+                return availableGLinks.map((menu) => {
                   const IconComponent = getIconComponent(menu.icon);
                   return (
                     <SelectItem key={menu.id} value={menu.id.toString()}>
@@ -467,7 +473,8 @@ export default function GlinkPage() {
                       </div>
                     </SelectItem>
                   );
-                })}
+                });
+              })()}
             </SelectContent>
           </Select>
           <p className="text-xs text-gray-500">All GLink menus are bound as parent options for PLink</p>
