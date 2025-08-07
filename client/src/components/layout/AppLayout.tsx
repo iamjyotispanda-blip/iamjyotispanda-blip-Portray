@@ -85,6 +85,24 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     setLocation("/login");
   };
 
+  const handleNotificationClick = (notification: Notification) => {
+    // Check if it's a terminal activation notification
+    if (notification.type === 'terminal_activation' || notification.title.toLowerCase().includes('terminal activation')) {
+      // Mark as read if not already read
+      if (!notification.isRead) {
+        markAsReadMutation.mutate(notification.id);
+      }
+      
+      // Navigate to terminal activation page with terminal ID
+      const terminalId = notification.relatedId || notification.entityId;
+      if (terminalId) {
+        setLocation(`/terminal-activation?autoActivate=${terminalId}`);
+      } else {
+        setLocation('/terminal-activation');
+      }
+    }
+  };
+
   // Role-based navigation items
   const getNavigationItems = () => {
     if (user?.role === "PortAdmin") {
@@ -333,7 +351,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                           ) : (
                             notifications.map((notification) => (
                               <DropdownMenuItem key={notification.id} className="block p-0">
-                                <div className={`p-3 border-b last:border-b-0 ${!notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                                <div 
+                                  className={`p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                                  onClick={() => handleNotificationClick(notification)}
+                                >
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                       <h5 className="text-sm font-medium text-gray-900 dark:text-white">

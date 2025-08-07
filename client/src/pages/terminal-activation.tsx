@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -55,12 +55,33 @@ const activationFormSchema = z.object({
 type ActivationFormData = z.infer<typeof activationFormSchema>;
 
 export default function TerminalActivationPage() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [activationDialog, setActivationDialog] = useState<{ open: boolean; terminal?: TerminalWithDetails }>({ open: false });
   const [activationLogDialog, setActivationLogDialog] = useState<{ open: boolean; terminalId?: number }>({ open: false });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get URL parameters to check for auto-activation
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoActivateTerminalId = urlParams.get('autoActivate');
+
+  // Auto-open activation dialog when navigated from notification
+  useEffect(() => {
+    if (autoActivateTerminalId && terminals.length > 0 && !activationDialog.open) {
+      const terminalToActivate = terminals.find((terminal: TerminalWithDetails) => 
+        terminal.id.toString() === autoActivateTerminalId
+      );
+      
+      if (terminalToActivate) {
+        handleActivate(terminalToActivate);
+        
+        // Clear the URL parameter after opening the dialog
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [autoActivateTerminalId, terminals, activationDialog.open]);
 
   // Form for activation
   const form = useForm<ActivationFormData>({
