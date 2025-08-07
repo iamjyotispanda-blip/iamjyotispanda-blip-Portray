@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck, ChevronDown, ChevronRight
+  Ship, LogOut, Menu as MenuIcon, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck, ChevronDown, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PortrayLogo } from "@/components/portray-logo";
 import { AuthService } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
-import type { Notification } from "@shared/schema";
+import type { Notification, Menu } from "@shared/schema";
+import * as LucideIcons from "lucide-react";
+
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  route?: string | null;
+  children?: NavigationItem[];
+}
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -33,15 +42,15 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // Helper function to check if any child of an item is active
-  const isParentActive = (item: any) => {
+  const isParentActive = (item: NavigationItem) => {
     if (!item.children) return false;
-    return item.children.some((child: any) => activeSection === child.id);
+    return item.children.some((child: NavigationItem) => activeSection === child.id);
   };
 
   // Helper function to get the parent of the active section
   const getActiveParent = () => {
     for (const item of navigationItems) {
-      if (item.children?.some((child: any) => child.id === activeSection)) {
+      if (item.children?.some((child: NavigationItem) => child.id === activeSection)) {
         return item.id;
       }
     }
@@ -52,6 +61,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: AuthService.getCurrentUser,
+  });
+
+  // Get dynamic GLink menus from API for System Admin
+  const { data: glinkMenus = [] } = useQuery<Menu[]>({
+    queryKey: ["/api/menus", "glink"],
+    enabled: user?.role === "SystemAdmin",
+  });
+
+  // Get dynamic PLink menus from API for System Admin
+  const { data: plinkMenus = [] } = useQuery<Menu[]>({
+    queryKey: ["/api/menus", "plink"],
+    enabled: user?.role === "SystemAdmin",
   });
 
   // Get notifications only for system admins
@@ -132,39 +153,57 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     }
   };
 
+  // Helper function to get Lucide icon component by name
+  const getIconComponent = (iconName: string | null) => {
+    if (!iconName) return Home;
+    const IconComponent = (LucideIcons as any)[iconName];
+    return IconComponent || Home;
+  };
+
   // Role-based navigation items
-  const getNavigationItems = () => {
+  const getNavigationItems = (): NavigationItem[] => {
     if (user?.role === "PortAdmin") {
       // Port Admin only sees Terminals
       return [
-        { id: "terminals", label: "Terminals", icon: Ship }
+        { id: "terminals", label: "Terminals", icon: Ship, route: "/terminals" }
       ];
     } else {
-      // System Admin sees all navigation
-      return [
-        { id: "dashboard", label: "Dashboard", icon: Home },
-        { 
-          id: "users-access", 
-          label: "Users & Access", 
-          icon: Users,
-          children: [
-            { id: "glink", label: "GLink", icon: Link },
-            { id: "plink", label: "PLink", icon: Link },
-            { id: "roles", label: "Roles", icon: Shield },
-            { id: "groups", label: "Groups", icon: UserCheck },
-          ]
-        },
-        { 
-          id: "configuration", 
-          label: "Configuration", 
-          icon: Settings,
-          children: [
-            { id: "organization", label: "Organizations", icon: Building2 },
-            { id: "ports", label: "Ports", icon: Ship },
-            { id: "terminal-activation", label: "Terminal Activation", icon: CheckCircle },
-          ]
-        },
-      ];
+      // System Admin sees dynamic GLink menus + static management items
+      const dynamicItems: NavigationItem[] = (glinkMenus || [])
+        .filter((menu: Menu) => menu.isActive)
+        .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
+        .map((menu: Menu): NavigationItem => {
+          const children = (plinkMenus || [])
+            .filter((plink: Menu) => plink.parentId === menu.id && plink.isActive)
+            .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
+            .map((plink: Menu): NavigationItem => ({
+              id: plink.name,
+              label: plink.label,
+              icon: getIconComponent(plink.icon),
+              route: plink.route
+            }));
+          
+          return {
+            id: menu.name,
+            label: menu.label,
+            icon: getIconComponent(menu.icon),
+            route: menu.route,
+            children: children.length > 0 ? children : undefined
+          };
+        });
+
+      // Add static management items if no menu-management menu exists
+      const hasMenuManagement = (glinkMenus || []).some((menu: Menu) => menu.name === 'menu-management');
+      if (!hasMenuManagement) {
+        dynamicItems.push({
+          id: "menu-management",
+          label: "Menu Management",
+          icon: MenuIcon,
+          route: "/menu-management"
+        });
+      }
+
+      return dynamicItems;
     }
   };
 
@@ -192,41 +231,22 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     }
   }, [activeSection]);
 
-  const handleNavigation = (itemId: string) => {
-    switch (itemId) {
-      case "dashboard":
-        setLocation("/dashboard");
-        break;
-      case "glink":
-        setLocation("/users-access/glink");
-        break;
-      case "plink":
-        setLocation("/users-access/plink");
-        break;
-      case "roles":
-        setLocation("/users-access/roles");
-        break;
-      case "groups":
-        setLocation("/users-access/groups");
-        break;
-      case "terminals":
-        // For Port Admin - redirect to terminals page
-        setLocation("/terminals");
-        break;
-      case "terminal-activation":
-        setLocation("/terminal-activation");
-        break;
-      case "email":
-        setLocation("/configuration/email");
-        break;
-      case "organization":
-        setLocation("/organizations");
-        break;
-      case "ports":
-        setLocation("/ports");
-        break;
-      default:
-        break;
+  const handleNavigation = (item: NavigationItem) => {
+    if (item.route) {
+      setLocation(item.route);
+    } else {
+      // Fallback for items without routes
+      switch (item.id) {
+        case "terminals":
+          setLocation("/terminals");
+          break;
+        case "menu-management":
+          setLocation("/menu-management");
+          break;
+        default:
+          console.warn(`No route defined for menu item: ${item.id}`);
+          break;
+      }
     }
   };
 
@@ -270,7 +290,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
-                  onClick={() => item.children ? expandItem(item.id) : handleNavigation(item.id)}
+                  onClick={() => item.children && item.children.length > 0 ? expandItem(item.id) : handleNavigation(item)}
                   className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-200 ${
                     activeSection === item.id || isParentActive(item)
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
@@ -284,7 +304,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     }`} />
                     {(!sidebarCollapsed || sidebarHovered) && item.label}
                   </div>
-                  {item.children && (!sidebarCollapsed || sidebarHovered) && (
+                  {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && (
                     <div className="ml-2">
                       {expandedItems.includes(item.id) ? (
                         <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -295,12 +315,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   )}
                 </button>
                 
-                {item.children && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id) && (
+                {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id) && (
                   <div className="ml-8 mt-1 space-y-1">
-                    {item.children.map((child) => (
+                    {item.children.map((child: NavigationItem) => (
                       <button
                         key={child.id}
-                        onClick={() => handleNavigation(child.id)}
+                        onClick={() => handleNavigation(child)}
                         className={`group flex items-center px-2 py-1.5 text-sm rounded-md w-full text-left transition-all duration-200 ${
                           activeSection === child.id
                             ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 shadow-sm border-l-2 border-blue-500 ml-1 pl-1'
@@ -369,7 +389,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   className="lg:hidden mr-3"
                   onClick={() => setSidebarOpen(true)}
                 >
-                  <Menu className="h-5 w-5" />
+                  <MenuIcon className="h-5 w-5" />
                 </Button>
                 <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
                   {/* Clean header without page configuration details */}

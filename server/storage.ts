@@ -736,11 +736,15 @@ export class MemStorage implements IStorage {
   private portAdminContacts: Map<number, PortAdminContact>;
   private emailConfigurations: Map<number, EmailConfiguration>;
   private terminals: Map<number, Terminal>;
+  private menus: Map<number, Menu>;
+  private activationLogs: Map<number, ActivationLog>;
   private nextOrgId: number = 1;
   private nextPortId: number = 1;
   private nextContactId: number = 1;
   private nextEmailConfigId: number = 1;
   private nextTerminalId: number = 1;
+  private nextMenuId: number = 1;
+  private nextActivationLogId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -750,10 +754,13 @@ export class MemStorage implements IStorage {
     this.portAdminContacts = new Map();
     this.emailConfigurations = new Map();
     this.terminals = new Map();
+    this.menus = new Map();
+    this.activationLogs = new Map();
     
     // Create a default admin user for testing
     this.initializeDefaultUser();
     this.initializeDefaultData();
+    this.initializeDefaultMenus();
   }
 
   private async initializeDefaultUser() {
@@ -823,6 +830,71 @@ export class MemStorage implements IStorage {
 
     this.nextOrgId = 2;
     this.nextPortId = 3;
+  }
+
+  private initializeDefaultMenus() {
+    // Create default GLink (Main Menu) items
+    const dashboardMenu: Menu = {
+      id: 1,
+      name: "dashboard",
+      label: "Dashboard",
+      icon: "Home",
+      route: "/dashboard",
+      parentId: null,
+      sortOrder: 1,
+      menuType: "glink",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.menus.set(1, dashboardMenu);
+
+    const organizationsMenu: Menu = {
+      id: 2,
+      name: "organizations",
+      label: "Organizations",
+      icon: "Building2",
+      route: "/organizations",
+      parentId: null,
+      sortOrder: 2,
+      menuType: "glink",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.menus.set(2, organizationsMenu);
+
+    const portsMenu: Menu = {
+      id: 3,
+      name: "ports",
+      label: "Ports",
+      icon: "MapPin",
+      route: "/ports",
+      parentId: null,
+      sortOrder: 3,
+      menuType: "glink",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.menus.set(3, portsMenu);
+
+    const menuManagementMenu: Menu = {
+      id: 4,
+      name: "menu-management",
+      label: "Menu Management",
+      icon: "Menu",
+      route: "/menu-management",
+      parentId: null,
+      sortOrder: 4,
+      menuType: "glink",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.menus.set(4, menuManagementMenu);
+
+    this.nextMenuId = 5;
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -1242,6 +1314,10 @@ export class MemStorage implements IStorage {
       id,
       gst: terminalData.gst ?? null,
       pan: terminalData.pan ?? null,
+      currency: terminalData.currency || "USD",
+      billingFax: terminalData.billingFax ?? null,
+      shippingFax: terminalData.shippingFax ?? null,
+      sameAsBilling: terminalData.sameAsBilling ?? false,
       status: terminalData.status ?? "Processing for activation",
       isActive: true,
       subscriptionTypeId: null,
@@ -1391,6 +1467,94 @@ export class MemStorage implements IStorage {
     };
     this.terminals.set(id, updatedTerminal);
     return updatedTerminal;
+  }
+
+  // Activation Log operations
+  async getActivationLogsByTerminalId(terminalId: number): Promise<ActivationLog[]> {
+    return Array.from(this.activationLogs.values()).filter(
+      (log) => log.terminalId === terminalId
+    );
+  }
+
+  async createActivationLog(logData: InsertActivationLog): Promise<ActivationLog> {
+    const id = this.nextActivationLogId++;
+    const log: ActivationLog = {
+      ...logData,
+      id,
+      data: logData.data ?? null,
+      createdAt: new Date(),
+    };
+    this.activationLogs.set(id, log);
+    return log;
+  }
+
+  // Menu operations
+  async getAllMenus(): Promise<Menu[]> {
+    return Array.from(this.menus.values());
+  }
+
+  async getMenuById(id: number): Promise<Menu | undefined> {
+    return this.menus.get(id);
+  }
+
+  async getMenusByType(menuType: 'glink' | 'plink'): Promise<Menu[]> {
+    return Array.from(this.menus.values()).filter(
+      (menu) => menu.menuType === menuType
+    );
+  }
+
+  async getMenusByParentId(parentId: number | null): Promise<Menu[]> {
+    return Array.from(this.menus.values()).filter(
+      (menu) => menu.parentId === parentId
+    );
+  }
+
+  async createMenu(menuData: InsertMenu): Promise<Menu> {
+    const id = this.nextMenuId++;
+    const menu: Menu = {
+      ...menuData,
+      id,
+      icon: menuData.icon ?? null,
+      route: menuData.route ?? null,
+      parentId: menuData.parentId ?? null,
+      sortOrder: menuData.sortOrder ?? 0,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.menus.set(id, menu);
+    return menu;
+  }
+
+  async updateMenu(id: number, updates: UpdateMenu): Promise<Menu | undefined> {
+    const menu = this.menus.get(id);
+    if (!menu) return undefined;
+
+    const updatedMenu: Menu = {
+      ...menu,
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+    this.menus.set(id, updatedMenu);
+    return updatedMenu;
+  }
+
+  async deleteMenu(id: number): Promise<void> {
+    this.menus.delete(id);
+  }
+
+  async toggleMenuStatus(id: number): Promise<Menu | undefined> {
+    const menu = this.menus.get(id);
+    if (!menu) return undefined;
+
+    const updatedMenu: Menu = {
+      ...menu,
+      isActive: !menu.isActive,
+      updatedAt: new Date(),
+    };
+    this.menus.set(id, updatedMenu);
+    return updatedMenu;
   }
 }
 
