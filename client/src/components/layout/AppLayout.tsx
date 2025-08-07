@@ -398,7 +398,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   }}
                   className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-200 ${
                     activeSection === item.id || (isParentActive(item) && expandedItems.includes(item.id))
-                      ? 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/30 text-green-900 dark:text-green-100 shadow-sm border-l-4 border-green-500'
+                      ? 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/30 text-green-900 dark:text-green-100 border-l-4 border-green-500'
                       : expandedItems.includes(item.id) && item.children && item.children.length > 0
                       ? 'bg-gray-50 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border-l-2 border-gray-300 dark:border-gray-600'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white hover:shadow-sm'
@@ -464,8 +464,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                             onClick={() => handleNavigation(child)}
                             className={`group flex items-center px-3 py-2 ml-4 text-sm rounded-md w-full text-left transition-all duration-200 relative ${
                               activeSection === child.id
-                                ? 'bg-gradient-to-r from-green-100 to-green-50 dark:from-green-800/40 dark:to-green-900/20 text-green-800 dark:text-green-200 shadow-md border-l-4 border-green-600 font-medium transform scale-[1.02]'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-green-50/50 dark:hover:bg-green-900/30 hover:shadow-sm hover:border-l-2 hover:border-green-300 dark:hover:border-green-600'
+                                ? 'bg-gradient-to-r from-green-100 to-green-50 dark:from-green-800/40 dark:to-green-900/20 text-green-800 dark:text-green-200 border-l-4 border-green-600 font-medium transform scale-[1.02]'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-green-50/50 dark:hover:bg-green-900/30 hover:border-l-2 hover:border-green-300 dark:hover:border-green-600'
                             }`}
                           >
                             <child.icon className={`mr-3 h-4 w-4 transition-all duration-300 ease-in-out ${
