@@ -952,14 +952,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const menuType = req.query.type as string;
       const parentId = req.query.parentId ? parseInt(req.query.parentId as string) : undefined;
       
+      console.log("GET /api/menus - menuType:", menuType, "parentId:", parentId);
+      
       if (menuType) {
         const menus = await storage.getMenusByType(menuType as 'glink' | 'plink');
+        console.log(`Found ${menus.length} menus for type '${menuType}':`, menus);
         res.json(menus);
       } else if (parentId !== undefined) {
         const menus = await storage.getMenusByParentId(parentId === 0 ? null : parentId);
+        console.log(`Found ${menus.length} menus for parentId '${parentId}':`, menus);
         res.json(menus);
       } else {
         const menus = await storage.getAllMenus();
+        console.log(`Found ${menus.length} total menus:`, menus);
         res.json(menus);
       }
     } catch (error) {
