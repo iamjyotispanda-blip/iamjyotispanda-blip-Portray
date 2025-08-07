@@ -87,24 +87,16 @@ export function RolesContent() {
 
   // Get already assigned menu combinations
   const getAssignedMenuCombinations = () => {
-    console.log('Current permissions:', formData.permissions);
-    const combinations = formData.permissions.map(permission => {
+    return formData.permissions.map(permission => {
       const parts = permission.split(':');
       if (parts.length >= 2) {
-        const combo = `${parts[0]}:${parts[1]}`; // GLink:PLink combination
-        console.log('Found assigned combination:', combo);
-        return combo;
+        return `${parts[0]}:${parts[1]}`; // GLink:PLink combination
       }
       return '';
     }).filter(combo => combo !== '');
-    
-    console.log('All assigned combinations:', combinations);
-    return combinations;
   };
 
   const assignedCombinations = getAssignedMenuCombinations();
-  console.log('Available menus:', menus);
-  console.log('Selected GLink:', selectedGLink);
 
   // Filter GLinks (parent menus) - only show GLinks that have available PLinks
   const availableGLinks = (menus as Menu[]).filter(menu => {
@@ -136,22 +128,12 @@ export function RolesContent() {
     // Get the selected GLink name from all menus
     const selectedGLinkMenu = (menus as Menu[]).find(g => g.id.toString() === selectedGLink);
     if (!selectedGLinkMenu) {
-      console.log('No GLink found for ID:', selectedGLink);
       return false;
     }
     
     // Check if this PLink is already assigned to the selected GLink
     const combination = `${selectedGLinkMenu.name}:${menu.name}`;
     const isAlreadyAssigned = assignedCombinations.includes(combination);
-    
-    // Debug log to see what's happening
-    console.log('Checking PLink:', {
-      name: menu.name,
-      parentId: menu.parentId,
-      combination: combination,
-      isAlreadyAssigned: isAlreadyAssigned,
-      assignedCombinations: assignedCombinations
-    });
     
     return !isAlreadyAssigned;
   }) : [];
@@ -770,7 +752,7 @@ export function RolesContent() {
                     disabled={!selectedGLink}
                   >
                     <SelectTrigger data-testid="select-plink">
-                      <SelectValue placeholder={selectedGLink ? `Select a child menu (${availablePLinks.length} available)` : "First select a parent menu"} />
+                      <SelectValue placeholder={selectedGLink ? `Select a child menu (${availablePLinks.length} available, ${assignedCombinations.length} assigned)` : "First select a parent menu"} />
                     </SelectTrigger>
                     <SelectContent>
                       {availablePLinks.length === 0 && selectedGLink ? (
