@@ -256,16 +256,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const toggleExpandedItem = (itemId: string) => {
     console.log('Toggling item:', itemId, 'Current expanded:', expandedItems);
     setExpandedItems(prev => {
-      // Accordion behavior: only one parent menu expanded at a time
+      // Tree structure behavior: each parent can be independently toggled
       if (prev.includes(itemId)) {
         // If clicking on expanded item, collapse it
-        const newExpanded: string[] = [];
+        const newExpanded = prev.filter(id => id !== itemId);
         console.log('Collapsing item:', itemId, 'New expanded state:', newExpanded);
         return newExpanded;
       } else {
-        // If clicking on collapsed item, expand only this one (collapse all others)
-        const newExpanded: string[] = [itemId];
-        console.log('Expanding only item:', itemId, 'New expanded state:', newExpanded);
+        // If clicking on collapsed item, expand it (keep others as they are)
+        const newExpanded = [...prev, itemId];
+        console.log('Expanding item:', itemId, 'New expanded state:', newExpanded);
         return newExpanded;
       }
     });
@@ -277,31 +277,19 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
-  // Initialize based on current active section or default to first parent menu
+  // Initialize all parent menus as expanded for full tree structure
   React.useEffect(() => {
     if (!initialized && navigationItems.length > 0) {
       const parentMenuIds = navigationItems
         .filter(item => item.children && item.children.length > 0)
         .map(item => item.id);
       
-      // Check if current active section has a parent that should be expanded
-      const activeParent = getActiveParent();
-      let initialExpanded: string[] = [];
-      
-      if (activeParent && parentMenuIds.includes(activeParent)) {
-        // If there's an active parent, expand it
-        initialExpanded = [activeParent];
-        console.log('Initializing with active parent expanded:', activeParent);
-      } else if (parentMenuIds.length > 0) {
-        // Otherwise, start with first parent menu expanded (accordion style)
-        initialExpanded = [parentMenuIds[0]];
-        console.log('Initializing with first parent expanded:', parentMenuIds[0]);
-      }
-      
-      setExpandedItems(initialExpanded);
+      // Tree structure: expand all parent menus by default to show full hierarchy
+      console.log('Initializing tree structure with all parents expanded:', parentMenuIds);
+      setExpandedItems(parentMenuIds);
       setInitialized(true);
     }
-  }, [navigationItems, initialized, activeSection]);
+  }, [navigationItems, initialized]);
 
   // Auto-expand parent menu when child is active
   React.useEffect(() => {
@@ -435,22 +423,27 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 </button>
                 
                 {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id) && (
-                  <div className="ml-8 mt-1 space-y-1">
-                    {item.children.map((child: NavigationItem) => (
-                      <button
-                        key={child.id}
-                        onClick={() => handleNavigation(child)}
-                        className={`group flex items-center px-2 py-1.5 text-sm rounded-md w-full text-left transition-all duration-200 ${
-                          activeSection === child.id
-                            ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 shadow-sm border-l-2 border-blue-500 ml-1 pl-1'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 hover:shadow-sm hover:ml-0.5 hover:border-l-2 hover:border-gray-300 dark:hover:border-gray-600 hover:pl-1'
-                        }`}
-                      >
-                        <child.icon className={`mr-2 h-4 w-4 transition-colors ${
-                          activeSection === child.id ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
-                        }`} />
-                        {child.label}
-                      </button>
+                  <div className="ml-6 mt-1 space-y-1 border-l border-gray-200 dark:border-gray-600">
+                    {item.children.map((child: NavigationItem, index) => (
+                      <div key={child.id} className="relative">
+                        {/* Tree line connector */}
+                        <div className="absolute left-0 top-0 h-full w-px bg-gray-200 dark:bg-gray-600"></div>
+                        <div className="absolute left-0 top-3 w-4 h-px bg-gray-200 dark:bg-gray-600"></div>
+                        
+                        <button
+                          onClick={() => handleNavigation(child)}
+                          className={`group flex items-center px-2 py-1.5 ml-4 text-sm rounded-md w-full text-left transition-all duration-200 relative ${
+                            activeSection === child.id
+                              ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 shadow-sm border-l-2 border-blue-500'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 hover:shadow-sm'
+                          }`}
+                        >
+                          <child.icon className={`mr-2 h-4 w-4 transition-colors ${
+                            activeSection === child.id ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                          }`} />
+                          {child.label}
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
