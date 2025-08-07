@@ -241,17 +241,15 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const toggleExpandedItem = (itemId: string) => {
     console.log('Toggling item:', itemId, 'Current expanded:', expandedItems);
     setExpandedItems(prev => {
-      // Tree structure behavior: each parent can be independently toggled
+      // Accordion behavior: only one parent can be expanded at a time
       if (prev.includes(itemId)) {
         // If clicking on expanded item, collapse it
-        const newExpanded = prev.filter(id => id !== itemId);
-        console.log('Collapsing item:', itemId, 'New expanded state:', newExpanded);
-        return newExpanded;
+        console.log('Collapsing item:', itemId);
+        return [];
       } else {
-        // If clicking on collapsed item, expand it (keep others as they are)
-        const newExpanded = [...prev, itemId];
-        console.log('Expanding item:', itemId, 'New expanded state:', newExpanded);
-        return newExpanded;
+        // If clicking on collapsed item, expand it and collapse others
+        console.log('Expanding item:', itemId, 'Collapsing others');
+        return [itemId];
       }
     });
   };
@@ -398,22 +396,22 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                       handleNavigation(item);
                     }
                   }}
-                  className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-500 ease-in-out transform hover:scale-[1.02] ${
+                  className={`group flex items-center justify-between px-3 py-3 text-sm font-medium rounded-lg w-full text-left transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform hover:translate-x-1 ${
                     activeSection === item.id || (isParentActive(item) && expandedItems.includes(item.id))
-                      ? 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/30 text-green-900 dark:text-green-100 border-l-4 border-green-500 shadow-sm'
+                      ? 'bg-gradient-to-r from-blue-50 via-blue-100 to-blue-50 dark:from-blue-900/30 dark:via-blue-800/40 dark:to-blue-900/30 text-blue-900 dark:text-blue-100 border-l-4 border-blue-500 shadow-lg shadow-blue-500/20'
                       : expandedItems.includes(item.id) && item.children && item.children.length > 0
-                      ? 'bg-gray-50 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border-l-2 border-gray-300 dark:border-gray-600'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white hover:shadow-sm'
+                      ? 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-700 dark:to-slate-600 text-gray-800 dark:text-gray-200 border-l-3 border-gray-400 dark:border-gray-500'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-slate-700 dark:hover:to-slate-600 hover:text-gray-900 dark:hover:text-white hover:shadow-md hover:border-l-2 hover:border-gray-300'
                   }`}
                   title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
                 >
                   <div className="flex items-center">
-                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 transition-all duration-500 ease-in-out transform group-hover:scale-110 ${
-                      activeSection === item.id || isParentActive(item) ? 'text-green-600 dark:text-green-400 scale-105' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-4'} h-5 w-5 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform group-hover:scale-110 group-hover:rotate-3 ${
+                      activeSection === item.id || isParentActive(item) ? 'text-blue-600 dark:text-blue-400 scale-110' : 'text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400'
                     }`} />
                     {(!sidebarCollapsed || sidebarHovered) && (
-                      <span className={`transition-all duration-300 ease-in-out ${
-                        (activeSection === item.id || isParentActive(item)) ? 'font-semibold transform scale-105' : 'group-hover:font-medium'
+                      <span className={`transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                        (activeSection === item.id || isParentActive(item)) ? 'font-semibold text-blue-900 dark:text-blue-100' : 'group-hover:font-medium group-hover:text-gray-900 dark:group-hover:text-white'
                       }`}>
                         {item.label}
                       </span>
@@ -421,62 +419,60 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   </div>
                   {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && (
                     <div className="ml-2 flex items-center space-x-1">
-                      {/* Animated chevron with rotation */}
-                      <div className={`transition-all duration-500 ease-in-out transform ${
+                      {/* Smooth rotating chevron */}
+                      <div className={`transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform origin-center ${
                         expandedItems.includes(item.id) 
-                          ? 'rotate-90 text-green-500 scale-110' 
-                          : 'rotate-0 text-gray-500 group-hover:text-green-500 group-hover:scale-105'
+                          ? 'rotate-90 text-blue-500 dark:text-blue-400 scale-110' 
+                          : 'rotate-0 text-gray-400 group-hover:text-blue-500 group-hover:scale-105'
                       }`}>
-                        <ChevronRight className="h-4 w-4 transition-colors duration-300 ease-in-out" />
+                        <ChevronRight className="h-4 w-4" />
                       </div>
                     </div>
                   )}
                 </button>
                 
-                {/* Expanded children with smooth animation */}
-                <div className={`overflow-hidden transition-all duration-700 ease-in-out transform ${
+                {/* Accordion-style smooth expansion */}
+                <div className={`overflow-hidden transition-all duration-400 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
                   item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id)
-                    ? 'max-h-96 opacity-100 translate-y-0 scale-y-100'
-                    : 'max-h-0 opacity-0 -translate-y-2 scale-y-95'
+                    ? 'max-h-[800px] opacity-100'
+                    : 'max-h-0 opacity-0'
                 }`}>
                   {item.children && item.children.length > 0 && expandedItems.includes(item.id) && (
-                    <div className="ml-6 mt-2 space-y-1 border-l-2 border-green-200 dark:border-green-800 bg-gradient-to-r from-green-50/30 to-transparent dark:from-green-900/20 rounded-r-lg transition-all duration-500 ease-in-out">
+                    <div className={`ml-4 mt-1 space-y-0.5 border-l-2 border-blue-200 dark:border-blue-700/50 bg-gradient-to-r from-blue-50/20 to-transparent dark:from-blue-900/10 rounded-r-lg transition-all duration-400 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                      expandedItems.includes(item.id) ? 'pl-4 py-2' : 'pl-0 py-0'
+                    }`}>
                       {item.children.map((child: NavigationItem, index) => (
-                        <div key={child.id} className={`relative transition-all duration-500 ease-out transform ${
+                        <div key={child.id} className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform ${
                           expandedItems.includes(item.id) 
-                            ? `opacity-100 translate-x-0 delay-[${index * 100}ms]` 
-                            : 'opacity-0 -translate-x-4'
-                        }`}>
-                          {/* Animated tree line connector */}
-                          <div className={`absolute left-0 top-0 h-6 w-px bg-green-200 dark:bg-green-700 transition-all duration-400 transform origin-top ${
-                            expandedItems.includes(item.id) ? 'scale-y-100' : 'scale-y-0'
-                          }`}></div>
-                          <div className={`absolute left-0 top-3 w-4 h-px bg-green-200 dark:bg-green-700 transition-all duration-400 transform origin-left ${
-                            expandedItems.includes(item.id) ? 'scale-x-100 delay-200' : 'scale-x-0'
-                          }`}></div>
+                            ? `opacity-100 translate-x-0 translate-y-0` 
+                            : 'opacity-0 -translate-x-8 -translate-y-2'
+                        }`} style={{ transitionDelay: expandedItems.includes(item.id) ? `${index * 80}ms` : '0ms' }}>
+                          {/* Clean connector line */}
+                          <div className={`absolute -left-4 top-4 w-3 h-px bg-blue-200 dark:bg-blue-700/50 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                            expandedItems.includes(item.id) ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'
+                          }`} style={{ transitionDelay: expandedItems.includes(item.id) ? `${index * 80 + 150}ms` : '0ms' }}></div>
                           
                           <button
                             onClick={() => handleNavigation(child)}
-                            className={`group flex items-center px-3 py-2 ml-4 text-sm rounded-md w-full text-left relative transition-all duration-400 ease-in-out transform hover:scale-[1.02] hover:translate-x-1 ${
+                            className={`group flex items-center px-4 py-2.5 text-sm rounded-lg w-full text-left relative transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform hover:translate-x-2 hover:scale-[1.01] ${
                               activeSection === child.id
-                                ? 'bg-gradient-to-r from-green-100 to-green-50 dark:from-green-800/40 dark:to-green-900/20 text-green-800 dark:text-green-200 border-l-4 border-green-600 font-medium shadow-md scale-[1.02] translate-x-1'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-green-50/50 dark:hover:bg-green-900/30 hover:border-l-2 hover:border-green-300 dark:hover:border-green-600 hover:shadow-sm'
+                                ? 'bg-gradient-to-r from-blue-100 via-blue-50 to-blue-100 dark:from-blue-800/40 dark:via-blue-700/30 dark:to-blue-800/40 text-blue-900 dark:text-blue-100 border-l-4 border-blue-500 font-semibold shadow-lg shadow-blue-500/20 scale-[1.01] translate-x-2'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-blue-100/50 dark:hover:from-blue-900/20 dark:hover:to-blue-800/30 hover:border-l-3 hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/10'
                             }`}
                           >
-                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-400 ease-in-out transform group-hover:scale-110 group-hover:rotate-3 ${
+                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform group-hover:scale-125 group-hover:rotate-6 ${
                               activeSection === child.id 
-                                ? 'text-green-600 dark:text-green-400 scale-110 rotate-3' 
-                                : 'text-gray-400 group-hover:text-green-500 dark:group-hover:text-green-400'
+                                ? 'text-blue-600 dark:text-blue-400 scale-125 rotate-6' 
+                                : 'text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400'
                             }`} />
-                            <span className={`transition-all duration-300 ease-in-out ${
-                              activeSection === child.id ? 'font-semibold transform scale-105' : 'group-hover:font-medium group-hover:scale-102'
+                            <span className={`transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                              activeSection === child.id ? 'font-semibold' : 'group-hover:font-medium'
                             }`}>
                               {child.label}
                             </span>
                             {activeSection === child.id && (
-                              <div className="ml-auto flex items-center space-x-1 animate-fade-in">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <div className="text-xs text-green-500 font-medium transition-all duration-300 ease-in-out transform scale-110">•</div>
+                              <div className="ml-auto flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                               </div>
                             )}
                           </button>
