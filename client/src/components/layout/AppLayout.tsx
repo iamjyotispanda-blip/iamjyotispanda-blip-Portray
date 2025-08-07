@@ -39,7 +39,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(['configurations', 'user-access']);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // Helper function to check if any child of an item is active
   const isParentActive = (item: NavigationItem) => {
@@ -78,15 +78,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     enabled: user?.role === "SystemAdmin",
   });
 
-  // Get dynamic PLink menus from API for System Admin
-  const { data: plinkMenus = [] } = useQuery<Menu[]>({
-    queryKey: ["/api/menus", "plink"],
+  // Get ALL dynamic menus from API for System Admin
+  const { data: allMenus = [] } = useQuery<Menu[]>({
+    queryKey: ["/api/menus"],
     queryFn: async () => {
       try {
-        const response = await apiRequest("GET", "/api/menus?type=plink");
-        return Array.isArray(response) ? response : [];
+        const response = await apiRequest("GET", "/api/menus");
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
       } catch (error) {
-        console.error("Failed to fetch plink menus:", error);
+        console.error("Failed to fetch all menus:", error);
         return [];
       }
     },
@@ -190,13 +191,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       const hasDynamicMenus = Array.isArray(glinkMenus) && glinkMenus.length > 0;
       
       if (hasDynamicMenus) {
-        // Dynamic GLink menus + static management items
-        const dynamicItems: NavigationItem[] = (Array.isArray(glinkMenus) ? glinkMenus : [])
-          .filter((menu: Menu) => menu.isActive)
+        // Separate GLink and PLink menus
+        const parentMenus = allMenus.filter((menu: Menu) => menu.menuType === 'glink' && menu.isActive);
+        const childMenus = allMenus.filter((menu: Menu) => menu.menuType === 'plink' && menu.isActive);
+        
+        // Dynamic GLink menus with their PLink children
+        const dynamicItems: NavigationItem[] = parentMenus
           .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
           .map((menu: Menu): NavigationItem => {
-            const children = (Array.isArray(plinkMenus) ? plinkMenus : [])
-              .filter((plink: Menu) => plink.parentId === menu.id && plink.isActive)
+            const children = childMenus
+              .filter((plink: Menu) => plink.parentId === menu.id)
               .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
               .map((plink: Menu): NavigationItem => ({
                 id: plink.name,
@@ -213,17 +217,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               children: children.length > 0 ? children : undefined
             };
           });
-
-        // Add static management items if no menu-management menu exists
-        const hasMenuManagement = (Array.isArray(glinkMenus) ? glinkMenus : []).some((menu: Menu) => menu.name === 'menu-management');
-        if (!hasMenuManagement) {
-          dynamicItems.push({
-            id: "menu-management",
-            label: "Menu Management",
-            icon: MenuIcon,
-            route: "/menu-management"
-          });
-        }
 
         return dynamicItems;
       } else {
@@ -273,13 +266,29 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
-  // Auto-expand parent menu when child is active
+  // Auto-expand all parent menus by default and when child is active
   React.useEffect(() => {
+    const parentMenuIds = navigationItems
+      .filter(item => item.children && item.children.length > 0)
+      .map(item => item.id);
+    
+    // Auto-expand all parent menus
+    setExpandedItems(prev => {
+      const newExpanded = [...prev];
+      parentMenuIds.forEach(id => {
+        if (!newExpanded.includes(id)) {
+          newExpanded.push(id);
+        }
+      });
+      return newExpanded;
+    });
+    
+    // Also expand specific parent if child is active
     const activeParent = getActiveParent();
     if (activeParent && !expandedItems.includes(activeParent)) {
       expandItem(activeParent);
     }
-  }, [activeSection]);
+  }, [navigationItems, activeSection]);
 
   const handleNavigation = (item: NavigationItem) => {
     if (item.route) {
