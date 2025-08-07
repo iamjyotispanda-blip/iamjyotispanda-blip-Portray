@@ -586,16 +586,17 @@ export default function MenuManagementPage() {
 
   return (
     <AppLayout title="Menu Management" activeSection="menu-management">
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Menu Management</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Manage main navigation menu items with drag-and-drop builder
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-3">
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Menu Management</span>
+        </div>
+        
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <div></div>
+              
+              <div className="flex items-center space-x-3">
             {/* Menu Type Filter */}
             <Select
               value={selectedMenuType}
@@ -887,20 +888,22 @@ export default function MenuManagementPage() {
           </Card>
         )}
 
-        {/* Edit Sheet */}
-        <Sheet open={showEditForm} onOpenChange={setShowEditForm}>
-          <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
-            <SheetHeader>
-              <SheetTitle>Edit Menu</SheetTitle>
-              <SheetDescription>
-                Update the menu item details
-              </SheetDescription>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-1 py-4">
-              <MenuForm isEdit={true} />
-            </div>
-          </SheetContent>
-        </Sheet>
+            {/* Edit Sheet */}
+            <Sheet open={showEditForm} onOpenChange={setShowEditForm}>
+              <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
+                <SheetHeader>
+                  <SheetTitle>Edit Menu</SheetTitle>
+                  <SheetDescription>
+                    Update the menu item details
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto px-1 py-4">
+                  <MenuForm isEdit={true} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </main>
       </div>
     </AppLayout>
   );
