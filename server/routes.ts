@@ -182,6 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/organizations", authenticateToken, async (req: Request, res: Response) => {
     try {
       const organizations = await storage.getAllOrganizations();
+      console.log("Organizations from database:", JSON.stringify(organizations, null, 2));
       res.json(organizations);
     } catch (error) {
       console.error("Get organizations error:", error);
