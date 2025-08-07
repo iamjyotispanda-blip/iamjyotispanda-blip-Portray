@@ -407,6 +407,7 @@ export default function GlinkPage() {
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <div className="space-y-6 mt-2 pb-8 max-w-none">
+      {/* Menu Type - First Field */}
       <div className="space-y-2">
         <Label htmlFor="menuType">Menu Type *</Label>
         <Select
@@ -431,6 +432,7 @@ export default function GlinkPage() {
         </p>
       </div>
 
+      {/* Parent Menu Selection - Only for PLink */}
       {formData.menuType === 'plink' && (
         <div className="space-y-2">
           <Label htmlFor="parentId">Parent GLink Menu *</Label>
@@ -447,7 +449,7 @@ export default function GlinkPage() {
             </SelectTrigger>
             <SelectContent>
               {safeGlinkMenus
-                .filter(menu => menu.isActive)
+                .filter(menu => menu.isActive && menu.menuType === 'glink')
                 .sort((a, b) => a.sortOrder - b.sortOrder)
                 .map((menu) => {
                   const IconComponent = getIconComponent(menu.icon);
@@ -456,23 +458,25 @@ export default function GlinkPage() {
                       <div className="flex items-center space-x-2">
                         <IconComponent className="h-4 w-4" />
                         <span>{menu.label}</span>
+                        <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
                       </div>
                     </SelectItem>
                   );
                 })}
             </SelectContent>
           </Select>
-          <p className="text-xs text-gray-500">Select which GLink this PLink should appear under</p>
+          <p className="text-xs text-gray-500">All GLink menus are bound as parent options for PLink</p>
         </div>
       )}
 
+      {/* Name Field */}
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="dashboard"
+          placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
           data-testid="input-name"
         />
         <p className="text-xs text-gray-500">Used as the unique identifier (lowercase, no spaces)</p>
