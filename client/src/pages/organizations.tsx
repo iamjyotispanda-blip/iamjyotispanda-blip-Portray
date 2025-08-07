@@ -3,7 +3,7 @@ import OrganizationPage from "./organization-simple";
 
 export default function OrganizationsPage() {
   return (
-    <AppLayout title="Organizations" activeSection="organization">
+    <AppLayout title="Organizations" activeSection="organisations">
       <OrganizationPage />
     </AppLayout>
   );

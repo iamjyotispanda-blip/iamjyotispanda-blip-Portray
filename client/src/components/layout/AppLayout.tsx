@@ -287,9 +287,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   React.useEffect(() => {
     if (initialized && activeSection) {
       const activeParent = getActiveParent();
-      console.log('Active section:', activeSection, 'Active parent:', activeParent);
+      console.log('🎯 Navigation Debug:', {
+        activeSection,
+        activeParent,
+        expandedItems,
+        availableMenus: navigationItems.map(item => ({ id: item.id, children: item.children?.map(c => c.id) }))
+      });
       if (activeParent && !expandedItems.includes(activeParent)) {
-        console.log('Expanding parent for active child:', activeParent);
+        console.log('🔥 Auto-expanding parent for active child:', activeParent);
         expandItem(activeParent);
       }
     }
@@ -310,11 +315,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         case "plink":
           setLocation("/users-access/plink");
           break;
-        case "roles":
+        case "roles-groups":
           setLocation("/users-access/roles");
-          break;
-        case "groups":
-          setLocation("/users-access/groups");
           break;
         case "terminals":
           setLocation("/terminals");
@@ -322,10 +324,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         case "terminal-activation":
           setLocation("/terminal-activation");
           break;
-        case "email":
+        case "email-config":
           setLocation("/configuration/email");
           break;
-        case "organization":
+        case "organisations":
           setLocation("/organizations");
           break;
         case "ports":

@@ -218,7 +218,7 @@ export default function EmailConfigurationPage() {
   };
 
   return (
-    <AppLayout title="Email Configuration" activeSection="email">
+    <AppLayout title="Email Configuration" activeSection="email-config">
       <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Email Configuration</span>
