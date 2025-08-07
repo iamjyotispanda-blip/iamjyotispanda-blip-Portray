@@ -78,6 +78,7 @@ export default function GlinkPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
+  const [selectedMenuType, setSelectedMenuType] = useState<'glink' | 'plink'>('glink');
   const [viewMode, setViewMode] = useState<'table' | 'builder'>('table');
   const [builderMenus, setBuilderMenus] = useState<Menu[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -111,6 +112,9 @@ export default function GlinkPage() {
 
   // Ensure glinkMenus is always an array
   const safeGlinkMenus = Array.isArray(glinkMenus) ? glinkMenus : [];
+
+  // Filter menus based on selected type
+  const filteredMenus = safeGlinkMenus.filter(menu => menu.menuType === selectedMenuType);
 
   // Initialize builder menus when data is loaded
   React.useEffect(() => {
@@ -234,7 +238,7 @@ export default function GlinkPage() {
       icon: "",
       route: "",
       sortOrder: 0,
-      menuType: 'glink',
+      menuType: selectedMenuType, // Set based on current filter selection
       parentId: null,
     });
   };
@@ -584,6 +588,23 @@ export default function GlinkPage() {
           </div>
           
           <div className="flex items-center space-x-3">
+            {/* Menu Type Filter */}
+            <Select
+              value={selectedMenuType}
+              onValueChange={(value: 'glink' | 'plink') => setSelectedMenuType(value)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="glink">GLink (Main Menu)</SelectItem>
+                <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Badge variant="outline">
+              {filteredMenus.length} menu{filteredMenus.length !== 1 ? 's' : ''}
+            </Badge>
+            
             {/* View toggle buttons */}
             <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg p-1">
               <Button
@@ -611,16 +632,18 @@ export default function GlinkPage() {
             {/* Add menu button */}
             <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
               <SheetTrigger asChild>
-                <Button className="flex items-center space-x-2" data-testid="button-add-menu">
+                <Button className="flex items-center space-x-2" data-testid="button-add-menu" onClick={() => {
+                  resetForm(); // Pre-populate form with selected menu type
+                }}>
                   <Plus className="h-4 w-4" />
-                  <span>Add Menu</span>
+                  <span>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
                 <SheetHeader>
-                  <SheetTitle>Add New Menu</SheetTitle>
+                  <SheetTitle>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</SheetTitle>
                   <SheetDescription>
-                    Create a new menu item (GLink or PLink)
+                    Create a new {selectedMenuType === 'glink' ? 'main menu item' : 'sub menu item'}
                   </SheetDescription>
                 </SheetHeader>
                 <div className="flex-1 overflow-y-auto px-1 py-4">
@@ -638,10 +661,10 @@ export default function GlinkPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center space-x-2">
                   <List className="h-5 w-5" />
-                  <span>GLink Menus - Table View</span>
+                  <span>{selectedMenuType.toUpperCase()} Menus - Table View</span>
                 </CardTitle>
                 <Badge variant="outline" data-testid="text-menu-count">
-                  {safeGlinkMenus.length} menu{safeGlinkMenus.length !== 1 ? 's' : ''}
+                  {filteredMenus.length} menu{filteredMenus.length !== 1 ? 's' : ''}
                 </Badge>
               </div>
             </CardHeader>
@@ -650,7 +673,7 @@ export default function GlinkPage() {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
-              ) : safeGlinkMenus.length === 0 ? (
+              ) : filteredMenus.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <LinkIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p>No GLink menus found</p>
@@ -670,7 +693,7 @@ export default function GlinkPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {safeGlinkMenus
+                    {filteredMenus
                       .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
                       .map((menu: Menu) => {
                         const IconComponent = getIconComponent(menu.icon);
