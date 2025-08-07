@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Ship, MapPin, Building2, Globe, Edit, Trash2, Search, Calendar } from "lucide-react";
+import { Plus, Ship, MapPin, Building2, Globe, Edit, Trash2, Search, Calendar, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -54,6 +55,7 @@ const CountryFlag = ({ country }: { country: string }) => {
 export default function TerminalsPage() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [activationLogDialog, setActivationLogDialog] = useState<{ open: boolean; terminalId?: number }>({ open: false });
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -247,6 +249,13 @@ export default function TerminalsPage() {
                                       <span>
                                         {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")} {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}{terminal.workOrderNo && ` WO: ${terminal.workOrderNo}`}
                                       </span>
+                                      <button
+                                        onClick={() => setActivationLogDialog({ open: true, terminalId: terminal.id })}
+                                        className="ml-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                        title="View Activation Log"
+                                      >
+                                        <FileText className="h-3 w-3" />
+                                      </button>
                                     </div>
                                   </>
                                 )}
@@ -289,6 +298,79 @@ export default function TerminalsPage() {
           </div>
         </main>
       </div>
+
+      {/* Activation Log Dialog */}
+      <Dialog open={activationLogDialog.open} onOpenChange={(open) => setActivationLogDialog({ open })}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <FileText className="w-5 h-5 text-blue-600" />
+              <span>Activation Log</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {/* Mock activation log data */}
+            <div className="space-y-3">
+              <div className="border-l-4 border-green-500 pl-4 py-2 bg-green-50 dark:bg-green-900/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-green-800 dark:text-green-200">Terminal Activated</h4>
+                  <span className="text-sm text-gray-500">{format(new Date(), "MMM dd, yyyy - hh:mm a")}</span>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                  Terminal successfully activated with 24-month subscription plan
+                </p>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  <span>Activated by: System Admin</span> • 
+                  <span> Work Order: WBSRT87654</span>
+                </div>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 dark:bg-blue-900/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-blue-800 dark:text-blue-200">Application Submitted</h4>
+                  <span className="text-sm text-gray-500">{format(new Date(Date.now() - 24 * 60 * 60 * 1000), "MMM dd, yyyy - hh:mm a")}</span>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  Terminal activation request submitted for review
+                </p>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  <span>Submitted by: Port Admin</span>
+                </div>
+              </div>
+
+              <div className="border-l-4 border-yellow-500 pl-4 py-2 bg-yellow-50 dark:bg-yellow-900/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Documentation Received</h4>
+                  <span className="text-sm text-gray-500">{format(new Date(Date.now() - 48 * 60 * 60 * 1000), "MMM dd, yyyy - hh:mm a")}</span>
+                </div>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                  All required documents uploaded and verified
+                </p>
+              </div>
+
+              <div className="border-l-4 border-gray-500 pl-4 py-2 bg-gray-50 dark:bg-gray-900/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">Terminal Created</h4>
+                  <span className="text-sm text-gray-500">{format(new Date(Date.now() - 72 * 60 * 60 * 1000), "MMM dd, yyyy - hh:mm a")}</span>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                  Terminal record created in the system
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setActivationLogDialog({ open: false })}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
