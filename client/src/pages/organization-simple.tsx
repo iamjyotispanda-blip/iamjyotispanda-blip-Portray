@@ -760,6 +760,10 @@ export default function OrganizationPage() {
                     <TableRow key={org.id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
+                          {/* Debug: Show logoUrl value */}
+                          <div className="text-xs text-blue-500 max-w-20 truncate" title={org.logoUrl || 'No logo URL'}>
+                            {org.logoUrl ? '✅ Logo' : '❌ No URL'}
+                          </div>
                           {org.logoUrl ? (
                             <img 
                               src={org.logoUrl} 
