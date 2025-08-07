@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -60,6 +61,7 @@ interface GlinkFormData {
   sortOrder: number;
   menuType: 'glink' | 'plink';
   parentId: number | null;
+  isSystemConfig: boolean;
 }
 
 const iconOptions = [
@@ -91,6 +93,7 @@ export default function MenuManagementPage() {
     sortOrder: 0,
     menuType: 'glink',
     parentId: null,
+    isSystemConfig: false,
   });
   
   const { toast } = useToast();
@@ -304,6 +307,7 @@ export default function MenuManagementPage() {
       sortOrder: 0,
       menuType: selectedMenuType, // Set based on current filter selection
       parentId: null,
+      isSystemConfig: false,
     });
   };
 
@@ -317,6 +321,7 @@ export default function MenuManagementPage() {
       sortOrder: menu.sortOrder,
       menuType: menu.menuType as 'glink' | 'plink',
       parentId: menu.parentId,
+      isSystemConfig: (menu as any).isSystemConfig || false,
     });
     setShowEditForm(true);
   };
@@ -538,6 +543,26 @@ export default function MenuManagementPage() {
             </SelectContent>
           </Select>
           <p className="text-xs text-gray-500">All GLink menus are bound as parent options for PLink</p>
+        </div>
+      )}
+
+      {/* System Configuration Flag - Only for PLink */}
+      {formData.menuType === 'plink' && (
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isSystemConfig"
+              checked={formData.isSystemConfig}
+              onCheckedChange={(checked) => setFormData({ ...formData, isSystemConfig: checked })}
+              data-testid="switch-system-config"
+            />
+            <Label htmlFor="isSystemConfig" className="text-sm font-medium">
+              System Configuration
+            </Label>
+          </div>
+          <p className="text-xs text-gray-500">
+            When enabled, this menu item will appear in the header configuration section alongside Email Configuration
+          </p>
         </div>
       )}
 

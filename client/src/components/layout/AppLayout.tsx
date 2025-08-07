@@ -97,6 +97,11 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     enabled: user?.role === "SystemAdmin",
   });
 
+  // Get system configuration menus (Plink items with isSystemConfig flag)
+  const systemConfigMenus = allMenus.filter((menu: Menu) => 
+    menu.menuType === 'plink' && (menu as any).isSystemConfig && menu.isActive
+  ).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
+
   // Get notifications only for system admins
   const queryClient = useQueryClient();
   const { data: notifications = [] } = useQuery<Notification[]>({
@@ -657,19 +662,37 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     </DropdownMenu>
                   )}
                   
-                  {/* Email Configuration - Only for System Admin */}
+                  {/* Configuration - Only for System Admin */}
                   {user?.role === "SystemAdmin" && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" title="Email Configuration">
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" title="Configuration">
                           <Settings className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="w-52">
                         <DropdownMenuItem onClick={() => setLocation('/configuration/email')} className="cursor-pointer">
                           <Mail className="h-4 w-4 mr-2" />
                           Email Configuration
                         </DropdownMenuItem>
+                        {systemConfigMenus.length > 0 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            {systemConfigMenus.map((menu: Menu) => {
+                              const IconComponent = getIconComponent(menu.icon);
+                              return (
+                                <DropdownMenuItem 
+                                  key={menu.id}
+                                  onClick={() => menu.route && setLocation(menu.route)} 
+                                  className="cursor-pointer"
+                                >
+                                  <IconComponent className="h-4 w-4 mr-2" />
+                                  {menu.label}
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}

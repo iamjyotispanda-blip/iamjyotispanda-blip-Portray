@@ -340,6 +340,7 @@ export const menus = pgTable("menus", {
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   menuType: text("menu_type").notNull(), // 'glink' or 'plink'
+  isSystemConfig: boolean("is_system_config").notNull().default(false), // Flag for header system configuration
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
@@ -363,6 +364,7 @@ export const insertMenuSchema = createInsertSchema(menus).pick({
   parentId: true,
   sortOrder: true,
   menuType: true,
+  isSystemConfig: true,
 });
 
 export const updateMenuSchema = createInsertSchema(menus).pick({
@@ -373,6 +375,7 @@ export const updateMenuSchema = createInsertSchema(menus).pick({
   parentId: true,
   sortOrder: true,
   menuType: true,
+  isSystemConfig: true,
 }).partial();
 
 export type Menu = typeof menus.$inferSelect;
