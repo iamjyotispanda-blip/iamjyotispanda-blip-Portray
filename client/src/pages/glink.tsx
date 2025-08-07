@@ -384,8 +384,11 @@ export default function GlinkPage() {
                       return (
                         <TableRow key={menu.id} data-testid={`row-menu-${menu.id}`}>
                           <TableCell>
-                            <div className="flex items-center justify-center w-8 h-8 border rounded-md bg-gray-50">
-                              <IconComponent className="h-4 w-4" />
+                            <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-center w-8 h-8 border rounded-md bg-gray-50">
+                                <IconComponent className="h-4 w-4" />
+                              </div>
+                              <span className="text-sm text-gray-600">{menu.icon || "None"}</span>
                             </div>
                           </TableCell>
                           <TableCell className="font-medium" data-testid={`text-name-${menu.id}`}>{menu.name}</TableCell>
