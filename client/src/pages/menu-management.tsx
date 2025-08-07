@@ -821,6 +821,12 @@ export default function MenuManagementPage() {
                                           {menu.childCount} sub-menu{menu.childCount !== 1 ? 's' : ''}
                                         </Badge>
                                       )}
+                                      {menu.menuType === 'plink' && (menu as any).isSystemConfig && (
+                                        <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                          <Settings className="h-3 w-3 mr-1" />
+                                          Config
+                                        </Badge>
+                                      )}
                                     </div>
                                     <div className="text-sm text-gray-500">{menu.name}</div>
                                     {menu.isChild && menu.parentMenu && (
@@ -834,9 +840,17 @@ export default function MenuManagementPage() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={menu.menuType === 'glink' ? 'default' : 'secondary'} data-testid={`table-type-${menu.id}`}>
-                                {menu.menuType === 'glink' ? 'GLink' : 'PLink'}
-                              </Badge>
+                              <div className="flex flex-col space-y-1">
+                                <Badge variant={menu.menuType === 'glink' ? 'default' : 'secondary'} data-testid={`table-type-${menu.id}`}>
+                                  {menu.menuType === 'glink' ? 'GLink' : 'PLink'}
+                                </Badge>
+                                {menu.menuType === 'plink' && (menu as any).isSystemConfig && (
+                                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                    <Settings className="h-3 w-3 mr-1" />
+                                    System Config
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">{menu.icon || "None"}</Badge>
