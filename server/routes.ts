@@ -396,8 +396,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Found organization:", org.organizationName);
 
-      // Update with new logo URL
-      const updateData = { ...org, logoUrl: logoUrl };
+      // Update with new logo URL (exclude ID to avoid database error)
+      const { id, ...orgWithoutId } = org;
+      const updateData = { ...orgWithoutId, logoUrl: logoUrl };
       const updated = await storage.updateOrganization(organizationId, updateData);
 
       console.log("Successfully updated organization logo");
