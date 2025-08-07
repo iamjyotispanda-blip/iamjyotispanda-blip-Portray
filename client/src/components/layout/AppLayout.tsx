@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle
+  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -126,6 +126,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       // System Admin sees all navigation
       return [
         { id: "dashboard", label: "Dashboard", icon: Home },
+        { id: "users-access", label: "Users & Access", icon: Users },
         { 
           id: "configuration", 
           label: "Configuration", 
@@ -146,6 +147,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     switch (itemId) {
       case "dashboard":
         setLocation("/dashboard");
+        break;
+      case "users-access":
+        setLocation("/users-access");
         break;
       case "terminals":
         // For Port Admin - redirect to terminals page
