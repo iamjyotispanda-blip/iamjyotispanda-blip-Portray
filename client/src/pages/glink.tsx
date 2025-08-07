@@ -95,33 +95,34 @@ export default function GlinkPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get GLink menus only
-  const { data: glinkMenus = [], isLoading } = useQuery<Menu[]>({
+  // Get ALL menus for comprehensive parent dropdown
+  const { data: allMenusData = [], isLoading } = useQuery<Menu[]>({
+    queryKey: ["/api/menus"],
+  });
+
+  // Get GLink menus only for parent dropdown
+  const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
-    queryFn: async (): Promise<Menu[]> => {
-      try {
-        const response = await apiRequest("GET", "/api/menus?type=glink");
-        // Ensure we always return an array
-        return Array.isArray(response) ? response : [];
-      } catch (error) {
-        console.error("Failed to fetch GLink menus:", error);
-        return [];
-      }
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/menus?type=glink");
+      return response.json();
     },
   });
 
-  // Ensure glinkMenus is always an array
+  // Ensure allMenusData is always an array
+  const safeAllMenus = Array.isArray(allMenusData) ? allMenusData : [];
+  // Ensure glinkMenus is always an array for parent dropdown
   const safeGlinkMenus = Array.isArray(glinkMenus) ? glinkMenus : [];
 
   // Filter menus based on selected type
-  const filteredMenus = safeGlinkMenus.filter(menu => menu.menuType === selectedMenuType);
+  const filteredMenus = safeAllMenus.filter(menu => menu.menuType === selectedMenuType);
 
   // Initialize builder menus when data is loaded
   React.useEffect(() => {
-    if (safeGlinkMenus.length > 0 && builderMenus.length === 0) {
-      setBuilderMenus([...safeGlinkMenus].sort((a, b) => a.sortOrder - b.sortOrder));
+    if (safeAllMenus.length > 0 && builderMenus.length === 0) {
+      setBuilderMenus([...safeAllMenus].sort((a, b) => a.sortOrder - b.sortOrder));
     }
-  }, [safeGlinkMenus]);
+  }, [safeAllMenus]);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -285,7 +286,7 @@ export default function GlinkPage() {
   };
 
   const handleDiscardChanges = () => {
-    setBuilderMenus([...safeGlinkMenus].sort((a, b) => a.sortOrder - b.sortOrder));
+    setBuilderMenus([...safeAllMenus].sort((a, b) => a.sortOrder - b.sortOrder));
     setHasUnsavedChanges(false);
   };
 

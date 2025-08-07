@@ -65,12 +65,12 @@ export default function MenuManagementPage() {
     queryKey: ["/api/menus"],
   });
 
-  // Get GLink menus (parent menus)
+  // Get GLink menus (parent menus) - Load ALL GLink menus for parent dropdown
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/menus?type=glink");
-      return await response.json();
+      return response.json();
     },
   });
 
@@ -268,11 +268,15 @@ export default function MenuManagementPage() {
               <SelectValue placeholder="Select parent menu" />
             </SelectTrigger>
             <SelectContent>
-              {glinkMenus.map((menu: Menu) => (
+              {glinkMenus
+                .filter(menu => menu.isActive && menu.menuType === 'glink')
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((menu: Menu) => (
                 <SelectItem key={menu.id} value={menu.id.toString()}>
                   <div className="flex items-center">
                     <GitBranch className="h-4 w-4 mr-2" />
                     {menu.label}
+                    <Badge variant="outline" className="text-xs ml-2">GLink</Badge>
                   </div>
                 </SelectItem>
               ))}
