@@ -109,15 +109,16 @@ export default function EmailConfigurationPage() {
 
   return (
     <AppLayout title="Email Configuration" activeSection="email">
-      <div className="space-y-6">
-        {/* Email Configurations List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">
-              Email Configuration
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Email Configuration</span>
+        </div>
+        
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+          <div className="space-y-2">
+            {/* Email Configurations List */}
+            <Card>
+              <CardContent className="p-6">
             {isLoading ? (
               <div className="text-center py-4">Loading configurations...</div>
             ) : emailConfigs.length === 0 ? (
@@ -216,8 +217,10 @@ export default function EmailConfigurationPage() {
                 </TableBody>
               </Table>
             )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     </AppLayout>
   );
