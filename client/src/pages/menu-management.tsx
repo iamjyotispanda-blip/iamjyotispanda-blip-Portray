@@ -199,6 +199,23 @@ export default function MenuManagementPage() {
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <div className="space-y-4 mt-6 pb-6">
+      {/* FIRST FIELD: Menu Type - Must be at the top */}
+      <div className="space-y-2">
+        <Label htmlFor="menuType">Menu Type *</Label>
+        <Select
+          value={formData.menuType}
+          onValueChange={(value: 'glink' | 'plink') => setFormData({ ...formData, menuType: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select menu type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="glink">GLink (Main Menu)</SelectItem>
+            <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <Input
@@ -238,22 +255,6 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, route: e.target.value })}
           placeholder="/dashboard"
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="menuType">Menu Type *</Label>
-        <Select
-          value={formData.menuType}
-          onValueChange={(value: 'glink' | 'plink') => setFormData({ ...formData, menuType: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select menu type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="glink">GLink (Main Menu)</SelectItem>
-            <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {formData.menuType === 'plink' && (
