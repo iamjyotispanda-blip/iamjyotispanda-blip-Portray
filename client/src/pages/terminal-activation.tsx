@@ -273,18 +273,28 @@ export default function TerminalActivationPage() {
                                 className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center space-x-3" : ""}
                               >
                                 {terminal.status === "Active" && terminal.activationStartDate ? (
-                                  <div className="flex items-center space-x-3">
-                                    <span>{terminal.status}</span>
-                                    <span>
-                                      {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
-                                    </span>
-                                    <span>
-                                      {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
-                                    </span>
-                                    {terminal.workOrderNo && (
+                                  <div className="flex flex-col space-y-1">
+                                    <div className="flex items-center space-x-3">
+                                      <span>{terminal.status}</span>
                                       <span>
-                                        WO: {terminal.workOrderNo}
+                                        {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
                                       </span>
+                                      <div className="flex items-center space-x-1">
+                                        <Calendar className="h-3 w-3" />
+                                        <span>
+                                          {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
+                                        </span>
+                                      </div>
+                                      {terminal.workOrderNo && (
+                                        <span>
+                                          WO: {terminal.workOrderNo}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {terminal.activationEndDate && (
+                                      <div className="text-xs opacity-75">
+                                        {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
+                                      </div>
                                     )}
                                   </div>
                                 ) : (
