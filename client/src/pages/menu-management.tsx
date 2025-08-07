@@ -64,6 +64,96 @@ interface GlinkFormData {
   isSystemConfig: boolean;
 }
 
+// Icon recommendation system
+const getRecommendedIcons = (menuType: 'glink' | 'plink', name: string, label: string, parentMenu?: Menu) => {
+  const allIcons = iconOptions.map(option => option.name);
+  
+  // Base recommendations for GLink (main menu)
+  const glinkRecommendations = [
+    'Home', 'Dashboard', 'Settings', 'Users', 'Building2', 'Shield', 
+    'Database', 'BarChart', 'Briefcase', 'Globe', 'Navigation'
+  ];
+  
+  // Base recommendations for PLink (sub-menu) 
+  const plinkRecommendations = [
+    'Settings', 'Edit', 'Plus', 'Save', 'Search', 'Filter', 'List', 
+    'Grid', 'Eye', 'Download', 'Upload', 'CheckCircle'
+  ];
+  
+  // Context-based recommendations based on name/label keywords
+  const contextualRecommendations: Record<string, string[]> = {
+    // User & Access related
+    'user': ['User', 'Users', 'UserCheck', 'Shield', 'Lock', 'Key'],
+    'access': ['Shield', 'Lock', 'Unlock', 'Key', 'UserCheck'],
+    'auth': ['Shield', 'Lock', 'Key', 'LogIn', 'LogOut'],
+    'login': ['LogIn', 'User', 'Shield', 'Lock'],
+    'role': ['Shield', 'Users', 'UserCheck', 'Crown'],
+    'permission': ['Shield', 'Lock', 'Key', 'CheckCircle'],
+    
+    // Configuration & Settings
+    'config': ['Settings', 'Wrench', 'Sliders', 'Palette'],
+    'setting': ['Settings', 'Sliders', 'Wrench', 'Palette'],
+    'email': ['Mail', 'MessageCircle', 'Send'],
+    'notification': ['Bell', 'MessageCircle', 'AlertCircle'],
+    
+    // Business & Organization
+    'organization': ['Building2', 'Briefcase', 'Users'],
+    'company': ['Building2', 'Briefcase', 'Globe'],
+    'port': ['Ship', 'Anchor', 'MapPin'],
+    'terminal': ['Monitor', 'Server', 'Database'],
+    
+    // Data & Analytics
+    'dashboard': ['BarChart', 'PieChart', 'Monitor', 'Grid'],
+    'report': ['BarChart', 'PieChart', 'FileText', 'Printer'],
+    'analytics': ['BarChart', 'PieChart', 'Target', 'TrendingUp'],
+    'data': ['Database', 'Server', 'BarChart', 'Grid'],
+    
+    // Actions & Operations
+    'create': ['Plus', 'PlusCircle', 'Edit', 'Save'],
+    'add': ['Plus', 'PlusCircle', 'Upload'],
+    'edit': ['Edit', 'Pencil', 'Settings'],
+    'delete': ['Trash', 'X', 'Minus'],
+    'view': ['Eye', 'List', 'Grid', 'Monitor'],
+    'list': ['List', 'Grid', 'Eye', 'Database'],
+    'manage': ['Settings', 'Wrench', 'Edit', 'Sliders'],
+    
+    // Communication
+    'message': ['MessageCircle', 'MessageSquare', 'Mail'],
+    'chat': ['MessageCircle', 'MessageSquare', 'Mic'],
+    'call': ['Phone', 'Mic', 'Video'],
+    
+    // Files & Documents
+    'file': ['File', 'FileText', 'Folder', 'Archive'],
+    'document': ['FileText', 'File', 'Clipboard', 'Archive'],
+    'upload': ['Upload', 'CloudUpload', 'Plus'],
+    'download': ['Download', 'CloudDownload', 'Archive']
+  };
+  
+  // Get base recommendations
+  let recommendations = menuType === 'glink' ? [...glinkRecommendations] : [...plinkRecommendations];
+  
+  // Add contextual recommendations based on name and label
+  const searchText = `${name} ${label}`.toLowerCase();
+  Object.entries(contextualRecommendations).forEach(([keyword, icons]) => {
+    if (searchText.includes(keyword)) {
+      recommendations = Array.from(new Set([...icons, ...recommendations]));
+    }
+  });
+  
+  // For PLinks, also consider parent menu context
+  if (menuType === 'plink' && parentMenu) {
+    const parentText = `${parentMenu.name} ${parentMenu.label}`.toLowerCase();
+    Object.entries(contextualRecommendations).forEach(([keyword, icons]) => {
+      if (parentText.includes(keyword)) {
+        recommendations = Array.from(new Set([...icons, ...recommendations]));
+      }
+    });
+  }
+  
+  // Filter to only include available icons and limit to top 8
+  return recommendations.filter(icon => allIcons.includes(icon)).slice(0, 8);
+};
+
 const iconOptions = [
   // Navigation & Core
   { name: "Home", component: Home },
@@ -729,6 +819,47 @@ export default function MenuManagementPage() {
                 <span>No icon</span>
               </div>
             </SelectItem>
+            
+            {/* Recommended Icons Section */}
+            {(() => {
+              const parentMenu = formData.parentId ? safeGlinkMenus.find(m => m.id === formData.parentId) : undefined;
+              const recommendedIcons = getRecommendedIcons(
+                formData.menuType, 
+                formData.name, 
+                formData.label, 
+                parentMenu
+              );
+              
+              if (recommendedIcons.length > 0) {
+                return (
+                  <>
+                    <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b">
+                      🎯 Recommended for {formData.menuType === 'glink' ? 'Main Menu' : 'Sub Menu'}
+                    </div>
+                    {recommendedIcons.map((iconName) => {
+                      const iconOption = iconOptions.find(opt => opt.name === iconName);
+                      if (!iconOption) return null;
+                      const IconComponent = iconOption.component;
+                      return (
+                        <SelectItem key={`rec-${iconName}`} value={iconName}>
+                          <div className="flex items-center space-x-2">
+                            <IconComponent className="h-4 w-4 text-blue-600" />
+                            <span className="font-medium">{iconName}</span>
+                            <span className="text-xs text-blue-600 ml-auto">✨</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                    <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b border-t">
+                      📋 All Icons
+                    </div>
+                  </>
+                );
+              }
+              return null;
+            })()}
+            
+            {/* All Icons */}
             {iconOptions.map((icon) => {
               const IconComponent = icon.component;
               return (
