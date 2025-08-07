@@ -242,9 +242,9 @@ export default function TerminalsPage() {
                                       )}
                                     </div>
                                     {terminal.activationEndDate && (
-                                      <div className="text-xs opacity-75">
+                                      <h5 className="text-lg font-bold">
                                         {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                      </div>
+                                      </h5>
                                     )}
                                   </div>
                                 ) : (
