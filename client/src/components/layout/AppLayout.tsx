@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu as MenuIcon, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck, ChevronDown, ChevronRight
+  Ship, LogOut, Menu as MenuIcon, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck, ChevronDown, ChevronRight, Folder, FolderOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -425,30 +425,49 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     )}
                   </div>
                   {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && (
-                    <div className="ml-2 flex items-center">
-                      <span className="text-xs text-gray-500 mr-1">({item.children.length})</span>
+                    <div className="ml-2 flex items-center space-x-1">
+                      <span className="text-xs text-gray-500 mr-1 font-medium">({item.children.length})</span>
+                      
+                      {/* Dynamic folder icon */}
                       {expandedItems.includes(item.id) ? (
-                        <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors" />
+                        <FolderOpen className="h-4 w-4 text-blue-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all duration-300 transform" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors" />
+                        <Folder className="h-4 w-4 text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-all duration-300 transform group-hover:scale-110" />
                       )}
+                      
+                      {/* Animated chevron */}
+                      <div className={`transition-all duration-300 ease-in-out transform ${
+                        expandedItems.includes(item.id) 
+                          ? 'rotate-180 text-blue-500' 
+                          : 'rotate-0 text-gray-500 group-hover:text-blue-500'
+                      }`}>
+                        <ChevronDown className="h-4 w-4 transition-colors duration-300" />
+                      </div>
                     </div>
                   )}
                 </button>
                 
-                {/* Expanded children with animation */}
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                {/* Expanded children with enhanced smooth animation */}
+                <div className={`overflow-hidden transition-all duration-500 ease-in-out transform ${
                   item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id)
-                    ? 'max-h-96 opacity-100'
-                    : 'max-h-0 opacity-0'
+                    ? 'max-h-96 opacity-100 translate-y-0 scale-y-100'
+                    : 'max-h-0 opacity-0 -translate-y-2 scale-y-95'
                 }`}>
                   {item.children && item.children.length > 0 && expandedItems.includes(item.id) && (
-                    <div className="ml-6 mt-1 space-y-1 border-l-2 border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50/30 to-transparent dark:from-blue-900/20">
+                    <div className="ml-6 mt-2 space-y-1 border-l-2 border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50/30 to-transparent dark:from-blue-900/20 rounded-r-lg">
                       {item.children.map((child: NavigationItem, index) => (
-                        <div key={child.id} className="relative">
-                          {/* Enhanced tree line connector */}
-                          <div className="absolute left-0 top-0 h-6 w-px bg-blue-200 dark:bg-blue-700"></div>
-                          <div className="absolute left-0 top-3 w-4 h-px bg-blue-200 dark:bg-blue-700"></div>
+                        <div key={child.id} className={`relative transition-all duration-300 ease-out transform ${
+                          expandedItems.includes(item.id) 
+                            ? `opacity-100 translate-x-0 delay-[${index * 50}ms]` 
+                            : 'opacity-0 -translate-x-4'
+                        }`}>
+                          {/* Enhanced animated tree line connector */}
+                          <div className={`absolute left-0 top-0 h-6 w-px bg-blue-200 dark:bg-blue-700 transition-all duration-300 transform ${
+                            expandedItems.includes(item.id) ? 'scale-y-100' : 'scale-y-0'
+                          }`}></div>
+                          <div className={`absolute left-0 top-3 w-4 h-px bg-blue-200 dark:bg-blue-700 transition-all duration-300 transform ${
+                            expandedItems.includes(item.id) ? 'scale-x-100' : 'scale-x-0'
+                          }`}></div>
                           
                           <button
                             onClick={() => handleNavigation(child)}
@@ -458,10 +477,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/30 hover:shadow-sm hover:border-l-2 hover:border-blue-300 dark:hover:border-blue-600'
                             }`}
                           >
-                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-200 ${
+                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-300 ease-in-out ${
                               activeSection === child.id 
-                                ? 'text-blue-600 dark:text-blue-400 transform scale-110' 
-                                : 'text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+                                ? 'text-blue-600 dark:text-blue-400 transform scale-110 rotate-3' 
+                                : 'text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:scale-105'
                             }`} />
                             <span className={`transition-all duration-200 ${
                               activeSection === child.id ? 'font-semibold' : 'group-hover:font-medium'
@@ -469,8 +488,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                               {child.label}
                             </span>
                             {activeSection === child.id && (
-                              <div className="ml-auto">
+                              <div className="ml-auto flex items-center space-x-1">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                <div className="text-xs text-blue-500 font-medium animate-fade-in">•</div>
                               </div>
                             )}
                           </button>
