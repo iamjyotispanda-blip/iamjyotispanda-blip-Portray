@@ -185,7 +185,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900">
         <div className="w-full max-w-md">
           
           {/* Mobile Logo */}
@@ -194,7 +194,7 @@ export default function LoginPage() {
           </div>
           
           {/* Login Card */}
-          <Card className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-2xl border-white/30">
+          <Card className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-2xl border-gray-200 dark:border-slate-700">
             <CardHeader className="text-center">
               <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white">
                 Sign In
