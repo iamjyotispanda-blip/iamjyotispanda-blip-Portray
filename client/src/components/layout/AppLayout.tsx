@@ -259,12 +259,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       // Accordion behavior: only one parent menu expanded at a time
       if (prev.includes(itemId)) {
         // If clicking on expanded item, collapse it
-        const newExpanded = [];
+        const newExpanded: string[] = [];
         console.log('Collapsing item:', itemId, 'New expanded state:', newExpanded);
         return newExpanded;
       } else {
         // If clicking on collapsed item, expand only this one (collapse all others)
-        const newExpanded = [itemId];
+        const newExpanded: string[] = [itemId];
         console.log('Expanding only item:', itemId, 'New expanded state:', newExpanded);
         return newExpanded;
       }
@@ -277,20 +277,31 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
-  // Initialize with first parent menu expanded on first load only
+  // Initialize based on current active section or default to first parent menu
   React.useEffect(() => {
     if (!initialized && navigationItems.length > 0) {
       const parentMenuIds = navigationItems
         .filter(item => item.children && item.children.length > 0)
         .map(item => item.id);
       
-      // Start with first parent menu expanded (accordion style)
-      const firstParent = parentMenuIds.length > 0 ? [parentMenuIds[0]] : [];
-      console.log('Initializing with first parent expanded:', firstParent);
-      setExpandedItems(firstParent);
+      // Check if current active section has a parent that should be expanded
+      const activeParent = getActiveParent();
+      let initialExpanded: string[] = [];
+      
+      if (activeParent && parentMenuIds.includes(activeParent)) {
+        // If there's an active parent, expand it
+        initialExpanded = [activeParent];
+        console.log('Initializing with active parent expanded:', activeParent);
+      } else if (parentMenuIds.length > 0) {
+        // Otherwise, start with first parent menu expanded (accordion style)
+        initialExpanded = [parentMenuIds[0]];
+        console.log('Initializing with first parent expanded:', parentMenuIds[0]);
+      }
+      
+      setExpandedItems(initialExpanded);
       setInitialized(true);
     }
-  }, [navigationItems, initialized]);
+  }, [navigationItems, initialized, activeSection]);
 
   // Auto-expand parent menu when child is active
   React.useEffect(() => {
