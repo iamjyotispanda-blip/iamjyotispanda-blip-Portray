@@ -379,31 +379,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const organizationId = parseInt(req.params.id);
-    const userId = (req as any).user?.id;
 
     try {
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        req.body.logoUrl,
-        {
-          owner: userId,
-          // Organization logos should be public so they can be viewed by everyone
-          visibility: "public",
-        },
-      );
+      // For our fallback system, just use the logoUrl directly
+      const objectPath = req.body.logoUrl;
 
       // Update organization with the logo URL in storage
-      const organizations = await storage.getAllOrganizations();
-      const orgIndex = organizations.findIndex((org: any) => org.id === organizationId);
-      if (orgIndex === -1) {
+      const organization = await storage.getOrganizationById(organizationId);
+      if (!organization) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      organizations[orgIndex].logoUrl = objectPath;
-      await storage.updateOrganization(organizationId, organizations[orgIndex]);
+      const updatedOrganization = await storage.updateOrganization(organizationId, {
+        ...organization,
+        logoUrl: objectPath
+      });
 
       res.status(200).json({
         objectPath: objectPath,
+        organization: updatedOrganization
       });
     } catch (error) {
       console.error("Error setting organization logo:", error);
