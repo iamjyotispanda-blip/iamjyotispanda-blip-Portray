@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, type InsertUser } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -903,6 +903,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Send test email error:", error);
       res.status(500).json({ message: "Failed to send test email. Please verify your SMTP settings." });
+    }
+  });
+
+  app.put("/api/configuration/email/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = updateEmailConfigurationSchema.parse(req.body);
+      const config = await storage.updateEmailConfiguration(id, updates);
+      
+      if (!config) {
+        return res.status(404).json({ message: "Email configuration not found" });
+      }
+      
+      // Don't send sensitive password in response
+      const safeConfig = {
+        ...config,
+        smtpPassword: config.smtpPassword ? '***masked***' : ''
+      };
+      
+      res.json(safeConfig);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Update email configuration error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
