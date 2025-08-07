@@ -454,7 +454,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                             onClick={() => handleNavigation(child)}
                             className={`group flex items-center px-3 py-2 ml-4 text-sm rounded-md w-full text-left transition-all duration-200 relative ${
                               activeSection === child.id
-                                ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 shadow-md border-l-4 border-blue-600 font-medium transform scale-[1.02]'
+                                ? 'text-blue-800 dark:text-blue-200 shadow-md border-l-4 border-blue-600 font-medium transform scale-[1.02]'
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/30 hover:shadow-sm hover:border-l-2 hover:border-blue-300 dark:hover:border-blue-600'
                             }`}
                           >
