@@ -39,7 +39,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['configurations', 'user-access']);
 
   // Helper function to check if any child of an item is active
   const isParentActive = (item: NavigationItem) => {
