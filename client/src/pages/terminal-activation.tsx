@@ -274,27 +274,31 @@ export default function TerminalActivationPage() {
                               >
                                 {terminal.status === "Active" && terminal.activationStartDate ? (
                                   <div className="flex flex-col space-y-1">
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center justify-between w-full">
                                       <span>{terminal.status}</span>
+                                      {terminal.activationEndDate && (
+                                        <h5 className="text-lg font-bold text-center">
+                                          {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
+                                        </h5>
+                                      )}
+                                    </div>
+                                    <div className="text-center">
                                       <span>
                                         {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
                                       </span>
-                                      <div className="flex items-center space-x-1">
-                                        <Calendar className="h-3 w-3" />
-                                        <span>
-                                          {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
-                                        </span>
-                                      </div>
-                                      {terminal.workOrderNo && (
+                                    </div>
+                                    <div className="flex items-center justify-center space-x-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>
+                                        {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
+                                      </span>
+                                    </div>
+                                    {terminal.workOrderNo && (
+                                      <div className="text-center">
                                         <span>
                                           WO: {terminal.workOrderNo}
                                         </span>
-                                      )}
-                                    </div>
-                                    {terminal.activationEndDate && (
-                                      <h5 className="text-lg font-bold text-left">
-                                        {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                      </h5>
+                                      </div>
                                     )}
                                   </div>
                                 ) : (
