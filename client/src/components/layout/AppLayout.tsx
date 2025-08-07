@@ -367,7 +367,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
-                  onClick={() => item.children && item.children.length > 0 ? expandItem(item.id) : handleNavigation(item)}
+                  onClick={() => item.children && item.children.length > 0 ? toggleExpandedItem(item.id) : handleNavigation(item)}
                   className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-200 ${
                     activeSection === item.id || isParentActive(item)
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
