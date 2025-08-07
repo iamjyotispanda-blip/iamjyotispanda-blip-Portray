@@ -142,10 +142,47 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/30 via-blue-600/20 to-purple-500/10" />
         
         <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full">
-          {/* Logo and tagline in same line */}
-          <div className="mb-8">
-            <HeroLogo />
-            <p className="text-sm text-blue-100 mt-2 font-medium">Steering Port Operations into the Future</p>
+          {/* Logo and Feature Carousel - Side by side */}
+          <div className="flex items-start space-x-8 mb-8">
+            {/* Logo section */}
+            <div className="flex-shrink-0">
+              <HeroLogo />
+              <p className="text-sm text-blue-100 mt-2 font-medium">Steering Port Operations into the Future</p>
+            </div>
+            
+            {/* Feature Carousel - positioned beside logo */}
+            <div className="flex-1">
+              <div className="p-6 min-h-[200px]">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    {features[currentFeature].icon}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-lime-300 mb-3">
+                      {features[currentFeature].title}
+                    </h3>
+                    <p className="text-white text-sm leading-relaxed">
+                      {features[currentFeature].description}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Dots indicator */}
+                <div className="flex justify-center space-x-2 mt-4">
+                  {features.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        index === currentFeature 
+                          ? 'bg-lime-300 w-6' 
+                          : 'bg-white/30 hover:bg-white/50'
+                      }`}
+                      onClick={() => setCurrentFeature(index)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Live Port Status - Keep this */}
@@ -166,40 +203,6 @@ export default function LoginPage() {
               <div className="flex justify-between">
                 <span className="text-blue-200">Tanker Gamma</span>
                 <span className="text-blue-400">Departing 16:45</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature Carousel */}
-          <div className="relative">
-            <div className="p-6 min-h-[200px]">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  {features[currentFeature].icon}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-lime-300 mb-3">
-                    {features[currentFeature].title}
-                  </h3>
-                  <p className="text-white text-sm leading-relaxed">
-                    {features[currentFeature].description}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Dots indicator */}
-              <div className="flex justify-center space-x-2 mt-4">
-                {features.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentFeature 
-                        ? 'bg-lime-300 w-6' 
-                        : 'bg-white/30 hover:bg-white/50'
-                    }`}
-                    onClick={() => setCurrentFeature(index)}
-                  />
-                ))}
               </div>
             </div>
           </div>
