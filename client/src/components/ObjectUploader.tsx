@@ -173,7 +173,17 @@ export function ObjectUploader({
       // Get auth token from localStorage
       const token = localStorage.getItem('portray_auth_token');
       
-      // Get presigned URL
+      // Convert file to base64 for simple storage
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(fileToUpload);
+      });
+
+      const base64Data = await base64Promise;
+      
+      // Get upload URL
       const response = await fetch("/api/objects/upload", {
         method: "POST",
         headers: {
@@ -186,14 +196,19 @@ export function ObjectUploader({
         throw new Error("Failed to get upload URL");
       }
 
-      const { uploadURL } = await response.json();
+      const { uploadURL, uploadId } = await response.json();
 
-      // Upload file to object storage
+      // Upload file data
       const uploadResponse = await fetch(uploadURL, {
         method: "PUT",
-        body: fileToUpload,
+        body: JSON.stringify({
+          data: base64Data,
+          filename: fileToUpload.name,
+          contentType: fileToUpload.type
+        }),
         headers: {
-          "Content-Type": fileToUpload.type,
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
       });
 
@@ -201,8 +216,8 @@ export function ObjectUploader({
         throw new Error("Failed to upload file");
       }
 
-      // Extract the object path from the upload URL
-      const objectPath = `/objects/uploads/${uploadURL.split('/uploads/')[1].split('?')[0]}`;
+      const uploadResult = await uploadResponse.json();
+      const objectPath = uploadResult.objectPath || base64Data; // Use base64 as fallback
       
       onChange(objectPath);
       setIsDialogOpen(false);

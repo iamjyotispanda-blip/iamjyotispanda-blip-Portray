@@ -308,13 +308,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/objects/upload", authenticateToken, async (req: Request, res: Response) => {
-    const objectStorageService = new ObjectStorageService();
     try {
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      // For now, return a simple success response - the actual upload will be handled differently
+      const uploadId = randomUUID();
+      res.json({ 
+        uploadURL: `/api/objects/direct-upload/${uploadId}`,
+        uploadId: uploadId
+      });
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Simple file storage in memory for demo
+  const uploadedFiles = new Map<string, { data: string; filename: string; contentType: string }>();
+
+  // Direct upload endpoint for file uploads
+  app.put("/api/objects/direct-upload/:uploadId", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const uploadId = req.params.uploadId;
+      const { data, filename, contentType } = req.body;
+      
+      // Store the file data in memory
+      uploadedFiles.set(uploadId, { data, filename, contentType });
+      
+      const objectPath = `/api/objects/file/${uploadId}`;
+      
+      res.status(200).json({ 
+        success: true,
+        objectPath: objectPath
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ error: "Failed to upload file" });
+    }
+  });
+
+  // Serve uploaded files
+  app.get("/api/objects/file/:uploadId", async (req: Request, res: Response) => {
+    try {
+      const uploadId = req.params.uploadId;
+      const fileData = uploadedFiles.get(uploadId);
+      
+      if (!fileData) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      
+      // Convert base64 back to binary and serve
+      const base64Data = fileData.data.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      res.set({
+        'Content-Type': fileData.contentType,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'public, max-age=3600'
+      });
+      
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error serving file:", error);
+      res.status(500).json({ error: "Error serving file" });
     }
   });
 
