@@ -326,3 +326,36 @@ export const subscriptionTypes = pgTable("subscription_types", {
 export const insertSubscriptionTypeSchema = createInsertSchema(subscriptionTypes);
 export type InsertSubscriptionType = z.infer<typeof insertSubscriptionTypeSchema>;
 export type SubscriptionType = typeof subscriptionTypes.$inferSelect;
+
+// Activation Logs Table
+export const activationLogs = pgTable("activation_logs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  terminalId: integer("terminal_id").notNull().references(() => terminals.id),
+  action: text("action").notNull(), // "submitted", "approved", "activated", "rejected"
+  description: text("description").notNull(),
+  performedBy: varchar("performed_by").notNull().references(() => users.id),
+  data: text("data"), // JSON string for additional data
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+export const activationLogsRelations = relations(activationLogs, ({ one }) => ({
+  terminal: one(terminals, {
+    fields: [activationLogs.terminalId],
+    references: [terminals.id],
+  }),
+  user: one(users, {
+    fields: [activationLogs.performedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertActivationLogSchema = createInsertSchema(activationLogs).pick({
+  terminalId: true,
+  action: true,
+  description: true,
+  performedBy: true,
+  data: true,
+});
+
+export type ActivationLog = typeof activationLogs.$inferSelect;
+export type InsertActivationLog = z.infer<typeof insertActivationLogSchema>;

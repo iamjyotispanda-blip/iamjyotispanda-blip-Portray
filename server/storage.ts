@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -87,6 +87,10 @@ export interface IStorage {
   }): Promise<Terminal | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   deleteNotification(id: number): Promise<void>;
+
+  // Activation Log operations
+  getActivationLogsByTerminalId(terminalId: number): Promise<ActivationLog[]>;
+  createActivationLog(log: InsertActivationLog): Promise<ActivationLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -660,6 +664,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNotification(id: number): Promise<void> {
     await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  // Activation Log operations
+  async getActivationLogsByTerminalId(terminalId: number): Promise<ActivationLog[]> {
+    return db
+      .select({
+        id: activationLogs.id,
+        terminalId: activationLogs.terminalId,
+        action: activationLogs.action,
+        description: activationLogs.description,
+        performedBy: activationLogs.performedBy,
+        data: activationLogs.data,
+        createdAt: activationLogs.createdAt,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          role: users.role,
+        },
+      })
+      .from(activationLogs)
+      .leftJoin(users, eq(activationLogs.performedBy, users.id))
+      .where(eq(activationLogs.terminalId, terminalId))
+      .orderBy(activationLogs.createdAt);
+  }
+
+  async createActivationLog(logData: InsertActivationLog): Promise<ActivationLog> {
+    const [log] = await db
+      .insert(activationLogs)
+      .values(logData)
+      .returning();
+    return log;
   }
 }
 

@@ -999,6 +999,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Terminal not found" });
       }
 
+      // Create activation log entry
+      await storage.createActivationLog({
+        terminalId: id,
+        action: "activated",
+        description: `Terminal activated with ${subscriptionTypeId === 1 ? '1 month' : subscriptionTypeId === 12 ? '12 months' : subscriptionTypeId === 24 ? '24 months' : subscriptionTypeId === 48 ? '48 months' : 'unknown'} subscription${workOrderNo ? ` (Work Order: ${workOrderNo})` : ''}`,
+        performedBy: req.user.id,
+        data: JSON.stringify({
+          subscriptionTypeId: parseInt(subscriptionTypeId),
+          activationStartDate,
+          workOrderNo,
+          workOrderDate
+        })
+      });
+
       res.json(terminal);
     } catch (error) {
       console.error("Activate terminal error:", error);
@@ -1016,6 +1030,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(terminal);
     } catch (error) {
       console.error("Get terminal error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get activation logs for a terminal
+  app.get("/api/terminals/:id/activation-log", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid terminal ID" });
+      }
+
+      const logs = await storage.getActivationLogsByTerminalId(id);
+      res.json(logs);
+    } catch (error) {
+      console.error("Get activation logs error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -1061,6 +1091,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Terminal created with status:", terminal.status);
       console.log("Checking if status is 'Processing for activation':", terminal.status === "Processing for activation");
+      
+      // Create activation log entry for terminal creation
+      await storage.createActivationLog({
+        terminalId: terminal.id,
+        action: "submitted",
+        description: `Terminal "${terminal.terminalName}" (${terminal.shortCode}) was submitted for activation`,
+        performedBy: req.user.id,
+        data: JSON.stringify({
+          terminalName: terminal.terminalName,
+          shortCode: terminal.shortCode,
+          currency: terminal.currency,
+          timezone: terminal.timezone
+        })
+      });
       
       // Create notification for system admin only if status is "Processing for activation"
       if (terminal.status === "Processing for activation") {
@@ -1116,6 +1160,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Terminal after update:", JSON.stringify(terminal, null, 2));
       console.log("Checking if status is 'Processing for activation':", updates.status === "Processing for activation");
+      
+      // Create activation log entry for terminal update
+      await storage.createActivationLog({
+        terminalId: terminal.id,
+        action: "updated",
+        description: `Terminal "${terminal.terminalName}" (${terminal.shortCode}) was updated${updates.status ? ` - Status: ${updates.status}` : ''}`,
+        performedBy: req.user.id,
+        data: JSON.stringify(updates)
+      });
       
       // Create notification for system admin only if status is "Processing for activation"
       if (updates.status === "Processing for activation") {
