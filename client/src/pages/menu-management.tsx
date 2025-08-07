@@ -796,8 +796,8 @@ export default function MenuManagementPage() {
       <div className="space-y-2">
         <Label htmlFor="icon">Icon</Label>
         <Select
-          value={formData.icon}
-          onValueChange={(value: string) => setFormData({ ...formData, icon: value })}
+          value={formData.icon || "no-icon"}
+          onValueChange={(value: string) => setFormData({ ...formData, icon: value === "no-icon" ? "" : value })}
         >
           <SelectTrigger data-testid="select-icon">
             <SelectValue placeholder="Select an icon">
@@ -813,7 +813,7 @@ export default function MenuManagementPage() {
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="max-h-64 overflow-y-auto">
-            <SelectItem value="">
+            <SelectItem value="no-icon">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4"></div>
                 <span>No icon</span>
