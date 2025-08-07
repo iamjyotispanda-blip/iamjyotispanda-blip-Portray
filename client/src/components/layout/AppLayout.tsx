@@ -66,12 +66,28 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   // Get dynamic GLink menus from API for System Admin
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
+    queryFn: async () => {
+      try {
+        return await apiRequest("GET", "/api/menus?type=glink");
+      } catch (error) {
+        console.error("Failed to fetch glink menus:", error);
+        return [];
+      }
+    },
     enabled: user?.role === "SystemAdmin",
   });
 
   // Get dynamic PLink menus from API for System Admin
   const { data: plinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "plink"],
+    queryFn: async () => {
+      try {
+        return await apiRequest("GET", "/api/menus?type=plink");
+      } catch (error) {
+        console.error("Failed to fetch plink menus:", error);
+        return [];
+      }
+    },
     enabled: user?.role === "SystemAdmin",
   });
 
@@ -168,42 +184,74 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         { id: "terminals", label: "Terminals", icon: Ship, route: "/terminals" }
       ];
     } else {
-      // System Admin sees dynamic GLink menus + static management items
-      const dynamicItems: NavigationItem[] = (glinkMenus || [])
-        .filter((menu: Menu) => menu.isActive)
-        .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
-        .map((menu: Menu): NavigationItem => {
-          const children = (plinkMenus || [])
-            .filter((plink: Menu) => plink.parentId === menu.id && plink.isActive)
-            .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
-            .map((plink: Menu): NavigationItem => ({
-              id: plink.name,
-              label: plink.label,
-              icon: getIconComponent(plink.icon),
-              route: plink.route
-            }));
-          
-          return {
-            id: menu.name,
-            label: menu.label,
-            icon: getIconComponent(menu.icon),
-            route: menu.route,
-            children: children.length > 0 ? children : undefined
-          };
-        });
+      // System Admin sees navigation - use dynamic if available, fallback to default
+      const hasDynamicMenus = glinkMenus && glinkMenus.length > 0;
+      
+      if (hasDynamicMenus) {
+        // Dynamic GLink menus + static management items
+        const dynamicItems: NavigationItem[] = (glinkMenus || [])
+          .filter((menu: Menu) => menu.isActive)
+          .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
+          .map((menu: Menu): NavigationItem => {
+            const children = (plinkMenus || [])
+              .filter((plink: Menu) => plink.parentId === menu.id && plink.isActive)
+              .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
+              .map((plink: Menu): NavigationItem => ({
+                id: plink.name,
+                label: plink.label,
+                icon: getIconComponent(plink.icon),
+                route: plink.route
+              }));
+            
+            return {
+              id: menu.name,
+              label: menu.label,
+              icon: getIconComponent(menu.icon),
+              route: menu.route,
+              children: children.length > 0 ? children : undefined
+            };
+          });
 
-      // Add static management items if no menu-management menu exists
-      const hasMenuManagement = (glinkMenus || []).some((menu: Menu) => menu.name === 'menu-management');
-      if (!hasMenuManagement) {
-        dynamicItems.push({
-          id: "menu-management",
-          label: "Menu Management",
-          icon: MenuIcon,
-          route: "/menu-management"
-        });
+        // Add static management items if no menu-management menu exists
+        const hasMenuManagement = (glinkMenus || []).some((menu: Menu) => menu.name === 'menu-management');
+        if (!hasMenuManagement) {
+          dynamicItems.push({
+            id: "menu-management",
+            label: "Menu Management",
+            icon: MenuIcon,
+            route: "/menu-management"
+          });
+        }
+
+        return dynamicItems;
+      } else {
+        // Fallback to default navigation structure
+        return [
+          { id: "dashboard", label: "Dashboard", icon: Home, route: "/dashboard" },
+          { 
+            id: "users-access", 
+            label: "Users & Access", 
+            icon: Users,
+            children: [
+              { id: "glink", label: "GLink", icon: Link, route: "/users-access/glink" },
+              { id: "plink", label: "PLink", icon: Link, route: "/users-access/plink" },
+              { id: "roles", label: "Roles", icon: Shield, route: "/users-access/roles" },
+              { id: "groups", label: "Groups", icon: UserCheck, route: "/users-access/groups" },
+            ]
+          },
+          { 
+            id: "configuration", 
+            label: "Configuration", 
+            icon: Settings,
+            children: [
+              { id: "organization", label: "Organizations", icon: Building2, route: "/organizations" },
+              { id: "ports", label: "Ports", icon: Ship, route: "/ports" },
+              { id: "terminal-activation", label: "Terminal Activation", icon: CheckCircle, route: "/terminal-activation" },
+            ]
+          },
+          { id: "menu-management", label: "Menu Management", icon: MenuIcon, route: "/menu-management" },
+        ];
       }
-
-      return dynamicItems;
     }
   };
 
@@ -235,10 +283,37 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     if (item.route) {
       setLocation(item.route);
     } else {
-      // Fallback for items without routes
+      // Fallback routes for items without explicit routes
       switch (item.id) {
+        case "dashboard":
+          setLocation("/dashboard");
+          break;
+        case "glink":
+          setLocation("/users-access/glink");
+          break;
+        case "plink":
+          setLocation("/users-access/plink");
+          break;
+        case "roles":
+          setLocation("/users-access/roles");
+          break;
+        case "groups":
+          setLocation("/users-access/groups");
+          break;
         case "terminals":
           setLocation("/terminals");
+          break;
+        case "terminal-activation":
+          setLocation("/terminal-activation");
+          break;
+        case "email":
+          setLocation("/configuration/email");
+          break;
+        case "organization":
+          setLocation("/organizations");
+          break;
+        case "ports":
+          setLocation("/ports");
           break;
         case "menu-management":
           setLocation("/menu-management");
