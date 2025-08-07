@@ -66,22 +66,6 @@ export default function TerminalActivationPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const autoActivateTerminalId = urlParams.get('autoActivate');
 
-  // Auto-open activation dialog when navigated from notification
-  useEffect(() => {
-    if (autoActivateTerminalId && terminals.length > 0 && !activationDialog.open) {
-      const terminalToActivate = terminals.find((terminal: TerminalWithDetails) => 
-        terminal.id.toString() === autoActivateTerminalId
-      );
-      
-      if (terminalToActivate) {
-        handleActivate(terminalToActivate);
-        
-        // Clear the URL parameter after opening the dialog
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
-      }
-    }
-  }, [autoActivateTerminalId, terminals, activationDialog.open]);
 
   // Form for activation
   const form = useForm<ActivationFormData>({
@@ -130,6 +114,23 @@ export default function TerminalActivationPage() {
       return response.json();
     },
   });
+
+  // Auto-open activation dialog when navigated from notification
+  useEffect(() => {
+    if (autoActivateTerminalId && terminals.length > 0 && !activationDialog.open) {
+      const terminalToActivate = terminals.find((terminal: TerminalWithDetails) => 
+        terminal.id.toString() === autoActivateTerminalId
+      );
+      
+      if (terminalToActivate) {
+        handleActivate(terminalToActivate);
+        
+        // Clear the URL parameter after opening the dialog
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [autoActivateTerminalId, terminals, activationDialog.open]);
 
   // Activate terminal mutation
   const activateTerminalMutation = useMutation({
