@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   Table, 
@@ -57,6 +58,8 @@ interface GlinkFormData {
   icon: string;
   route: string;
   sortOrder: number;
+  menuType: 'glink' | 'plink';
+  parentId: number | null;
 }
 
 const iconOptions = [
@@ -84,6 +87,8 @@ export default function GlinkPage() {
     icon: "",
     route: "",
     sortOrder: 0,
+    menuType: 'glink',
+    parentId: null,
   });
   
   const { toast } = useToast();
@@ -127,8 +132,7 @@ export default function GlinkPage() {
     mutationFn: async (data: GlinkFormData) => {
       const menuData = {
         ...data,
-        menuType: 'glink',
-        parentId: null, // GLink menus don't have parents
+        parentId: data.menuType === 'glink' ? null : data.parentId,
       };
       
       if (editingMenu) {
@@ -230,6 +234,8 @@ export default function GlinkPage() {
       icon: "",
       route: "",
       sortOrder: 0,
+      menuType: 'glink',
+      parentId: null,
     });
   };
 
@@ -241,6 +247,8 @@ export default function GlinkPage() {
       icon: menu.icon || "",
       route: menu.route || "",
       sortOrder: menu.sortOrder,
+      menuType: menu.menuType as 'glink' | 'plink',
+      parentId: menu.parentId,
     });
     setShowEditForm(true);
   };
@@ -278,14 +286,24 @@ export default function GlinkPage() {
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.label) {
+    if (!formData.name || !formData.label || !formData.menuType) {
       toast({
         title: "Error",
-        description: "Name and Label are required",
+        description: "Name, Label, and Menu Type are required",
         variant: "destructive",
       });
       return;
     }
+    
+    if (formData.menuType === 'plink' && !formData.parentId) {
+      toast({
+        title: "Error",
+        description: "Parent GLink menu is required for PLink menus",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     saveMenuMutation.mutate(formData);
   };
 
@@ -389,6 +407,65 @@ export default function GlinkPage() {
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <div className="space-y-6 mt-2 pb-8 max-w-none">
+      <div className="space-y-2">
+        <Label htmlFor="menuType">Menu Type *</Label>
+        <Select
+          value={formData.menuType}
+          onValueChange={(value: 'glink' | 'plink') => setFormData({ 
+            ...formData, 
+            menuType: value,
+            parentId: value === 'glink' ? null : formData.parentId
+          })}
+          data-testid="select-menu-type"
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select menu type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="glink">GLink (Main Menu)</SelectItem>
+            <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-gray-500">
+          GLink: Main navigation items | PLink: Sub-menu items under GLink
+        </p>
+      </div>
+
+      {formData.menuType === 'plink' && (
+        <div className="space-y-2">
+          <Label htmlFor="parentId">Parent GLink Menu *</Label>
+          <Select
+            value={formData.parentId?.toString() || ""}
+            onValueChange={(value: string) => setFormData({ 
+              ...formData, 
+              parentId: value ? parseInt(value) : null 
+            })}
+            data-testid="select-parent-menu"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select parent GLink menu" />
+            </SelectTrigger>
+            <SelectContent>
+              {safeGlinkMenus
+                .filter(menu => menu.isActive)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((menu) => {
+                  const IconComponent = getIconComponent(menu.icon);
+                  return (
+                    <SelectItem key={menu.id} value={menu.id.toString()}>
+                      <div className="flex items-center space-x-2">
+                        <IconComponent className="h-4 w-4" />
+                        <span>{menu.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500">Select which GLink this PLink should appear under</p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <Input
@@ -530,16 +607,16 @@ export default function GlinkPage() {
             {/* Add menu button */}
             <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
               <SheetTrigger asChild>
-                <Button className="flex items-center space-x-2" data-testid="button-add-glink">
+                <Button className="flex items-center space-x-2" data-testid="button-add-menu">
                   <Plus className="h-4 w-4" />
-                  <span>Add GLink Menu</span>
+                  <span>Add Menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
                 <SheetHeader>
-                  <SheetTitle>Add New GLink Menu</SheetTitle>
+                  <SheetTitle>Add New Menu</SheetTitle>
                   <SheetDescription>
-                    Create a new main navigation menu item
+                    Create a new menu item (GLink or PLink)
                   </SheetDescription>
                 </SheetHeader>
                 <div className="flex-1 overflow-y-auto px-1 py-4">
@@ -768,9 +845,9 @@ export default function GlinkPage() {
         <Sheet open={showEditForm} onOpenChange={setShowEditForm}>
           <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
             <SheetHeader>
-              <SheetTitle>Edit GLink Menu</SheetTitle>
+              <SheetTitle>Edit Menu</SheetTitle>
               <SheetDescription>
-                Update the main navigation menu item
+                Update the menu item details
               </SheetDescription>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-1 py-4">
