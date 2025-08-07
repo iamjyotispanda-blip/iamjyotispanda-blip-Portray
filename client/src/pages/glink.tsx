@@ -326,14 +326,16 @@ export default function GlinkPage() {
                 <span>Add GLink Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-[400px] sm:w-[540px]">
+            <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Add New GLink Menu</SheetTitle>
                 <SheetDescription>
                   Create a new main navigation menu item
                 </SheetDescription>
               </SheetHeader>
-              <MenuForm />
+              <div className="flex-1 overflow-y-auto">
+                <MenuForm />
+              </div>
             </SheetContent>
           </Sheet>
         </div>
@@ -464,14 +466,16 @@ export default function GlinkPage() {
 
         {/* Edit Sheet */}
         <Sheet open={showEditForm} onOpenChange={setShowEditForm}>
-          <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Edit GLink Menu</SheetTitle>
               <SheetDescription>
                 Update the main navigation menu item
               </SheetDescription>
             </SheetHeader>
-            <MenuForm isEdit={true} />
+            <div className="flex-1 overflow-y-auto">
+              <MenuForm isEdit={true} />
+            </div>
           </SheetContent>
         </Sheet>
       </div>
