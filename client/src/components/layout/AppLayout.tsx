@@ -277,16 +277,23 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
-  // Initialize all parent menus as expanded for full tree structure
+  // Initialize parent menus based on active section for tree structure
   React.useEffect(() => {
     if (!initialized && navigationItems.length > 0) {
       const parentMenuIds = navigationItems
         .filter(item => item.children && item.children.length > 0)
         .map(item => item.id);
       
-      // Tree structure: expand all parent menus by default to show full hierarchy
-      console.log('Initializing tree structure with all parents expanded:', parentMenuIds);
-      setExpandedItems(parentMenuIds);
+      // Auto-expand parent menu that contains the active child
+      const activeParent = getActiveParent();
+      let initialExpanded: string[] = [];
+      
+      if (activeParent && parentMenuIds.includes(activeParent)) {
+        initialExpanded = [activeParent];
+        console.log('Initializing with active parent expanded:', activeParent);
+      }
+      
+      setExpandedItems(initialExpanded);
       setInitialized(true);
     }
   }, [navigationItems, initialized]);
@@ -399,8 +406,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     }
                   }}
                   className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-all duration-200 ${
-                    activeSection === item.id || isParentActive(item)
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm'
+                    activeSection === item.id || (isParentActive(item) && expandedItems.includes(item.id))
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 shadow-sm border-l-4 border-blue-500'
+                      : expandedItems.includes(item.id) && item.children && item.children.length > 0
+                      ? 'bg-gray-50 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border-l-2 border-gray-300 dark:border-gray-600'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white hover:shadow-sm'
                   }`}
                   title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
@@ -409,44 +418,67 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 transition-colors ${
                       activeSection === item.id || isParentActive(item) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                     }`} />
-                    {(!sidebarCollapsed || sidebarHovered) && item.label}
+                    {(!sidebarCollapsed || sidebarHovered) && (
+                      <span className={`${(activeSection === item.id || isParentActive(item)) ? 'font-semibold' : ''}`}>
+                        {item.label}
+                      </span>
+                    )}
                   </div>
                   {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && (
-                    <div className="ml-2">
+                    <div className="ml-2 flex items-center">
+                      <span className="text-xs text-gray-500 mr-1">({item.children.length})</span>
                       {expandedItems.includes(item.id) ? (
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                        <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                        <ChevronRight className="h-4 w-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors" />
                       )}
                     </div>
                   )}
                 </button>
                 
-                {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id) && (
-                  <div className="ml-6 mt-1 space-y-1 border-l border-gray-200 dark:border-gray-600">
-                    {item.children.map((child: NavigationItem, index) => (
-                      <div key={child.id} className="relative">
-                        {/* Tree line connector */}
-                        <div className="absolute left-0 top-0 h-full w-px bg-gray-200 dark:bg-gray-600"></div>
-                        <div className="absolute left-0 top-3 w-4 h-px bg-gray-200 dark:bg-gray-600"></div>
-                        
-                        <button
-                          onClick={() => handleNavigation(child)}
-                          className={`group flex items-center px-2 py-1.5 ml-4 text-sm rounded-md w-full text-left transition-all duration-200 relative ${
-                            activeSection === child.id
-                              ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 shadow-sm border-l-2 border-blue-500'
-                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 hover:shadow-sm'
-                          }`}
-                        >
-                          <child.icon className={`mr-2 h-4 w-4 transition-colors ${
-                            activeSection === child.id ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
-                          }`} />
-                          {child.label}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* Expanded children with animation */}
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id)
+                    ? 'max-h-96 opacity-100'
+                    : 'max-h-0 opacity-0'
+                }`}>
+                  {item.children && item.children.length > 0 && expandedItems.includes(item.id) && (
+                    <div className="ml-6 mt-1 space-y-1 border-l-2 border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50/30 to-transparent dark:from-blue-900/20">
+                      {item.children.map((child: NavigationItem, index) => (
+                        <div key={child.id} className="relative">
+                          {/* Enhanced tree line connector */}
+                          <div className="absolute left-0 top-0 h-6 w-px bg-blue-200 dark:bg-blue-700"></div>
+                          <div className="absolute left-0 top-3 w-4 h-px bg-blue-200 dark:bg-blue-700"></div>
+                          
+                          <button
+                            onClick={() => handleNavigation(child)}
+                            className={`group flex items-center px-3 py-2 ml-4 text-sm rounded-md w-full text-left transition-all duration-200 relative ${
+                              activeSection === child.id
+                                ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 shadow-md border-l-4 border-blue-600 font-medium transform scale-[1.02]'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-blue-50/50 dark:hover:bg-blue-900/30 hover:shadow-sm hover:border-l-2 hover:border-blue-300 dark:hover:border-blue-600'
+                            }`}
+                          >
+                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-200 ${
+                              activeSection === child.id 
+                                ? 'text-blue-600 dark:text-blue-400 transform scale-110' 
+                                : 'text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`transition-all duration-200 ${
+                              activeSection === child.id ? 'font-semibold' : 'group-hover:font-medium'
+                            }`}>
+                              {child.label}
+                            </span>
+                            {activeSection === child.id && (
+                              <div className="ml-auto">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                              </div>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
