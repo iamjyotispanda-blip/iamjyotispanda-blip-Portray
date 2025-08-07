@@ -26,7 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon, Download } from "lucide-react";
+import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu, InsertMenu, UpdateMenu } from "@shared/schema";
@@ -67,13 +67,11 @@ export default function GlinkPage() {
   const queryClient = useQueryClient();
 
   // Get GLink menus only
-  const { data: glinkMenus = [], isLoading, refetch } = useQuery<Menu[]>({
+  const { data: glinkMenus = [], isLoading } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
     queryFn: async (): Promise<Menu[]> => {
       try {
-        console.log("Fetching GLink menus...");
         const response = await apiRequest("GET", "/api/menus?type=glink");
-        console.log("GLink menus response:", response);
         // Ensure we always return an array
         return Array.isArray(response) ? response : [];
       } catch (error) {
@@ -159,29 +157,6 @@ export default function GlinkPage() {
     },
   });
 
-  // Seed default menus mutation
-  const seedDefaultMenusMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("POST", "/api/menus/seed-defaults");
-    },
-    onSuccess: (data: any) => {
-      toast({
-        title: "Success",
-        description: `Successfully seeded ${data.menus?.length || 0} default menus`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/menus", "glink"] });
-      // Force refetch
-      refetch();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to seed default menus",
-        variant: "destructive",
-      });
-    },
-  });
 
   const resetForm = () => {
     setFormData({
@@ -345,28 +320,7 @@ export default function GlinkPage() {
               Manage main navigation menu items (GLink)
             </p>
           </div>
-          <div className="flex space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="flex items-center space-x-2 mr-2"
-              data-testid="button-refresh"
-            >
-              <ToggleRight className="h-4 w-4" />
-              <span>{isLoading ? "Loading..." : "Refresh"}</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => seedDefaultMenusMutation.mutate()}
-              disabled={seedDefaultMenusMutation.isPending}
-              className="flex items-center space-x-2"
-              data-testid="button-seed-defaults"
-            >
-              <Download className="h-4 w-4" />
-              <span>{seedDefaultMenusMutation.isPending ? "Seeding..." : "Seed Default Menus"}</span>
-            </Button>
-            <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+          <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
             <SheetTrigger asChild>
               <Button className="flex items-center space-x-2" data-testid="button-add-glink">
                 <Plus className="h-4 w-4" />
@@ -384,8 +338,7 @@ export default function GlinkPage() {
                 <MenuForm />
               </div>
             </SheetContent>
-            </Sheet>
-          </div>
+          </Sheet>
         </div>
 
         <Card>
