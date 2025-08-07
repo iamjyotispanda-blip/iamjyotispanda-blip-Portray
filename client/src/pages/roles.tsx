@@ -21,10 +21,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Role } from "@shared/schema";
+import type { Role, Menu } from "@shared/schema";
 
 interface RoleFormData {
   name: string;
@@ -39,6 +56,14 @@ export function RolesContent() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [selectedGLink, setSelectedGLink] = useState<string>("");
+  const [selectedPLink, setSelectedPLink] = useState<string>("");
+  const [permissionLevels, setPermissionLevels] = useState({
+    read: false,
+    write: false,
+    manage: false,
+  });
   const [formData, setFormData] = useState<RoleFormData>({
     name: "",
     displayName: "",
@@ -54,6 +79,21 @@ export function RolesContent() {
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ["/api/roles"],
   });
+
+  // Get all menus for permission selection
+  const { data: menus = [] } = useQuery<Menu[]>({
+    queryKey: ["/api/menus"],
+  });
+
+  // Filter GLinks (parent menus)
+  const gLinks = (menus as Menu[]).filter(menu => menu.menuType === 'glink' && menu.isActive);
+
+  // Filter PLinks (child menus) based on selected GLink
+  const pLinks = (menus as Menu[]).filter(menu => 
+    menu.menuType === 'plink' && 
+    menu.isActive && 
+    menu.parentId?.toString() === selectedGLink
+  );
 
   // Filter roles based on search term
   const filteredRoles = (roles as Role[]).filter((role: Role) =>
@@ -177,13 +217,57 @@ export function RolesContent() {
   };
 
   const handleAddPermission = () => {
-    const newPermission = prompt("Enter permission (e.g., users:read, ports:write):");
-    if (newPermission && !formData.permissions.includes(newPermission)) {
+    setShowPermissionDialog(true);
+  };
+
+  const handleSavePermission = () => {
+    if (!selectedGLink || !selectedPLink || (!permissionLevels.read && !permissionLevels.write && !permissionLevels.manage)) {
+      toast({
+        title: "Error",
+        description: "Please select GLink, PLink, and at least one permission level",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const gLinkMenu = gLinks.find(g => g.id.toString() === selectedGLink);
+    const pLinkMenu = pLinks.find(p => p.id.toString() === selectedPLink);
+    
+    if (!gLinkMenu || !pLinkMenu) {
+      toast({
+        title: "Error",
+        description: "Invalid menu selection",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const permissionParts = [];
+    if (permissionLevels.read) permissionParts.push("read");
+    if (permissionLevels.write) permissionParts.push("write");
+    if (permissionLevels.manage) permissionParts.push("manage");
+
+    const newPermission = `${gLinkMenu.name}:${pLinkMenu.name}:${permissionParts.join(",")}`;
+    
+    if (!formData.permissions.includes(newPermission)) {
       setFormData({
         ...formData,
         permissions: [...formData.permissions, newPermission]
       });
     }
+
+    // Reset and close dialog
+    setSelectedGLink("");
+    setSelectedPLink("");
+    setPermissionLevels({ read: false, write: false, manage: false });
+    setShowPermissionDialog(false);
+  };
+
+  const handleCancelPermission = () => {
+    setSelectedGLink("");
+    setSelectedPLink("");
+    setPermissionLevels({ read: false, write: false, manage: false });
+    setShowPermissionDialog(false);
   };
 
   const handleRemovePermission = (permission: string) => {
@@ -580,6 +664,122 @@ export function RolesContent() {
               </div>
             </SheetContent>
           </Sheet>
+
+          {/* Permission Management Dialog */}
+          <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Add Permission</DialogTitle>
+                <DialogDescription>
+                  Select menu access levels and permission types for this role
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="glink">GLink (Parent Menu) *</Label>
+                  <Select
+                    value={selectedGLink}
+                    onValueChange={(value) => {
+                      setSelectedGLink(value);
+                      setSelectedPLink(""); // Reset PLink when GLink changes
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-glink">
+                      <SelectValue placeholder="Select a parent menu" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gLinks.map((glink) => (
+                        <SelectItem key={glink.id} value={glink.id.toString()}>
+                          <div className="flex items-center">
+                            <span className="font-medium">{glink.label}</span>
+                            <span className="ml-2 text-sm text-gray-500">({glink.name})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="plink">PLink (Child Menu) *</Label>
+                  <Select
+                    value={selectedPLink}
+                    onValueChange={setSelectedPLink}
+                    disabled={!selectedGLink}
+                  >
+                    <SelectTrigger data-testid="select-plink">
+                      <SelectValue placeholder={selectedGLink ? "Select a child menu" : "First select a parent menu"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pLinks.map((plink) => (
+                        <SelectItem key={plink.id} value={plink.id.toString()}>
+                          <div className="flex items-center">
+                            <span className="font-medium">{plink.label}</span>
+                            <span className="ml-2 text-sm text-gray-500">({plink.name})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Permission Levels *</Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="read"
+                        checked={permissionLevels.read}
+                        onCheckedChange={(checked) =>
+                          setPermissionLevels({ ...permissionLevels, read: !!checked })
+                        }
+                        data-testid="checkbox-permission-read"
+                      />
+                      <Label htmlFor="read" className="text-sm font-medium">
+                        Read - View and access data
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="write"
+                        checked={permissionLevels.write}
+                        onCheckedChange={(checked) =>
+                          setPermissionLevels({ ...permissionLevels, write: !!checked })
+                        }
+                        data-testid="checkbox-permission-write"
+                      />
+                      <Label htmlFor="write" className="text-sm font-medium">
+                        Write - Create and edit data
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="manage"
+                        checked={permissionLevels.manage}
+                        onCheckedChange={(checked) =>
+                          setPermissionLevels({ ...permissionLevels, manage: !!checked })
+                        }
+                        data-testid="checkbox-permission-manage"
+                      />
+                      <Label htmlFor="manage" className="text-sm font-medium">
+                        Manage - Full administrative control
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={handleCancelPermission} data-testid="button-cancel-permission">
+                  Cancel
+                </Button>
+                <Button onClick={handleSavePermission} data-testid="button-save-permission">
+                  Add Permission
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>
