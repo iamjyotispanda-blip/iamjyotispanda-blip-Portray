@@ -82,6 +82,7 @@ export default function MenuManagementPage() {
   const [viewMode, setViewMode] = useState<'table' | 'builder'>('table');
   const [builderMenus, setBuilderMenus] = useState<Menu[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState<GlinkFormData>({
     name: "",
     label: "",
@@ -117,8 +118,67 @@ export default function MenuManagementPage() {
   // Ensure glinkMenus is always an array for parent dropdown
   const safeGlinkMenus = Array.isArray(glinkMenus) ? glinkMenus : [];
 
-  // Filter menus based on selected type
-  const filteredMenus = safeAllMenus.filter(menu => menu.menuType === selectedMenuType);
+  // Toggle parent menu expansion
+  const toggleParentExpansion = (parentId: number) => {
+    setExpandedParents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(parentId)) {
+        newSet.delete(parentId);
+      } else {
+        newSet.add(parentId);
+      }
+      return newSet;
+    });
+  };
+
+  // Organize menus into hierarchical structure with expansion state
+  const organizeMenusHierarchically = () => {
+    const parentMenus = safeAllMenus.filter(menu => menu.menuType === 'glink');
+    const childMenus = safeAllMenus.filter(menu => menu.menuType === 'plink');
+    
+    const hierarchicalMenus: any[] = [];
+    
+    // Add parent menus with their children (only if expanded)
+    parentMenus.sort((a, b) => a.sortOrder - b.sortOrder).forEach(parent => {
+      const isExpanded = expandedParents.has(parent.id);
+      const children = childMenus
+        .filter(child => child.parentId === parent.id)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      
+      hierarchicalMenus.push({ 
+        ...parent, 
+        isParent: true, 
+        isExpanded, 
+        childCount: children.length 
+      });
+      
+      // Add children only if parent is expanded
+      if (isExpanded) {
+        children.forEach(child => {
+          hierarchicalMenus.push({ ...child, isChild: true, parentMenu: parent });
+        });
+      }
+    });
+    
+    // Add orphaned child menus (PLinks without valid parent)
+    const orphanedChildren = childMenus.filter(child => 
+      !parentMenus.find(parent => parent.id === child.parentId)
+    );
+    if (orphanedChildren.length > 0) {
+      orphanedChildren.forEach(orphan => {
+        hierarchicalMenus.push({ ...orphan, isOrphan: true });
+      });
+    }
+    
+    return hierarchicalMenus;
+  };
+
+  const hierarchicalMenus = organizeMenusHierarchically();
+  
+  // Filter menus based on selected type - show hierarchy when viewing GLink, flat when viewing PLink
+  const filteredMenus = selectedMenuType === 'glink' 
+    ? hierarchicalMenus  // Show full hierarchy for GLink view
+    : hierarchicalMenus.filter(menu => menu.menuType === 'plink' || menu.isOrphan); // Show only PLinks for PLink view
 
   // Initialize builder menus when data is loaded
   React.useEffect(() => {
@@ -611,7 +671,7 @@ export default function MenuManagementPage() {
               </SelectContent>
             </Select>
             <Badge variant="outline">
-              {filteredMenus.length} menu{filteredMenus.length !== 1 ? 's' : ''}
+              {safeAllMenus.filter(menu => menu.menuType === selectedMenuType).length} menu{safeAllMenus.filter(menu => menu.menuType === selectedMenuType).length !== 1 ? 's' : ''}
             </Badge>
             
             {/* View toggle buttons */}
@@ -671,19 +731,19 @@ export default function MenuManagementPage() {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
-              ) : filteredMenus.length === 0 ? (
+              ) : hierarchicalMenus.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <MenuIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menus
+                    No Menus
                   </h3>
-                  <p className="mb-4">Create your first {selectedMenuType === 'glink' ? 'main navigation menu' : 'sub-menu'} item</p>
+                  <p className="mb-4">Create your first navigation menu item</p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Menu Details</TableHead>
+                      <TableHead>Menu Hierarchy</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Icon</TableHead>
                       <TableHead>Route</TableHead>
@@ -693,27 +753,58 @@ export default function MenuManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredMenus
-                      .sort((a, b) => a.sortOrder - b.sortOrder)
-                      .map((menu) => {
+                    {filteredMenus.map((menu) => {
                         const IconComponent = getIconComponent(menu.icon);
                         return (
-                          <TableRow key={menu.id} data-testid={`table-row-${menu.id}`}>
+                          <TableRow key={menu.id} className={menu.isChild ? "bg-gray-50 dark:bg-gray-800/50" : ""} data-testid={`table-row-${menu.id}`}>
                             <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <div className="flex items-center justify-center w-8 h-8 border rounded-md bg-gray-50 dark:bg-gray-700">
-                                  <IconComponent className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-900 dark:text-white" data-testid={`table-label-${menu.id}`}>
-                                    {menu.label}
+                              <div className={`flex items-center ${menu.isChild ? 'ml-8' : ''}`}>
+                                {menu.isChild && (
+                                  <div className="mr-2 text-gray-400">
+                                    <span className="text-sm">└─</span>
                                   </div>
-                                  <div className="text-sm text-gray-500">{menu.name}</div>
-                                  {menu.menuType === 'plink' && menu.parentId && (
-                                    <div className="text-xs text-blue-600">
-                                      Parent: {safeAllMenus.find(p => p.id === menu.parentId)?.label || 'Unknown'}
+                                )}
+                                
+                                {/* Parent menu with expand/collapse functionality */}
+                                {menu.isParent && (
+                                  <div className="flex items-center">
+                                    <button
+                                      onClick={() => toggleParentExpansion(menu.id)}
+                                      className="mr-1 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                                      data-testid={`expand-toggle-${menu.id}`}
+                                    >
+                                      {menu.isExpanded ? (
+                                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+                                
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex items-center justify-center w-8 h-8 border rounded-md bg-gray-50 dark:bg-gray-700">
+                                    <IconComponent className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center">
+                                      <span className="font-medium text-gray-900 dark:text-white" data-testid={`table-label-${menu.id}`}>
+                                        {menu.label}
+                                      </span>
+                                      {menu.isParent && menu.childCount > 0 && (
+                                        <Badge variant="outline" className="ml-2 text-xs">
+                                          {menu.childCount} sub-menu{menu.childCount !== 1 ? 's' : ''}
+                                        </Badge>
+                                      )}
                                     </div>
-                                  )}
+                                    <div className="text-sm text-gray-500">{menu.name}</div>
+                                    {menu.isChild && menu.parentMenu && (
+                                      <div className="text-xs text-gray-400">Under: {menu.parentMenu.label}</div>
+                                    )}
+                                    {menu.isOrphan && (
+                                      <div className="text-xs text-red-500">Orphaned PLink</div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </TableCell>
@@ -872,12 +963,41 @@ export default function MenuManagementPage() {
                     onDragEnd={handleDragEnd}
                   >
                     <SortableContext
-                      items={builderMenus.map(menu => menu.id.toString())}
+                      items={hierarchicalMenus.map(menu => menu.id.toString())}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-3" data-testid="builder-container">
-                        {builderMenus.map((menu) => (
-                          <SortableMenuItem key={menu.id} menu={menu} />
+                        {hierarchicalMenus.map((menu) => (
+                          <div key={menu.id} className={menu.isChild ? "ml-8" : ""}>
+                            {menu.isChild && (
+                              <div className="mb-2 text-gray-400 text-sm flex items-center">
+                                <span className="mr-2">\u2514\u2500</span>
+                                <span className="text-xs">Sub-menu under: {menu.parentMenu?.label}</span>
+                              </div>
+                            )}
+                            <div className={menu.isChild ? "border-l-2 border-gray-200 dark:border-gray-600 pl-4" : ""}>
+                              {menu.isParent && (
+                                <div className="mb-2 flex items-center">
+                                  <button
+                                    onClick={() => toggleParentExpansion(menu.id)}
+                                    className="mr-2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                                  >
+                                    {menu.isExpanded ? (
+                                      <ChevronDown className="h-4 w-4 text-gray-500" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4 text-gray-500" />
+                                    )}
+                                  </button>
+                                  {menu.childCount > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {menu.childCount} sub-menu{menu.childCount !== 1 ? 's' : ''}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                              <SortableMenuItem key={menu.id} menu={menu} />
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </SortableContext>
