@@ -329,6 +329,56 @@ export type InsertTerminal = z.infer<typeof insertTerminalSchema>;
 export type UpdateTerminal = z.infer<typeof updateTerminalSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 
+// Menu Management Tables
+export const menus = pgTable("menus", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull(),
+  label: text("label").notNull(),
+  icon: text("icon"),
+  route: text("route"),
+  parentId: integer("parent_id"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  menuType: text("menu_type").notNull(), // 'glink' or 'plink'
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const menusRelations = relations(menus, ({ one, many }) => ({
+  parent: one(menus, {
+    fields: [menus.parentId],
+    references: [menus.id],
+    relationName: "MenuParent",
+  }),
+  children: many(menus, {
+    relationName: "MenuParent",
+  }),
+}));
+
+export const insertMenuSchema = createInsertSchema(menus).pick({
+  name: true,
+  label: true,
+  icon: true,
+  route: true,
+  parentId: true,
+  sortOrder: true,
+  menuType: true,
+});
+
+export const updateMenuSchema = createInsertSchema(menus).pick({
+  name: true,
+  label: true,
+  icon: true,
+  route: true,
+  parentId: true,
+  sortOrder: true,
+  menuType: true,
+}).partial();
+
+export type Menu = typeof menus.$inferSelect;
+export type InsertMenu = z.infer<typeof insertMenuSchema>;
+export type UpdateMenu = z.infer<typeof updateMenuSchema>;
+
 // Subscription Types Table
 export const subscriptionTypes = pgTable("subscription_types", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

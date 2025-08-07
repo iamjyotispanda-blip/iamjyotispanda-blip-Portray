@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, type InsertUser } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -942,6 +942,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Email configuration deleted successfully" });
     } catch (error) {
       console.error("Delete email configuration error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Menu Management endpoints
+  app.get("/api/menus", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const menuType = req.query.type as string;
+      const parentId = req.query.parentId ? parseInt(req.query.parentId as string) : undefined;
+      
+      if (menuType) {
+        const menus = await storage.getMenusByType(menuType as 'glink' | 'plink');
+        res.json(menus);
+      } else if (parentId !== undefined) {
+        const menus = await storage.getMenusByParentId(parentId === 0 ? null : parentId);
+        res.json(menus);
+      } else {
+        const menus = await storage.getAllMenus();
+        res.json(menus);
+      }
+    } catch (error) {
+      console.error("Get menus error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/menus/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const menu = await storage.getMenuById(id);
+      
+      if (!menu) {
+        return res.status(404).json({ message: "Menu not found" });
+      }
+      
+      res.json(menu);
+    } catch (error) {
+      console.error("Get menu error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/menus", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const menuData = insertMenuSchema.parse(req.body);
+      const menu = await storage.createMenu(menuData);
+      res.status(201).json(menu);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create menu error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/menus/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = updateMenuSchema.parse(req.body);
+      const menu = await storage.updateMenu(id, updates);
+      
+      if (!menu) {
+        return res.status(404).json({ message: "Menu not found" });
+      }
+      
+      res.json(menu);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Update menu error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/menus/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const menu = await storage.toggleMenuStatus(id);
+      
+      if (!menu) {
+        return res.status(404).json({ message: "Menu not found" });
+      }
+      
+      res.json(menu);
+    } catch (error) {
+      console.error("Toggle menu status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/menus/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMenu(id);
+      res.json({ message: "Menu deleted successfully" });
+    } catch (error) {
+      console.error("Delete menu error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

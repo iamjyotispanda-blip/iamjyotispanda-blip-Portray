@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs } from "@shared/schema";
+import { type User, type InsertUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -91,6 +91,16 @@ export interface IStorage {
   // Activation Log operations
   getActivationLogsByTerminalId(terminalId: number): Promise<ActivationLog[]>;
   createActivationLog(log: InsertActivationLog): Promise<ActivationLog>;
+
+  // Menu operations
+  getAllMenus(): Promise<Menu[]>;
+  getMenuById(id: number): Promise<Menu | undefined>;
+  getMenusByType(menuType: 'glink' | 'plink'): Promise<Menu[]>;
+  getMenusByParentId(parentId: number | null): Promise<Menu[]>;
+  createMenu(menu: InsertMenu): Promise<Menu>;
+  updateMenu(id: number, updates: UpdateMenu): Promise<Menu | undefined>;
+  deleteMenu(id: number): Promise<void>;
+  toggleMenuStatus(id: number): Promise<Menu | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -697,6 +707,60 @@ export class DatabaseStorage implements IStorage {
       .values(logData)
       .returning();
     return log;
+  }
+
+  // Menu operations
+  async getAllMenus(): Promise<Menu[]> {
+    return db.select().from(menus);
+  }
+
+  async getMenuById(id: number): Promise<Menu | undefined> {
+    const [menu] = await db.select().from(menus).where(eq(menus.id, id));
+    return menu || undefined;
+  }
+
+  async getMenusByType(menuType: 'glink' | 'plink'): Promise<Menu[]> {
+    return db.select().from(menus).where(eq(menus.menuType, menuType));
+  }
+
+  async getMenusByParentId(parentId: number | null): Promise<Menu[]> {
+    if (parentId === null) {
+      return db.select().from(menus).where(eq(menus.parentId, null));
+    }
+    return db.select().from(menus).where(eq(menus.parentId, parentId));
+  }
+
+  async createMenu(menuData: InsertMenu): Promise<Menu> {
+    const [menu] = await db
+      .insert(menus)
+      .values(menuData)
+      .returning();
+    return menu;
+  }
+
+  async updateMenu(id: number, updates: UpdateMenu): Promise<Menu | undefined> {
+    const [menu] = await db
+      .update(menus)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(menus.id, id))
+      .returning();
+    return menu || undefined;
+  }
+
+  async deleteMenu(id: number): Promise<void> {
+    await db.delete(menus).where(eq(menus.id, id));
+  }
+
+  async toggleMenuStatus(id: number): Promise<Menu | undefined> {
+    const menu = await this.getMenuById(id);
+    if (!menu) return undefined;
+
+    const [updated] = await db
+      .update(menus)
+      .set({ isActive: !menu.isActive, updatedAt: new Date() })
+      .where(eq(menus.id, id))
+      .returning();
+    return updated || undefined;
   }
 }
 

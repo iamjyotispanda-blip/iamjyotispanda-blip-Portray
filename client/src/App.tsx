@@ -16,6 +16,7 @@ import PortContactsPage from "@/pages/port-contacts";
 import PortAdminVerificationPage from "@/pages/port-admin-verification";
 import PortAdminDashboard from "@/pages/port-admin-dashboard";
 import EmailConfigurationPage from "@/pages/email-configuration";
+import MenuManagementPage from "@/pages/menu-management";
 import OrganizationsPage from "@/pages/organizations";
 import VerifyPage from "@/pages/verify";
 import SetupPasswordPage from "@/pages/setup-password";
@@ -112,6 +113,9 @@ function Router() {
       </Route>
       <Route path="/configuration/email">
         {() => <ProtectedRoute component={EmailConfigurationPage} />}
+      </Route>
+      <Route path="/configuration/menu">
+        {() => <ProtectedRoute component={MenuManagementPage} />}
       </Route>
       <Route path="/terminals/new">
         {() => <ProtectedRoute component={TerminalFormPage} />}
