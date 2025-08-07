@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck
+  Ship, LogOut, Menu, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck, ChevronDown, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // Get current user
   const { data: user } = useQuery({
@@ -153,13 +154,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   const navigationItems = getNavigationItems();
 
+  const toggleExpandedItem = (itemId: string) => {
+    setExpandedItems(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
   const handleNavigation = (itemId: string) => {
     switch (itemId) {
       case "dashboard":
         setLocation("/dashboard");
-        break;
-      case "users-access":
-        setLocation("/users-access");
         break;
       case "glink":
         setLocation("/users-access/glink");
@@ -234,21 +240,32 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
-                  onClick={() => handleNavigation(item.id)}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
+                  onClick={() => item.children ? toggleExpandedItem(item.id) : handleNavigation(item.id)}
+                  className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
                     activeSection === item.id
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
                   title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
                 >
-                  <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
-                    activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
-                  }`} />
-                  {(!sidebarCollapsed || sidebarHovered) && item.label}
+                  <div className="flex items-center">
+                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 ${
+                      activeSection === item.id ? 'text-blue-500' : 'text-gray-400'
+                    }`} />
+                    {(!sidebarCollapsed || sidebarHovered) && item.label}
+                  </div>
+                  {item.children && (!sidebarCollapsed || sidebarHovered) && (
+                    <div className="ml-2">
+                      {expandedItems.includes(item.id) ? (
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                  )}
                 </button>
                 
-                {item.children && (!sidebarCollapsed || sidebarHovered) && (
+                {item.children && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id) && (
                   <div className="ml-8 mt-1 space-y-1">
                     {item.children.map((child) => (
                       <button
