@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Menu as MenuIcon, Trash2, Edit, ToggleLeft, ToggleRight, Settings, GitBranch, AlertTriangle } from "lucide-react";
+import { Plus, Menu as MenuIcon, Trash2, Edit, ToggleLeft, ToggleRight, Settings, GitBranch, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu, InsertMenu, UpdateMenu } from "@shared/schema";
@@ -47,6 +47,7 @@ export default function MenuManagementPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [selectedMenuType, setSelectedMenuType] = useState<'glink' | 'plink'>('glink');
+  const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState<MenuFormData>({
     name: "",
     label: "",
@@ -77,25 +78,46 @@ export default function MenuManagementPage() {
     },
   });
 
-  // Organize menus into hierarchical structure
+  // Toggle parent menu expansion
+  const toggleParentExpansion = (parentId: number) => {
+    setExpandedParents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(parentId)) {
+        newSet.delete(parentId);
+      } else {
+        newSet.add(parentId);
+      }
+      return newSet;
+    });
+  };
+
+  // Organize menus into hierarchical structure with expansion state
   const organizeMenusHierarchically = () => {
     const parentMenus = allMenus.filter(menu => menu.menuType === 'glink');
     const childMenus = allMenus.filter(menu => menu.menuType === 'plink');
     
     const hierarchicalMenus: any[] = [];
     
-    // Add parent menus with their children
+    // Add parent menus with their children (only if expanded)
     parentMenus.sort((a, b) => a.sortOrder - b.sortOrder).forEach(parent => {
-      hierarchicalMenus.push({ ...parent, isParent: true });
-      
-      // Add children of this parent
+      const isExpanded = expandedParents.has(parent.id);
       const children = childMenus
         .filter(child => child.parentId === parent.id)
         .sort((a, b) => a.sortOrder - b.sortOrder);
       
-      children.forEach(child => {
-        hierarchicalMenus.push({ ...child, isChild: true, parentMenu: parent });
+      hierarchicalMenus.push({ 
+        ...parent, 
+        isParent: true, 
+        isExpanded, 
+        childCount: children.length 
       });
+      
+      // Add children only if parent is expanded
+      if (isExpanded) {
+        children.forEach(child => {
+          hierarchicalMenus.push({ ...child, isChild: true, parentMenu: parent });
+        });
+      }
     });
     
     // Add orphaned child menus (PLinks without valid parent)
@@ -436,11 +458,37 @@ export default function MenuManagementPage() {
                                   <span className="text-sm">└─</span>
                                 </div>
                               )}
-                              {menu.isParent && <Settings className="h-4 w-4 mr-2 text-blue-600" />}
+                              
+                              {/* Parent menu with expand/collapse functionality */}
+                              {menu.isParent && (
+                                <div className="flex items-center">
+                                  <button
+                                    onClick={() => toggleParentExpansion(menu.id)}
+                                    className="mr-1 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                                    data-testid={`expand-toggle-${menu.id}`}
+                                  >
+                                    {menu.isExpanded ? (
+                                      <ChevronDown className="h-4 w-4 text-gray-500" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4 text-gray-500" />
+                                    )}
+                                  </button>
+                                  <Settings className="h-4 w-4 mr-2 text-blue-600" />
+                                </div>
+                              )}
+                              
                               {menu.isChild && <GitBranch className="h-4 w-4 mr-2 text-green-600" />}
                               {menu.isOrphan && <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />}
+                              
                               <div>
-                                <div className="font-medium">{menu.label}</div>
+                                <div className="flex items-center">
+                                  <span className="font-medium">{menu.label}</span>
+                                  {menu.isParent && menu.childCount > 0 && (
+                                    <Badge variant="outline" className="ml-2 text-xs">
+                                      {menu.childCount} sub-menu{menu.childCount !== 1 ? 's' : ''}
+                                    </Badge>
+                                  )}
+                                </div>
                                 <div className="text-sm text-gray-500">{menu.name}</div>
                                 {menu.isChild && menu.parentMenu && (
                                   <div className="text-xs text-gray-400">Under: {menu.parentMenu.label}</div>
