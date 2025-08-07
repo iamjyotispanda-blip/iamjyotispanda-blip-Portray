@@ -162,6 +162,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
+  const expandItem = (itemId: string) => {
+    setExpandedItems(prev => 
+      prev.includes(itemId) ? prev : [...prev, itemId]
+    );
+  };
+
   const handleNavigation = (itemId: string) => {
     switch (itemId) {
       case "dashboard":
@@ -240,7 +246,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             {navigationItems.map((item) => (
               <div key={item.id}>
                 <button
-                  onClick={() => item.children ? toggleExpandedItem(item.id) : handleNavigation(item.id)}
+                  onClick={() => item.children ? expandItem(item.id) : handleNavigation(item.id)}
                   className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md w-full text-left ${
                     activeSection === item.id
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
