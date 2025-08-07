@@ -400,10 +400,7 @@ export default function EmailConfigurationPage() {
                       <TableCell>
                         <div className="flex items-center">
                           <Ship className="h-4 w-4 mr-2 text-blue-600" />
-                          <div>
-                            <div className="font-medium">{getPortName(config.portId)}</div>
-                            <div className="text-sm text-gray-500">Port ID: {config.portId}</div>
-                          </div>
+                          <div className="font-medium">{getPortName(config.portId)}</div>
                         </div>
                       </TableCell>
                       <TableCell>
