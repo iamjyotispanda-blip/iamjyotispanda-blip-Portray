@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   Table, 
   TableBody, 
@@ -27,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Mail, Server, Shield, CheckCircle, AlertCircle, Settings, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Mail, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,30 +41,8 @@ interface EmailConfiguration {
   createdAt: string;
 }
 
-interface EmailConfigFormData {
-  smtpHost: string;
-  smtpPort: number;
-  smtpUser: string;
-  smtpPassword: string;
-  fromEmail: string;
-  fromName: string;
-  enableTLS: boolean;
-}
-
 export default function EmailConfigurationPage() {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingConfig, setEditingConfig] = useState<EmailConfiguration | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
   const [testEmailAddress, setTestEmailAddress] = useState("");
-  const [formData, setFormData] = useState<EmailConfigFormData>({
-    smtpHost: "smtp.gmail.com",
-    smtpPort: 587,
-    smtpUser: "",
-    smtpPassword: "",
-    fromEmail: "",
-    fromName: "PortRay Support",
-    enableTLS: true,
-  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -75,29 +50,6 @@ export default function EmailConfigurationPage() {
   // Get email configurations
   const { data: emailConfigs = [], isLoading } = useQuery<EmailConfiguration[]>({
     queryKey: ["/api/configuration/email"],
-  });
-
-  // Save email configuration mutation
-  const saveConfigMutation = useMutation({
-    mutationFn: async (data: EmailConfigFormData) => {
-      return apiRequest("POST", "/api/configuration/email", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Email configuration saved successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/configuration/email"] });
-      setShowAddForm(false);
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save email configuration",
-        variant: "destructive",
-      });
-    },
   });
 
   // Send test email mutation
@@ -142,31 +94,6 @@ export default function EmailConfigurationPage() {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      smtpHost: "smtp.gmail.com",
-      smtpPort: 587,
-      smtpUser: "",
-      smtpPassword: "",
-      fromEmail: "",
-      fromName: "PortRay Support",
-      enableTLS: true,
-    });
-  };
-
-  const handleSaveConfig = () => {
-    if (!formData.smtpHost || !formData.smtpUser || !formData.smtpPassword || !formData.fromEmail || !formData.fromName) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    saveConfigMutation.mutate(formData);
-  };
-
   const handleSendTest = (configId: number) => {
     if (!testEmailAddress) {
       toast({
@@ -183,17 +110,11 @@ export default function EmailConfigurationPage() {
   return (
     <AppLayout title="Email Configuration" activeSection="email">
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Email Configuration</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Manage SMTP settings for email notifications</p>
-        </div>
-
         {/* Email Configurations List */}
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">
-              Configuration
+              Email Configuration
             </CardTitle>
           </CardHeader>
           <CardContent>
