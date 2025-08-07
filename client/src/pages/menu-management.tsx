@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Menu as MenuIcon, Trash2, Edit, ToggleLeft, ToggleRight, Settings, GitBranch } from "lucide-react";
+import { Plus, Menu as MenuIcon, Trash2, Edit, ToggleLeft, ToggleRight, Settings, GitBranch, AlertTriangle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu, InsertMenu, UpdateMenu } from "@shared/schema";
@@ -77,8 +77,41 @@ export default function MenuManagementPage() {
     },
   });
 
-  // Filter menus based on selected type
-  const filteredMenus = allMenus.filter(menu => menu.menuType === selectedMenuType);
+  // Organize menus into hierarchical structure
+  const organizeMenusHierarchically = () => {
+    const parentMenus = allMenus.filter(menu => menu.menuType === 'glink');
+    const childMenus = allMenus.filter(menu => menu.menuType === 'plink');
+    
+    const hierarchicalMenus: any[] = [];
+    
+    // Add parent menus with their children
+    parentMenus.sort((a, b) => a.sortOrder - b.sortOrder).forEach(parent => {
+      hierarchicalMenus.push({ ...parent, isParent: true });
+      
+      // Add children of this parent
+      const children = childMenus
+        .filter(child => child.parentId === parent.id)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      
+      children.forEach(child => {
+        hierarchicalMenus.push({ ...child, isChild: true, parentMenu: parent });
+      });
+    });
+    
+    // Add orphaned child menus (PLinks without valid parent)
+    const orphanedChildren = childMenus.filter(child => 
+      !parentMenus.find(parent => parent.id === child.parentId)
+    );
+    if (orphanedChildren.length > 0) {
+      orphanedChildren.forEach(orphan => {
+        hierarchicalMenus.push({ ...orphan, isOrphan: true });
+      });
+    }
+    
+    return hierarchicalMenus;
+  };
+
+  const hierarchicalMenus = organizeMenusHierarchically();
 
   // Save menu mutation
   const saveMenuMutation = useMutation({
@@ -341,23 +374,12 @@ export default function MenuManagementPage() {
         
         <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
           <div className="space-y-2">
-            {/* Menu Type Filter and Add Button */}
+            {/* Header and Add Button */}
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-3">
-                <Select
-                  value={selectedMenuType}
-                  onValueChange={(value: 'glink' | 'plink') => setSelectedMenuType(value)}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="glink">GLink (Main Menu)</SelectItem>
-                    <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <h2 className="text-lg font-semibold">Menu Hierarchy</h2>
                 <Badge variant="outline">
-                  {filteredMenus.length} menu{filteredMenus.length !== 1 ? 's' : ''}
+                  {allMenus.length} total menu{allMenus.length !== 1 ? 's' : ''}
                 </Badge>
               </div>
               
@@ -385,37 +407,54 @@ export default function MenuManagementPage() {
               <CardContent className="p-6">
                 {isLoading ? (
                   <div className="text-center py-4">Loading menus...</div>
-                ) : filteredMenus.length === 0 ? (
+                ) : hierarchicalMenus.length === 0 ? (
                   <div className="text-center py-8">
                     <MenuIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No {selectedMenuType.toUpperCase()} Menus</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">No {selectedMenuType === 'glink' ? 'main' : 'sub'} menus available</p>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Menus</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">No menus available</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Label</TableHead>
+                        <TableHead>Menu Hierarchy</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Icon</TableHead>
                         <TableHead>Route</TableHead>
-                        {selectedMenuType === 'plink' && <TableHead>Parent</TableHead>}
                         <TableHead>Sort Order</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredMenus.map((menu) => (
-                        <TableRow key={menu.id}>
+                      {hierarchicalMenus.map((menu) => (
+                        <TableRow key={menu.id} className={menu.isChild ? "bg-gray-50 dark:bg-gray-800/50" : ""}>
                           <TableCell>
-                            <div className="flex items-center">
-                              <Settings className="h-4 w-4 mr-2 text-blue-600" />
-                              <div className="font-medium">{menu.name}</div>
+                            <div className={`flex items-center ${menu.isChild ? 'ml-8' : ''}`}>
+                              {menu.isChild && (
+                                <div className="mr-2 text-gray-400">
+                                  <span className="text-sm">└─</span>
+                                </div>
+                              )}
+                              {menu.isParent && <Settings className="h-4 w-4 mr-2 text-blue-600" />}
+                              {menu.isChild && <GitBranch className="h-4 w-4 mr-2 text-green-600" />}
+                              {menu.isOrphan && <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />}
+                              <div>
+                                <div className="font-medium">{menu.label}</div>
+                                <div className="text-sm text-gray-500">{menu.name}</div>
+                                {menu.isChild && menu.parentMenu && (
+                                  <div className="text-xs text-gray-400">Under: {menu.parentMenu.label}</div>
+                                )}
+                                {menu.isOrphan && (
+                                  <div className="text-xs text-red-500">Orphaned PLink</div>
+                                )}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">{menu.label}</div>
+                            <Badge variant={menu.menuType === 'glink' ? 'default' : 'secondary'}>
+                              {menu.menuType === 'glink' ? 'GLink' : 'PLink'}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">{menu.icon || "None"}</Badge>
@@ -425,11 +464,6 @@ export default function MenuManagementPage() {
                               {menu.route || "No route"}
                             </code>
                           </TableCell>
-                          {selectedMenuType === 'plink' && (
-                            <TableCell>
-                              <div className="text-sm">{getParentMenuName(menu.parentId)}</div>
-                            </TableCell>
-                          )}
                           <TableCell>
                             <Badge variant="secondary">{menu.sortOrder}</Badge>
                           </TableCell>
