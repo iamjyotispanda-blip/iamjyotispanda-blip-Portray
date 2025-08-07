@@ -396,7 +396,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                       handleNavigation(item);
                     }
                   }}
-                  className={`group flex items-center justify-between px-3 py-3 text-sm font-medium rounded-lg w-full text-left transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform hover:translate-x-1 ${
+                  className={`group flex items-center justify-between px-3 py-3 text-sm font-medium rounded-lg w-full text-left will-change-transform transition-all duration-600 ease-[cubic-bezier(0.4,0.0,0.2,1)] transform hover:translate-x-1 ${
                     activeSection === item.id || (isParentActive(item) && expandedItems.includes(item.id))
                       ? 'bg-gradient-to-r from-blue-50 via-blue-100 to-blue-50 dark:from-blue-900/30 dark:via-blue-800/40 dark:to-blue-900/30 text-blue-900 dark:text-blue-100 border-l-4 border-blue-500 shadow-lg shadow-blue-500/20'
                       : expandedItems.includes(item.id) && item.children && item.children.length > 0
@@ -406,11 +406,11 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
                 >
                   <div className="flex items-center">
-                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-4'} h-5 w-5 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform group-hover:scale-110 group-hover:rotate-3 ${
+                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-4'} h-5 w-5 will-change-transform transition-all duration-700 ease-[cubic-bezier(0.4,0.0,0.2,1)] transform group-hover:scale-110 group-hover:rotate-3 ${
                       activeSection === item.id || isParentActive(item) ? 'text-blue-600 dark:text-blue-400 scale-110' : 'text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400'
                     }`} />
                     {(!sidebarCollapsed || sidebarHovered) && (
-                      <span className={`transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                      <span className={`transition-all duration-700 ease-[cubic-bezier(0.4,0.0,0.2,1)] ${
                         (activeSection === item.id || isParentActive(item)) ? 'font-semibold text-blue-900 dark:text-blue-100' : 'group-hover:font-medium group-hover:text-gray-900 dark:group-hover:text-white'
                       }`}>
                         {item.label}
@@ -420,7 +420,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && (
                     <div className="ml-2 flex items-center space-x-1">
                       {/* Smooth rotating chevron */}
-                      <div className={`transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform origin-center ${
+                      <div className={`will-change-transform transition-all duration-700 ease-[cubic-bezier(0.4,0.0,0.2,1)] transform origin-center ${
                         expandedItems.includes(item.id) 
                           ? 'rotate-90 text-blue-500 dark:text-blue-400 scale-110' 
                           : 'rotate-0 text-gray-400 group-hover:text-blue-500 group-hover:scale-105'
@@ -432,40 +432,40 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 </button>
                 
                 {/* Accordion-style smooth expansion */}
-                <div className={`overflow-hidden transition-all duration-400 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.4,0.0,0.2,1)] ${
                   item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id)
                     ? 'max-h-[800px] opacity-100'
                     : 'max-h-0 opacity-0'
                 }`}>
                   {item.children && item.children.length > 0 && expandedItems.includes(item.id) && (
-                    <div className={`ml-4 mt-1 space-y-0.5 border-l-2 border-blue-200 dark:border-blue-700/50 bg-gradient-to-r from-blue-50/20 to-transparent dark:from-blue-900/10 rounded-r-lg transition-all duration-400 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                    <div className={`ml-4 mt-1 space-y-0.5 border-l-2 border-blue-200 dark:border-blue-700/50 bg-gradient-to-r from-blue-50/20 to-transparent dark:from-blue-900/10 rounded-r-lg transition-all duration-700 ease-[cubic-bezier(0.4,0.0,0.2,1)] ${
                       expandedItems.includes(item.id) ? 'pl-4 py-2' : 'pl-0 py-0'
                     }`}>
                       {item.children.map((child: NavigationItem, index) => (
-                        <div key={child.id} className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform ${
+                        <div key={child.id} className={`relative will-change-transform transition-all duration-600 ease-[cubic-bezier(0.4,0.0,0.2,1)] transform ${
                           expandedItems.includes(item.id) 
                             ? `opacity-100 translate-x-0 translate-y-0` 
                             : 'opacity-0 -translate-x-8 -translate-y-2'
-                        }`} style={{ transitionDelay: expandedItems.includes(item.id) ? `${index * 80}ms` : '0ms' }}>
+                        }`} style={{ transitionDelay: expandedItems.includes(item.id) ? `${index * 120}ms` : '0ms' }}>
                           {/* Clean connector line */}
-                          <div className={`absolute -left-4 top-4 w-3 h-px bg-blue-200 dark:bg-blue-700/50 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                          <div className={`absolute -left-4 top-4 w-3 h-px bg-blue-200 dark:bg-blue-700/50 transition-all duration-600 ease-[cubic-bezier(0.4,0.0,0.2,1)] ${
                             expandedItems.includes(item.id) ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'
-                          }`} style={{ transitionDelay: expandedItems.includes(item.id) ? `${index * 80 + 150}ms` : '0ms' }}></div>
+                          }`} style={{ transitionDelay: expandedItems.includes(item.id) ? `${index * 120 + 200}ms` : '0ms' }}></div>
                           
                           <button
                             onClick={() => handleNavigation(child)}
-                            className={`group flex items-center px-4 py-2.5 text-sm rounded-lg w-full text-left relative transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform hover:translate-x-2 hover:scale-[1.01] ${
+                            className={`group flex items-center px-4 py-2.5 text-sm rounded-lg w-full text-left relative will-change-transform transition-all duration-600 ease-[cubic-bezier(0.4,0.0,0.2,1)] transform hover:translate-x-2 hover:scale-[1.01] ${
                               activeSection === child.id
                                 ? 'bg-gradient-to-r from-blue-100 via-blue-50 to-blue-100 dark:from-blue-800/40 dark:via-blue-700/30 dark:to-blue-800/40 text-blue-900 dark:text-blue-100 border-l-4 border-blue-500 font-semibold shadow-lg shadow-blue-500/20 scale-[1.01] translate-x-2'
                                 : 'text-gray-600 dark:text-gray-400 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-blue-100/50 dark:hover:from-blue-900/20 dark:hover:to-blue-800/30 hover:border-l-3 hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/10'
                             }`}
                           >
-                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform group-hover:scale-125 group-hover:rotate-6 ${
+                            <child.icon className={`mr-3 h-4 w-4 will-change-transform transition-all duration-600 ease-[cubic-bezier(0.4,0.0,0.2,1)] transform group-hover:scale-125 group-hover:rotate-6 ${
                               activeSection === child.id 
                                 ? 'text-blue-600 dark:text-blue-400 scale-125 rotate-6' 
                                 : 'text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400'
                             }`} />
-                            <span className={`transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${
+                            <span className={`transition-all duration-600 ease-[cubic-bezier(0.4,0.0,0.2,1)] ${
                               activeSection === child.id ? 'font-semibold' : 'group-hover:font-medium'
                             }`}>
                               {child.label}
