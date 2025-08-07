@@ -231,19 +231,34 @@ export default function TerminalsPage() {
                                 {terminal.shortCode}
                               </Badge>
                               <div className="flex items-center space-x-3">
-                                <Badge
-                                  variant={terminal.status === "Active" ? "default" : "outline"}
-                                  className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
-                                >
-                                  {terminal.status || "Processing for activation"}
-                                </Badge>
-                                
-                                {/* Show remaining days alongside Active badge */}
-                                {terminal.status === "Active" && terminal.activationEndDate && (
-                                  <h5 className="text-lg font-bold text-green-700 dark:text-green-300">
-                                    {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                  </h5>
-                                )}
+                                {(() => {
+                                  const remainingDays = terminal.status === "Active" && terminal.activationEndDate 
+                                    ? Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))
+                                    : 0;
+                                  const isExpiringSoon = remainingDays <= 30 && remainingDays > 0;
+                                  
+                                  return (
+                                    <>
+                                      <Badge
+                                        variant={terminal.status === "Active" ? "default" : "outline"}
+                                        className={
+                                          terminal.status === "Active" 
+                                            ? (isExpiringSoon ? "bg-orange-600 text-white dark:bg-orange-700 dark:text-white" : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200")
+                                            : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                                        }
+                                      >
+                                        {terminal.status || "Processing for activation"}
+                                      </Badge>
+                                      
+                                      {/* Show remaining days alongside Active badge */}
+                                      {terminal.status === "Active" && terminal.activationEndDate && (
+                                        <h5 className={`text-lg font-bold ${isExpiringSoon ? "text-orange-600 dark:text-orange-400" : "text-green-700 dark:text-green-300"}`}>
+                                          {remainingDays} days remaining
+                                        </h5>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             </div>
                             <div className="space-y-2">
