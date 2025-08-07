@@ -399,7 +399,6 @@ export default function MenuManagementPage() {
             {/* Header and Add Button */}
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-3">
-                <h2 className="text-lg font-semibold">Menu Hierarchy</h2>
                 <Badge variant="outline">
                   {allMenus.length} total menu{allMenus.length !== 1 ? 's' : ''}
                 </Badge>
@@ -409,12 +408,12 @@ export default function MenuManagementPage() {
                 <SheetTrigger asChild>
                   <Button className="h-8">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu
+                    Add Menu
                   </Button>
                 </SheetTrigger>
                 <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
                   <SheetHeader>
-                    <SheetTitle>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</SheetTitle>
+                    <SheetTitle>Add Menu</SheetTitle>
                     <SheetDescription>
                       Create a new {selectedMenuType === 'glink' ? 'main menu item' : 'sub menu item'}
                     </SheetDescription>
