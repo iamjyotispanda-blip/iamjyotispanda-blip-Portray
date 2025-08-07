@@ -278,10 +278,10 @@ export default function TerminalActivationPage() {
                               {terminal.status === "Active" && terminal.activationStartDate && (
                                 <div className="flex items-center space-x-3 text-xs text-green-700 dark:text-green-300">
                                   <span>
-                                    {format(new Date(terminal.activationStartDate), "MMM d")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                    {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
                                   </span>
                                   <span>
-                                    {terminal.subscriptionTypeId === 1 ? "1M" : terminal.subscriptionTypeId === 2 ? "12M" : terminal.subscriptionTypeId === 3 ? "24M" : terminal.subscriptionTypeId === 4 ? "48M" : "Unknown"}
+                                    {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
                                   </span>
                                   {terminal.workOrderNo && (
                                     <span>
