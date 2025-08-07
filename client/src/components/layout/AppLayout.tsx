@@ -256,11 +256,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const toggleExpandedItem = (itemId: string) => {
     console.log('Toggling item:', itemId, 'Current expanded:', expandedItems);
     setExpandedItems(prev => {
-      const newExpanded = prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId];
-      console.log('New expanded state:', newExpanded);
-      return newExpanded;
+      // Accordion behavior: only one parent menu expanded at a time
+      if (prev.includes(itemId)) {
+        // If clicking on expanded item, collapse it
+        const newExpanded = [];
+        console.log('Collapsing item:', itemId, 'New expanded state:', newExpanded);
+        return newExpanded;
+      } else {
+        // If clicking on collapsed item, expand only this one (collapse all others)
+        const newExpanded = [itemId];
+        console.log('Expanding only item:', itemId, 'New expanded state:', newExpanded);
+        return newExpanded;
+      }
     });
   };
 
@@ -270,15 +277,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     );
   };
 
-  // Initialize parent menus as expanded on first load only
+  // Initialize with first parent menu expanded on first load only
   React.useEffect(() => {
     if (!initialized && navigationItems.length > 0) {
       const parentMenuIds = navigationItems
         .filter(item => item.children && item.children.length > 0)
         .map(item => item.id);
       
-      console.log('Initializing expanded menus:', parentMenuIds);
-      setExpandedItems(parentMenuIds);
+      // Start with first parent menu expanded (accordion style)
+      const firstParent = parentMenuIds.length > 0 ? [parentMenuIds[0]] : [];
+      console.log('Initializing with first parent expanded:', firstParent);
+      setExpandedItems(firstParent);
       setInitialized(true);
     }
   }, [navigationItems, initialized]);
