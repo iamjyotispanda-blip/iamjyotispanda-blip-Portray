@@ -96,7 +96,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       // System Admin sees all navigation
       return [
         { id: "dashboard", label: "Dashboard", icon: Home },
-        { id: "terminal-activation", label: "Terminal Activation", icon: CheckCircle },
         { 
           id: "configuration", 
           label: "Configuration", 
@@ -105,6 +104,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             { id: "email", label: "Email Configuration", icon: Mail },
             { id: "organization", label: "Organizations", icon: Building2 },
             { id: "ports", label: "Ports", icon: Ship },
+            { id: "terminal-activation", label: "Terminal Activation", icon: CheckCircle },
           ]
         },
       ];
