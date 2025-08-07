@@ -218,38 +218,40 @@ export default function TerminalsPage() {
                               <Badge variant="outline">
                                 {terminal.shortCode}
                               </Badge>
-                              <Badge
-                                variant={terminal.status === "Active" ? "default" : "outline"}
-                                className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
-                              >
-                                {terminal.status || "Processing for activation"}
-                              </Badge>
-                              
-                              {/* Show activation details below active badge */}
-                              {terminal.status === "Active" && terminal.activationStartDate && (
-                                <div className="flex flex-col space-y-1 mt-2 text-sm text-gray-700 dark:text-gray-300">
-                                  <span>Terminal ID: {terminal.id}</span>
-                                  <span>
-                                    {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
-                                  </span>
-                                  <div className="flex items-center space-x-1">
-                                    <Calendar className="h-3 w-3" />
+                              <div className="flex items-start justify-between">
+                                <Badge
+                                  variant={terminal.status === "Active" ? "default" : "outline"}
+                                  className={terminal.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"}
+                                >
+                                  {terminal.status || "Processing for activation"}
+                                </Badge>
+                                
+                                {/* Show activation details aligned to badge */}
+                                {terminal.status === "Active" && terminal.activationStartDate && (
+                                  <div className="flex flex-col space-y-1 text-sm text-gray-700 dark:text-gray-300 text-right">
+                                    <span>Terminal ID: {terminal.id}</span>
                                     <span>
-                                      {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
+                                      {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
                                     </span>
+                                    <div className="flex items-center justify-end space-x-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>
+                                        {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}
+                                      </span>
+                                    </div>
+                                    {terminal.workOrderNo && (
+                                      <span>
+                                        WO: {terminal.workOrderNo}
+                                      </span>
+                                    )}
+                                    {terminal.activationEndDate && (
+                                      <h5 className="text-lg font-bold text-green-700 dark:text-green-300 mt-1">
+                                        {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
+                                      </h5>
+                                    )}
                                   </div>
-                                  {terminal.workOrderNo && (
-                                    <span>
-                                      WO: {terminal.workOrderNo}
-                                    </span>
-                                  )}
-                                  {terminal.activationEndDate && (
-                                    <h5 className="text-lg font-bold text-green-700 dark:text-green-300 mt-2">
-                                      {Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} days remaining
-                                    </h5>
-                                  )}
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
                             <div className="space-y-2">
                               <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
