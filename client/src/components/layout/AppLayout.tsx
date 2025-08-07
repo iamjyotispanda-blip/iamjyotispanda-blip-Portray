@@ -66,7 +66,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   // Get dynamic GLink menus from API for System Admin
   const { data: glinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "glink"],
-    queryFn: async (): Promise<Menu[]> => {
+    queryFn: async () => {
       try {
         const response = await apiRequest("GET", "/api/menus?type=glink");
         return Array.isArray(response) ? response : [];
@@ -81,7 +81,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   // Get dynamic PLink menus from API for System Admin
   const { data: plinkMenus = [] } = useQuery<Menu[]>({
     queryKey: ["/api/menus", "plink"],
-    queryFn: async (): Promise<Menu[]> => {
+    queryFn: async () => {
       try {
         const response = await apiRequest("GET", "/api/menus?type=plink");
         return Array.isArray(response) ? response : [];
@@ -187,17 +187,15 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       ];
     } else {
       // System Admin sees navigation - use dynamic if available, fallback to default
-      const safeGlinkMenus = Array.isArray(glinkMenus) ? glinkMenus : [];
-      const safePlinkMenus = Array.isArray(plinkMenus) ? plinkMenus : [];
-      const hasDynamicMenus = safeGlinkMenus.length > 0;
+      const hasDynamicMenus = Array.isArray(glinkMenus) && glinkMenus.length > 0;
       
       if (hasDynamicMenus) {
         // Dynamic GLink menus + static management items
-        const dynamicItems: NavigationItem[] = safeGlinkMenus
+        const dynamicItems: NavigationItem[] = (Array.isArray(glinkMenus) ? glinkMenus : [])
           .filter((menu: Menu) => menu.isActive)
           .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
           .map((menu: Menu): NavigationItem => {
-            const children = safePlinkMenus
+            const children = (Array.isArray(plinkMenus) ? plinkMenus : [])
               .filter((plink: Menu) => plink.parentId === menu.id && plink.isActive)
               .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
               .map((plink: Menu): NavigationItem => ({
@@ -217,7 +215,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
           });
 
         // Add static management items if no menu-management menu exists
-        const hasMenuManagement = safeGlinkMenus.some((menu: Menu) => menu.name === 'menu-management');
+        const hasMenuManagement = (Array.isArray(glinkMenus) ? glinkMenus : []).some((menu: Menu) => menu.name === 'menu-management');
         if (!hasMenuManagement) {
           dynamicItems.push({
             id: "menu-management",
