@@ -638,7 +638,11 @@ export default function TerminalActivationPage() {
                       </p>
                       {(log.performedBy || log.workOrderNo || log.details) && (
                         <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                          {log.performedBy && <span>Performed by: {log.performedBy}</span>}
+                          {log.performedBy && (
+                            <span>
+                              Performed by: {log.user ? `${log.user.firstName} ${log.user.lastName} (${log.user.role})` : 'Unknown User'}
+                            </span>
+                          )}
                           {log.performedBy && log.workOrderNo && <span> • </span>}
                           {log.workOrderNo && <span>Work Order: {log.workOrderNo}</span>}
                           {log.details && (
