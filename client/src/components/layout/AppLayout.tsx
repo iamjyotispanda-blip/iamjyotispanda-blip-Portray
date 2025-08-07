@@ -432,12 +432,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="h-8 w-8 p-0" title="Email Configuration">
-                          <Mail className="h-4 w-4" />
+                          <Settings className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem onClick={() => setLocation('/configuration/email')} className="cursor-pointer">
-                          <Settings className="h-4 w-4 mr-2" />
+                          <Mail className="h-4 w-4 mr-2" />
                           Email Configuration
                         </DropdownMenuItem>
                       </DropdownMenuContent>
