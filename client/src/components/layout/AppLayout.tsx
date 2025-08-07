@@ -206,12 +206,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         
         console.log("Parent menus:", parentMenus.length, "Child menus:", childMenus.length);
         
-        // Dynamic GLink menus with their PLink children
+        // Dynamic GLink menus with their PLink children (excluding system config items)
         const dynamicItems: NavigationItem[] = parentMenus
           .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
           .map((menu: Menu): NavigationItem => {
             const children = childMenus
-              .filter((plink: Menu) => plink.parentId === menu.id)
+              .filter((plink: Menu) => plink.parentId === menu.id && !(plink as any).isSystemConfig)
               .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
               .map((plink: Menu): NavigationItem => ({
                 id: plink.name,
