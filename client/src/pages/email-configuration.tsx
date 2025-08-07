@@ -193,7 +193,7 @@ export default function EmailConfigurationPage() {
             <SheetTrigger asChild>
               <Button className="h-8">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Configuration
+                Add
               </Button>
             </SheetTrigger>
             <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
@@ -316,13 +316,9 @@ export default function EmailConfigurationPage() {
         {/* Email Configurations List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Mail className="h-5 w-5" />
-              <span>Email Configurations</span>
+            <CardTitle className="text-xl">
+              Configuration
             </CardTitle>
-            <CardDescription>
-              View and manage SMTP configurations for email notifications
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -330,11 +326,11 @@ export default function EmailConfigurationPage() {
             ) : emailConfigs.length === 0 ? (
               <div className="text-center py-8">
                 <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Email Configurations</h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-4">Get started by adding your first email configuration</p>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Configurations</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">Get started by adding your first configuration</p>
                 <Button onClick={() => setShowAddForm(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Configuration
+                  Add
                 </Button>
               </div>
             ) : (
