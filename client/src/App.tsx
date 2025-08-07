@@ -23,6 +23,7 @@ import TerminalsPage from "@/pages/terminals";
 import TerminalFormPage from "@/pages/terminal-form";
 import TerminalProfilePage from "@/pages/terminal-profile";
 import TerminalActivationPage from "@/pages/terminal-activation";
+import NotificationsPage from "@/pages/notifications";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -126,6 +127,9 @@ function Router() {
       </Route>
       <Route path="/terminal-activation">
         {() => <ProtectedRoute component={TerminalActivationPage} />}
+      </Route>
+      <Route path="/notifications">
+        {() => <ProtectedRoute component={NotificationsPage} />}
       </Route>
       <Route path="/">
         {() => <ProtectedRoute component={DashboardPage} />}

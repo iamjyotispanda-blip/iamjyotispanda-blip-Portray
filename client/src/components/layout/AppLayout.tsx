@@ -94,7 +94,19 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       }
       
       // Navigate to terminal activation page with terminal ID
-      const terminalId = notification.relatedId || notification.entityId;
+      // Parse terminal ID from notification data or message
+      let terminalId = null;
+      if (notification.data) {
+        try {
+          const data = JSON.parse(notification.data);
+          terminalId = data.terminalId || data.id;
+        } catch (e) {
+          // If data is not JSON, try to extract ID from message
+          const match = notification.message.match(/terminal\s+(\d+)/i);
+          if (match) terminalId = match[1];
+        }
+      }
+      
       if (terminalId) {
         setLocation(`/terminal-activation?autoActivate=${terminalId}`);
       } else {
@@ -349,7 +361,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                               No notifications
                             </div>
                           ) : (
-                            notifications.map((notification) => (
+                            notifications.slice(0, 5).map((notification) => (
                               <DropdownMenuItem key={notification.id} className="block p-0">
                                 <div 
                                   className={`p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
@@ -399,6 +411,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                                 </div>
                               </DropdownMenuItem>
                             ))
+                          )}
+                          {notifications.length > 5 && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-2">
+                              <button
+                                onClick={() => setLocation('/notifications')}
+                                className="w-full text-center text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 py-2 px-4 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                              >
+                                View All Notifications ({notifications.length})
+                              </button>
+                            </div>
                           )}
                         </ScrollArea>
                       </DropdownMenuContent>
