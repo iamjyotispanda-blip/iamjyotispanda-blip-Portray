@@ -258,20 +258,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {/* Email Configuration - Standalone Link */}
-            {user && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="relative"
-                onClick={() => setLocation('/configuration/email')}
-                title="Email Configuration"
-              >
-                <Mail className="h-5 w-5" />
-              </Button>
-            )}
-
-            {/* Configuration Dropdown - For future system config items */}
+            {/* System Configuration Dropdown */}
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -284,10 +271,11 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     System Configuration
                   </div>
                   <DropdownMenuItem 
-                    className="cursor-pointer text-gray-500 dark:text-gray-400"
-                    disabled
+                    onClick={() => setLocation('/configuration/email')}
+                    className="cursor-pointer"
                   >
-                    No additional config items
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email Configuration
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
