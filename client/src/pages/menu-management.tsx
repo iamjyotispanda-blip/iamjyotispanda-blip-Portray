@@ -570,6 +570,36 @@ export default function MenuManagementPage() {
       return;
     }
     
+    // Check for duplicate label names
+    const existingMenuWithSameLabel = safeAllMenus.find(menu => 
+      menu.label.toLowerCase() === formData.label.toLowerCase() && 
+      (!editingMenu || menu.id !== editingMenu.id)
+    );
+    
+    if (existingMenuWithSameLabel) {
+      toast({
+        title: "Error",
+        description: `Label "${formData.label}" already exists. Please choose a different label name.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check for duplicate name identifiers
+    const existingMenuWithSameName = safeAllMenus.find(menu => 
+      menu.name.toLowerCase() === formData.name.toLowerCase() && 
+      (!editingMenu || menu.id !== editingMenu.id)
+    );
+    
+    if (existingMenuWithSameName) {
+      toast({
+        title: "Error",
+        description: `Name "${formData.name}" already exists. Please choose a different name identifier.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (formData.menuType === 'plink' && !formData.isSystemConfig && !formData.parentId) {
       toast({
         title: "Error",
