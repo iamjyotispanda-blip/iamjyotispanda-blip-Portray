@@ -85,7 +85,7 @@ export default function TerminalFormPage() {
   });
 
   // Get assigned port for Port Admin
-  const { data: assignedPort } = useQuery({
+  const { data: assignedPort, isLoading: isPortLoading } = useQuery({
     queryKey: ["/api/terminals/my-port"],
     enabled: user?.role === "PortAdmin",
   });
@@ -286,7 +286,7 @@ export default function TerminalFormPage() {
   }
 
   // Show loading state while data is being fetched
-  if (portLoading || (user?.role === "PortAdmin" && !assignedPort)) {
+  if (isPortLoading || (user?.role === "PortAdmin" && !assignedPort)) {
     return (
       <AppLayout title="Loading..." activeSection="terminals">
         <div className="flex-1 flex items-center justify-center p-4">
