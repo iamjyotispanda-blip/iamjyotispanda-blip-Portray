@@ -478,6 +478,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTerminal(id: number): Promise<void> {
+    // First delete all activation logs for this terminal to avoid foreign key constraint violation
+    await db.delete(activationLogs).where(eq(activationLogs.terminalId, id));
+    
+    // Then delete the terminal
     await db.delete(terminals).where(eq(terminals.id, id));
   }
 
