@@ -125,8 +125,17 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
         
         <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
           <div className="space-y-4">
-            {/* Add Contact button */}
-            <div className="flex justify-end">
+            {/* Back button and Add Contact button on same line */}
+            <div className="flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation("/ports")}
+                className="h-8"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Ports
+              </Button>
               <Button
                 onClick={() => setShowAddDialog(true)}
                 className="h-8"
