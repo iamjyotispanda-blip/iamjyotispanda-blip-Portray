@@ -382,21 +382,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     <p className="text-xs text-gray-500">{user.email}</p>
                     <p className="text-xs text-gray-500">{user.role || 'User'}</p>
                   </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="bg-red-600 hover:bg-red-700 text-white focus:bg-red-700 focus:text-white cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
 
-            {/* Logout Button */}
-            {user && (
-              <Button 
-                onClick={handleLogout}
-                className="h-8 bg-red-600 hover:bg-red-700 text-white flex items-center space-x-2"
-                size="sm"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            )}
           </div>
         </header>
 
