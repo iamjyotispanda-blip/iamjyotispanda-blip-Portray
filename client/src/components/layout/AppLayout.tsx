@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  Ship, LogOut, Menu as MenuIcon, Settings, Building2, Home, PanelLeftClose, PanelLeftOpen, Mail, Bell, Check, Trash2, CheckCircle, Users, Link, Shield, UserCheck, ChevronDown, ChevronRight, Folder, FolderOpen
+  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,18 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PortrayLogo } from "@/components/portray-logo";
+import { TreeNavigation } from "@/components/navigation/TreeNavigation";
 import { AuthService } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
-import type { Notification, Menu } from "@shared/schema";
-import * as LucideIcons from "lucide-react";
-
-interface NavigationItem {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  route?: string | null;
-  children?: NavigationItem[];
-}
+import type { Notification } from "@shared/schema";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -39,39 +31,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
-  const [manualToggle, setManualToggle] = useState(false);
-
-  // Helper function to check if any child of an item is active
-  const isParentActive = (item: NavigationItem) => {
-    if (!item.children || item.children.length === 0) return false;
-    return item.children.some((child: NavigationItem) => activeSection === child.id);
-  };
-
-  // Helper function to get the parent of the active section
-  const getActiveParent = () => {
-    for (const item of navigationItems) {
-      if (item.children?.some((child: NavigationItem) => child.id === activeSection)) {
-        return item.id;
-      }
-    }
-    return null;
-  };
-
-  // Helper function to check if a menu should be expanded
-  const shouldMenuBeExpanded = (menuId: string) => {
-    // If user manually toggled, respect that choice
-    if (manualToggle) {
-      const result = expandedMenu === menuId;
-      console.log(`Should ${menuId} be expanded (manual)? ${result} (expandedMenu: ${expandedMenu})`);
-      return result;
-    }
-    // Auto-expand if this menu contains the active section
-    const activeParent = getActiveParent();
-    const result = activeParent === menuId;
-    console.log(`Should ${menuId} be expanded (auto)? ${result} (activeParent: ${activeParent}, activeSection: ${activeSection})`);
-    return result;
-  };
 
   // Get current user
   const { data: user } = useQuery({
@@ -79,104 +38,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     queryFn: AuthService.getCurrentUser,
   });
 
-  // Get user's role with permissions
-  const { data: userRole } = useQuery({
-    queryKey: ["/api/roles", user?.roleId],
-    queryFn: async () => {
-      if (!user?.roleId) return null;
-      try {
-        const response = await apiRequest("GET", `/api/roles/${user.roleId}`);
-        return await response.json();
-      } catch (error) {
-        console.error("Failed to fetch user role:", error);
-        return null;
-      }
-    },
-    enabled: !!user?.roleId,
-  });
-
-  // Helper function to check if user has permission for a menu item
-  const hasMenuPermission = (menuName: string, parentMenuName?: string) => {
-    if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
-      return false;
-    }
-    
-    // For SystemAdmin, allow all access (backward compatibility)
-    if (user?.role === "SystemAdmin") {
-      return true;
-    }
-    
-    // Check if user has permission for this menu
-    return userRole.permissions.some((permission: string) => {
-      const parts = permission.split(':');
-      if (parts.length >= 2) {
-        const [gLink, pLink] = parts;
-        if (parentMenuName) {
-          // For child menu items, check both parent and child
-          return gLink === parentMenuName && pLink === menuName;
-        } else {
-          // For parent menu items, check if any child is accessible
-          return gLink === menuName;
-        }
-      }
-      return false;
-    });
-  };
-
-  // Get dynamic GLink menus from API for all authenticated users
-  const { data: glinkMenus = [] } = useQuery<Menu[]>({
-    queryKey: ["/api/menus", "glink"],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest("GET", "/api/menus?type=glink");
-        const data = await response.json();
-        console.log("GLink menus fetched:", data);
-        return Array.isArray(data) ? data : [];
-      } catch (error) {
-        console.error("Failed to fetch glink menus:", error);
-        return [];
-      }
-    },
-    enabled: !!user,
-  });
-
-  // Get ALL dynamic menus from API for all authenticated users
-  const { data: allMenus = [] } = useQuery<Menu[]>({
-    queryKey: ["/api/menus"],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest("GET", "/api/menus");
-        const data = await response.json();
-        console.log('All menus fetched:', data);
-        
-        // Debug Configuration-related menus
-        const configMenus = data.filter((menu: Menu) => 
-          menu.name.toLowerCase().includes('config') || 
-          menu.label.toLowerCase().includes('config')
-        );
-        console.log('Configuration-related menus:', configMenus);
-        
-        // Debug system config menus
-        const systemConfigMenus = data.filter((menu: Menu) => 
-          menu.menuType === 'plink' && (menu as any).isSystemConfig && menu.isActive
-        );
-        console.log('System config menus:', systemConfigMenus);
-        
-        return Array.isArray(data) ? data : [];
-      } catch (error) {
-        console.error("Failed to fetch all menus:", error);
-        return [];
-      }
-    },
-    enabled: !!user,
-  });
-
-  // Get system configuration menus (Plink items with isSystemConfig flag)
-  const systemConfigMenus = allMenus.filter((menu: Menu) => 
-    menu.menuType === 'plink' && (menu as any).isSystemConfig && menu.isActive
-  ).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
-
-  // Get notifications for authenticated users (can be controlled by permissions later)
+  // Get notifications for authenticated users
   const queryClient = useQueryClient();
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
@@ -233,14 +95,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       }
       
       // Navigate to terminal activation page with terminal ID
-      // Parse terminal ID from notification data or message
       let terminalId = null;
       if (notification.data) {
         try {
           const data = JSON.parse(notification.data);
           terminalId = data.terminalId || data.id;
         } catch (e) {
-          // If data is not JSON, try to extract ID from message
           const match = notification.message.match(/terminal\s+(\d+)/i);
           if (match) terminalId = match[1];
         }
@@ -254,390 +114,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     }
   };
 
-  // Helper function to get Lucide icon component by name
-  const getIconComponent = (iconName: string | null) => {
-    if (!iconName) return Home;
-    const IconComponent = (LucideIcons as any)[iconName];
-    return IconComponent || Home;
-  };
-
-  // Role-based navigation items
-  const getNavigationItems = (): NavigationItem[] => {
-    if (user?.role === "PortAdmin") {
-      // Port Admin sees menus based on their role permissions
-      const hasMenuData = Array.isArray(allMenus) && allMenus.length > 0;
-      
-      if (!hasMenuData) {
-        // Fallback for Port Admin if no menu data
-        return [
-          { id: "terminals", label: "Terminals", icon: Ship, route: "/terminals" }
-        ];
-      }
-      
-      // Filter menus based on PortAdmin permissions
-      const parentMenus = allMenus.filter((menu: Menu) => 
-        menu.menuType === 'glink' && 
-        menu.isActive && 
-        hasMenuPermission(menu.name)
-      );
-      
-      const childMenus = allMenus.filter((menu: Menu) => 
-        menu.menuType === 'plink' && 
-        menu.isActive && 
-        !(menu as any).isSystemConfig
-      );
-      
-      const filteredItems: NavigationItem[] = parentMenus
-        .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
-        .map((menu: Menu): NavigationItem | null => {
-          const children = childMenus
-            .filter((plink: Menu) => 
-              plink.parentId === menu.id && 
-              hasMenuPermission(plink.name, menu.name)
-            )
-            .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
-            .map((plink: Menu): NavigationItem => ({
-              id: plink.name,
-              label: plink.label,
-              icon: getIconComponent(plink.icon),
-              route: plink.route
-            }));
-          
-          // Only include parent if it has accessible children or direct route
-          if (children.length > 0 || menu.route) {
-            return {
-              id: menu.name,
-              label: menu.label,
-              icon: getIconComponent(menu.icon),
-              route: menu.route,
-              children: children.length > 0 ? children : undefined
-            };
-          }
-          return null;
-        })
-        .filter((item): item is NavigationItem => item !== null);
-      
-      return filteredItems;
-      
-    } else {
-      // System Admin sees all navigation (backward compatibility)
-      const hasMenuData = Array.isArray(allMenus) && allMenus.length > 0;
-      
-      if (hasMenuData) {
-        // For SystemAdmin, show all menus (existing behavior)
-        const parentMenus = allMenus.filter((menu: Menu) => menu.menuType === 'glink' && menu.isActive);
-        const childMenus = allMenus.filter((menu: Menu) => menu.menuType === 'plink' && menu.isActive);
-        
-        // Dynamic GLink menus with their PLink children (excluding system config items)
-        const dynamicItems: NavigationItem[] = parentMenus
-          .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
-          .map((menu: Menu): NavigationItem => {
-            // For Configuration menu, include system config items
-            const includeSystemConfig = menu.name.toLowerCase().includes('config');
-            
-            const children = childMenus
-              .filter((plink: Menu) => {
-                const matchesParent = plink.parentId === menu.id;
-                const isSystemConfig = (plink as any).isSystemConfig;
-                
-                // Include system config items only for Configuration parent menu
-                return matchesParent && (includeSystemConfig || !isSystemConfig);
-              })
-              .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
-              .map((plink: Menu): NavigationItem => ({
-                id: plink.name,
-                label: plink.label,
-                icon: getIconComponent(plink.icon),
-                route: plink.route
-              }));
-            
-            
-            return {
-              id: menu.name,
-              label: menu.label,
-              icon: getIconComponent(menu.icon),
-              route: menu.route,
-              children: children.length > 0 ? children : undefined
-            };
-          });
-
-        
-        return dynamicItems;
-      } else {
-        // Loading state or no menus available
-        return [];
-      }
-    }
-  };
-
-  const navigationItems = getNavigationItems();
-  
-  // Debug navigation items
-  React.useEffect(() => {
-    if (navigationItems.length > 0) {
-      console.log('Navigation items loaded:', navigationItems.map(item => ({ 
-        id: item.id, 
-        label: item.label, 
-        hasChildren: !!item.children?.length,
-        childrenCount: item.children?.length || 0,
-        route: item.route 
-      })));
-      
-      // Specifically debug Configuration menu
-      const configMenu = navigationItems.find(item => item.id.toLowerCase().includes('config'));
-      if (configMenu) {
-        console.log('Configuration menu found:', {
-          id: configMenu.id,
-          label: configMenu.label,
-          hasChildren: !!configMenu.children?.length,
-          children: configMenu.children?.map(child => ({ id: child.id, label: child.label, route: child.route })) || []
-        });
-      } else {
-        console.log('No Configuration menu found in navigation items');
-      }
-    }
-  }, [navigationItems]);
-
-  const toggleMenu = (menuId: string) => {
-    console.log('Toggle menu clicked:', menuId, 'Current expanded:', expandedMenu);
-    setManualToggle(true);
-    setExpandedMenu(prev => {
-      // If clicking on currently expanded menu, collapse it
-      if (prev === menuId) {
-        console.log('Collapsing menu:', menuId);
-        return null;
-      }
-      // Otherwise, expand this menu (accordion behavior)
-      console.log('Expanding menu:', menuId);
-      return menuId;
-    });
-  };
-
-
-  // Reset manual toggle when navigating to different sections
-  React.useEffect(() => {
-    if (activeSection && navigationItems.length > 0) {
-      // Reset manual toggle flag when active section changes
-      // This allows auto-expand to work for new navigation
-      setManualToggle(false);
-    }
-  }, [activeSection, navigationItems]);
-
-  const handleNavigation = (item: NavigationItem) => {
-    if (item.route) {
-      setLocation(item.route);
-    } else {
-      // Fallback routes for items without explicit routes
-      switch (item.id) {
-        case "dashboard":
-          setLocation("/dashboard");
-          break;
-        case "glink":
-          setLocation("/users-access/glink");
-          break;
-        case "plink":
-          setLocation("/users-access/plink");
-          break;
-        case "roles-groups":
-          setLocation("/users-access/roles");
-          break;
-        case "terminals":
-          setLocation("/terminals");
-          break;
-        case "terminal-activation":
-          setLocation("/terminal-activation");
-          break;
-        case "email-config":
-          setLocation("/configuration/email");
-          break;
-        case "organisations":
-          setLocation("/organizations");
-          break;
-        case "ports":
-          setLocation("/ports");
-          break;
-        case "menu-management":
-          setLocation("/menu-management");
-          break;
-        case "permission-assignment":
-          setLocation("/permission-assignment");
-          break;
-        case "users":
-          setLocation("/users");
-          break;
-        case "roles":
-          setLocation("/roles");
-          break;
-        default:
-          break;
-      }
-    }
+  const handleNavigation = (route: string) => {
+    setLocation(route);
+    setSidebarOpen(false); // Close mobile sidebar after navigation
   };
 
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex">
-      {/* Sidebar */}
-      <div 
-        className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed && !sidebarHovered ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col`}
-        onMouseEnter={() => setSidebarHovered(true)}
-        onMouseLeave={() => setSidebarHovered(false)}
-      >
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
-          {sidebarCollapsed && !sidebarHovered ? (
-            /* Small Logo when collapsed */
-            <div className="hidden lg:flex items-center justify-center w-full">
-              <PortrayLogo size="xs" />
-            </div>
-          ) : (
-            /* Full layout when expanded */
-            <div className="flex items-center justify-between w-full">
-              <PortrayLogo size="sm" />
-              <div className="flex items-center space-x-1">
-                {/* Desktop Toggle Button - Right aligned within logo section */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hidden lg:flex items-center justify-center w-9 h-9 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm rounded-lg transition-all duration-200"
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  title="Collapse Sidebar"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <nav className="mt-5 px-2 flex-1">
-          <div className="space-y-1">
-            {navigationItems.length === 0 && !!user ? (
-              <div className="px-2 py-4 text-center text-gray-500 dark:text-gray-400">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-xs">Loading menus...</p>
-              </div>
-            ) : (
-              navigationItems.map((item) => (
-              <div key={item.id}>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    console.log('Menu item clicked:', item.id, 'Has children:', !!item.children?.length);
-                    if (item.children && item.children.length > 0) {
-                      // Parent menu - toggle expand/collapse
-                      console.log('Calling toggleMenu for:', item.id);
-                      toggleMenu(item.id);
-                    } else {
-                      // Leaf menu - navigate
-                      console.log('Navigating to:', item.id);
-                      handleNavigation(item);
-                    }
-                  }}
-                  className={`group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-200 ease-in-out ${
-                    activeSection === item.id || isParentActive(item)
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium'
-                      : shouldMenuBeExpanded(item.id) && item.children && item.children.length > 0
-                      ? 'bg-gray-50 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                  title={sidebarCollapsed && !sidebarHovered ? item.label : ''}
-                >
-                  <div className="flex items-center">
-                    <item.icon className={`${sidebarCollapsed && !sidebarHovered ? 'mx-auto' : 'mr-3'} h-5 w-5 transition-all duration-200 ease-in-out ${
-                      activeSection === item.id || isParentActive(item) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300'
-                    }`} />
-                    {(!sidebarCollapsed || sidebarHovered) && (
-                      <span className={`transition-all duration-200 ease-in-out ${
-                        (activeSection === item.id || isParentActive(item)) ? 'font-medium text-blue-700 dark:text-blue-200' : 'group-hover:text-gray-900 dark:group-hover:text-white'
-                      }`}>
-                        {item.label}
-                      </span>
-                    )}
-                  </div>
-                  {item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && (
-                    <div className="ml-2 flex items-center space-x-1">
-                      {/* Smooth rotating chevron */}
-                      <div className={`transition-all duration-200 ease-in-out transform ${
-                        shouldMenuBeExpanded(item.id)
-                          ? 'rotate-90 text-blue-600 dark:text-blue-400' 
-                          : 'rotate-0 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300'
-                      }`}>
-                        <ChevronRight className="h-4 w-4" />
-                      </div>
-                    </div>
-                  )}
-                </button>
-                
-                {/* Accordion-style smooth expansion */}
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && shouldMenuBeExpanded(item.id)
-                    ? 'max-h-[500px] opacity-100'
-                    : 'max-h-0 opacity-0'
-                }`}>
-                  {item.children && item.children.length > 0 && shouldMenuBeExpanded(item.id) && (
-                    <div className="ml-6 mt-1 space-y-1 pl-4 py-2">
-                      {item.children.map((child: NavigationItem) => (
-                        <div key={child.id} className="transition-all duration-200 ease-in-out opacity-100">
-                          
-                          <button
-                            onClick={() => handleNavigation(child)}
-                            className={`group flex items-center px-4 py-2 text-sm rounded-md w-full text-left transition-all duration-200 ease-in-out ${
-                              activeSection === child.id
-                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                          >
-                            <child.icon className={`mr-3 h-4 w-4 transition-all duration-200 ease-in-out ${
-                              activeSection === child.id 
-                                ? 'text-blue-600 dark:text-blue-400' 
-                                : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
-                            }`} />
-                            <span className={`transition-all duration-200 ease-in-out ${
-                              activeSection === child.id ? 'font-medium' : ''
-                            }`}>
-                              {child.label}
-                            </span>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              ))
-            )}
-          </div>
-        </nav>
-
-        {/* User Info */}
-        <div className={`mt-auto p-4 border-t border-gray-200 dark:border-slate-700 ${sidebarCollapsed && !sidebarHovered ? 'hidden' : ''}`}>
-          {user && (
-            <div className="flex items-center">
-              {(!sidebarCollapsed || sidebarHovered) && (
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user.role}
-                  </p>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className={sidebarCollapsed && !sidebarHovered ? '' : 'ml-2'}
-                title={sidebarCollapsed && !sidebarHovered ? 'Logout' : ''}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile sidebar overlay */}
+      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
@@ -645,201 +129,240 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         />
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
-        {/* Header */}
-        <header className="bg-white dark:bg-slate-800 shadow-md border-b border-gray-200 dark:border-slate-700">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
+      {/* Sidebar */}
+      <div 
+        className={`fixed inset-y-0 left-0 z-50 ${sidebarCollapsed && !sidebarHovered ? 'w-16' : 'w-72'} bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col`}
+        onMouseEnter={() => setSidebarHovered(true)}
+        onMouseLeave={() => setSidebarHovered(false)}
+      >
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750">
+          {sidebarCollapsed && !sidebarHovered ? (
+            <div className="hidden lg:flex items-center justify-center w-full">
+              <PortrayLogo size="xs" />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between w-full">
+              <PortrayLogo size="sm" />
+              <div className="flex items-center space-x-2">
+                {/* Mobile Menu Button */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="lg:hidden mr-3"
-                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden"
+                  onClick={() => setSidebarOpen(false)}
                 >
                   <MenuIcon className="h-5 w-5" />
                 </Button>
-                <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
-                  {/* Clean header without page configuration details */}
-                </div>
-              </div>
-              
-              {/* User Profile Section */}
-              <div className="flex items-center space-x-4">
-                <div className="hidden sm:flex sm:items-center sm:space-x-3">
-                  <div className="flex flex-col text-right">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user?.firstName} {user?.lastName}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {user?.role} | {user?.email}
-                    </span>
-                  </div>
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-white">
-                      {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                    </span>
-                  </div>
-                </div>
                 
-                <div className="flex items-center space-x-2">
-                  {/* Notifications - Only for System Admin */}
-                  {user?.role === "SystemAdmin" && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="relative h-8 w-8 p-0">
-                          <Bell className="h-4 w-4" />
-                          {unreadCount.count > 0 && (
-                            <Badge 
-                              variant="destructive" 
-                              className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs flex items-center justify-center"
-                            >
-                              {unreadCount.count}
-                            </Badge>
-                          )}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-80">
-                        <div className="flex items-center justify-between px-4 py-2">
-                          <h4 className="text-sm font-medium">Notifications</h4>
-                          {notifications.length > 0 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => markAllAsReadMutation.mutate()}
-                              className="h-6 text-xs"
-                            >
-                              <Check className="h-3 w-3 mr-1" />
-                              Mark all read
-                            </Button>
-                          )}
-                        </div>
-                        <DropdownMenuSeparator />
-                        <ScrollArea className="h-64">
-                          {notifications.length === 0 ? (
-                            <div className="p-4 text-center text-sm text-gray-500">
-                              No notifications
-                            </div>
-                          ) : (
-                            notifications.slice(0, 5).map((notification) => (
-                              <DropdownMenuItem key={notification.id} className="block p-0">
-                                <div 
-                                  className={`p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-                                  onClick={() => handleNotificationClick(notification)}
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <h5 className="text-sm font-medium text-gray-900 dark:text-white">
-                                        {notification.title}
-                                      </h5>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                        {notification.message}
-                                      </p>
-                                      <p className="text-xs text-gray-400 mt-2">
-                                        {new Date(notification.createdAt).toLocaleDateString()} {new Date(notification.createdAt).toLocaleTimeString()}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center space-x-1 ml-2">
-                                      {!notification.isRead && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            markAsReadMutation.mutate(notification.id);
-                                          }}
-                                          className="h-6 w-6 p-0"
-                                          title="Mark as read"
-                                        >
-                                          <Check className="h-3 w-3" />
-                                        </Button>
-                                      )}
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          deleteNotificationMutation.mutate(notification.id);
-                                        }}
-                                        className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-                                        title="Delete notification"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </DropdownMenuItem>
-                            ))
-                          )}
-                          {notifications.length > 5 && (
-                            <div className="border-t border-gray-200 dark:border-gray-700 p-2">
-                              <button
-                                onClick={() => setLocation('/notifications')}
-                                className="w-full text-center text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 py-2 px-4 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                              >
-                                View All Notifications ({notifications.length})
-                              </button>
-                            </div>
-                          )}
-                        </ScrollArea>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                  
-                  {/* Configuration - Only for System Admin */}
-                  {user?.role === "SystemAdmin" && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" title="Configuration">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuItem onClick={() => setLocation('/configuration/email')} className="cursor-pointer">
-                          <Mail className="h-4 w-4 mr-2" />
-                          Email Configuration
-                        </DropdownMenuItem>
-                        {systemConfigMenus.length > 0 && (
-                          <>
-                            <DropdownMenuSeparator />
-                            {systemConfigMenus.map((menu: Menu) => {
-                              const IconComponent = getIconComponent(menu.icon);
-                              return (
-                                <DropdownMenuItem 
-                                  key={menu.id}
-                                  onClick={() => menu.route && setLocation(menu.route)} 
-                                  className="cursor-pointer"
-                                >
-                                  <IconComponent className="h-4 w-4 mr-2" />
-                                  {menu.label}
-                                </DropdownMenuItem>
-                              );
-                            })}
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="flex items-center space-x-2 h-8"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span className="hidden sm:inline">Logout</span>
-                  </Button>
-                </div>
+                {/* Desktop Collapse Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden lg:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                  <PanelLeftClose className={`h-4 w-4 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            {(!sidebarCollapsed || sidebarHovered) && (
+              <TreeNavigation 
+                activeSection={activeSection}
+                onNavigate={handleNavigation}
+              />
+            )}
+          </ScrollArea>
+        </div>
+
+        {/* Sidebar Footer */}
+        {(!sidebarCollapsed || sidebarHovered) && user && (
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+            <div className="flex items-center space-x-3 text-sm">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 dark:text-white truncate">
+                  {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {user.email}
+                </p>
               </div>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center space-x-4">
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <MenuIcon className="h-5 w-5" />
+            </Button>
+            
+            {/* Page Title */}
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {title}
+              </h1>
+            </div>
+          </div>
+
+          {/* Right Side */}
+          <div className="flex items-center space-x-4">
+            {/* Notifications */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount.count > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-red-500 text-white">
+                        {unreadCount.count > 9 ? '9+' : unreadCount.count}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="flex items-center justify-between p-2">
+                    <span className="font-medium">Notifications</span>
+                    {unreadCount.count > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => markAllAsReadMutation.mutate()}
+                        className="text-xs"
+                      >
+                        Mark all read
+                      </Button>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">
+                        No notifications
+                      </div>
+                    ) : (
+                      notifications.slice(0, 5).map((notification) => (
+                        <DropdownMenuItem
+                          key={notification.id}
+                          className={`p-3 cursor-pointer ${
+                            !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="flex items-start space-x-3 w-full">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              !notification.isRead ? 'bg-blue-500' : 'bg-gray-300'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                {notification.title}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {notification.message}
+                              </p>
+                            </div>
+                            <div className="flex space-x-1">
+                              {!notification.isRead && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsReadMutation.mutate(notification.id);
+                                  }}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotificationMutation.mutate(notification.id);
+                                }}
+                                className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </div>
+                  {notifications.length > 5 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setLocation('/notifications')}>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">
+                          View all notifications
+                        </span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* User Menu */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                      {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    </div>
+                    <div className="hidden md:block text-left">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {user.role || 'User'}
+                      </p>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <div className="p-2">
+                    <p className="text-sm font-medium">{user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <p className="text-xs text-gray-500">{user.role || 'User'}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </header>
 
-        {/* Main Content */}
-        <main className="px-4 sm:px-6 lg:px-2 py-2">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-hidden">
           {children}
         </main>
       </div>
