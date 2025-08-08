@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +26,21 @@ export default function LoginPage() {
   const [currentFeature, setCurrentFeature] = useState(0);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+
+  // Add CSS reset to ensure no gaps
+  React.useEffect(() => {
+    // Temporarily set body and html to have no margins/padding
+    const originalBodyStyle = document.body.style.cssText;
+    const originalHtmlStyle = document.documentElement.style.cssText;
+    
+    document.body.style.cssText = 'margin: 0 !important; padding: 0 !important; overflow-x: hidden !important;';
+    document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important;';
+    
+    return () => {
+      document.body.style.cssText = originalBodyStyle;
+      document.documentElement.style.cssText = originalHtmlStyle;
+    };
+  }, []);
 
   const features = [
     {
@@ -119,7 +134,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex w-full">
+    <div 
+      className="h-screen w-screen flex"
+      style={{ 
+        margin: 0, 
+        padding: 0, 
+        width: '100vw', 
+        height: '100vh',
+        overflow: 'hidden'
+      }}
+    >
       {/* Theme Toggle */}
       <Button
         variant="outline"
@@ -131,7 +155,10 @@ export default function LoginPage() {
       </Button>
 
       {/* Left Side - Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-shrink-0">
+      <div 
+        className="hidden lg:block relative overflow-hidden"
+        style={{ width: '50vw', height: '100vh' }}
+      >
         {/* Background Image Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -143,7 +170,7 @@ export default function LoginPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/30 via-blue-600/20 to-purple-500/10" />
         
-        <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full">
+        <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white h-full w-full">
           {/* Logo and tagline */}
           <div className="mb-8">
             <HeroLogo />
@@ -187,7 +214,10 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
+      <div 
+        className="w-full lg:flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900"
+        style={{ width: '50vw', height: '100vh' }}
+      >
         <div className="w-full max-w-md">
           
           {/* Mobile Logo */}
