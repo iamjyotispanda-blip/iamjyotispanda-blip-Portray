@@ -189,7 +189,7 @@ export default function LoginPage() {
           style={{
             backgroundImage: `url(${portBackgroundImage})`,
             backgroundSize: 'cover',
-            backgroundPosition: '100% 50%'
+            backgroundPosition: '0% 50%'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/30 via-blue-600/20 to-purple-500/10" />
