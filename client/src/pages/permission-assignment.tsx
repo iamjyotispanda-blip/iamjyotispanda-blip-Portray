@@ -209,7 +209,7 @@ export default function PermissionAssignmentPage() {
   const treeData = buildTree();
 
   return (
-    <AppLayout title="Permission Assignment" activeSection="user-access">
+    <AppLayout title="Permission Assignment" activeSection="permission-assignment">
       <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Permission Assignment</span>
