@@ -143,13 +143,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         {/* Sidebar Header */}
         <div className={`flex items-center justify-between h-16 ${sidebarCollapsed && !sidebarHovered ? 'px-2' : 'px-4'} border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative`}>
           <div className="flex items-center justify-between w-full">
-            {sidebarCollapsed && !sidebarHovered ? (
-              <div className="w-10 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm mx-auto">
-                P
-              </div>
-            ) : (
-              <PortrayLogo size="sm" />
-            )}
+            <PortrayLogo size={sidebarCollapsed && !sidebarHovered ? "xs" : "sm"} />
             
             <div className="flex items-center space-x-2">
               {/* Mobile Menu Button */}
@@ -166,7 +160,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="hidden lg:flex h-9 w-9 p-0 items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300 shadow-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:shadow-md hover:scale-105"
+                className="hidden lg:flex h-9 w-9 p-0 items-center justify-center rounded-lg transition-all duration-300 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -177,9 +171,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               >
                 {sidebarCollapsed ? (
-                  <MenuIcon className="h-4 w-4 transition-transform duration-300" />
+                  <MenuIcon className="h-5 w-5 transition-transform duration-300" />
                 ) : (
-                  <PanelLeftClose className="h-4 w-4 transition-transform duration-300" />
+                  <PanelLeftClose className="h-5 w-5 transition-transform duration-300" />
                 )}
               </Button>
             </div>
