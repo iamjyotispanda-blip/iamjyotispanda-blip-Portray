@@ -44,21 +44,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   // Helper function to check if any child of an item is active
   const isParentActive = (item: NavigationItem) => {
-    if (!item.children) return false;
-    const isActive = item.children.some((child: NavigationItem) => activeSection === child.id);
-    console.log('🔎 Parent active check for', item.id, ':', isActive, 'activeSection:', activeSection, 'children:', item.children.map(c => c.id));
-    return isActive;
+    if (!item.children || item.children.length === 0) return false;
+    return item.children.some((child: NavigationItem) => activeSection === child.id);
   };
 
   // Helper function to get the parent of the active section
   const getActiveParent = () => {
     for (const item of navigationItems) {
       if (item.children?.some((child: NavigationItem) => child.id === activeSection)) {
-        console.log('📡 Found active parent:', item.id, 'for activeSection:', activeSection);
         return item.id;
       }
     }
-    console.log('🙅‍♂️ No parent found for activeSection:', activeSection);
     return null;
   };
 
@@ -372,33 +368,28 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   // Initialize parent menus based on active section for tree structure
   React.useEffect(() => {
     if (!initialized && navigationItems.length > 0) {
-      const parentMenuIds = navigationItems
-        .filter(item => item.children && item.children.length > 0)
-        .map(item => item.id);
-      
-      // Auto-expand parent menu that contains the active child
       const activeParent = getActiveParent();
-      let initialExpanded: string[] = [];
-      
-      if (activeParent && parentMenuIds.includes(activeParent)) {
-        initialExpanded = [activeParent];
-        // Initializing with active parent expanded
+      if (activeParent) {
+        setExpandedItems([activeParent]);
+      } else {
+        setExpandedItems([]);
       }
-      
-      setExpandedItems(initialExpanded);
       setInitialized(true);
     }
   }, [navigationItems, initialized]);
 
-  // Auto-expand parent menu when child is active
+  // Auto-expand parent menu when navigating to child pages
   React.useEffect(() => {
-    console.log('🎆 Auto-expand effect:', { initialized, activeSection, navItemsLength: navigationItems.length, expandedItems });
     if (initialized && activeSection && navigationItems.length > 0) {
       const activeParent = getActiveParent();
-      console.log('🎆 Active parent found:', activeParent);
-      if (activeParent && !expandedItems.includes(activeParent)) {
-        console.log('🎆 Setting expanded items to:', [activeParent]);
-        setExpandedItems([activeParent]);
+      if (activeParent) {
+        setExpandedItems(prev => {
+          // Only update if the parent is not already expanded
+          if (!prev.includes(activeParent)) {
+            return [activeParent];
+          }
+          return prev;
+        });
       }
     }
   }, [activeSection, initialized, navigationItems]);
