@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { PortAdminContact } from "@shared/schema";
 
 const contactSchema = z.object({
   contactName: z.string().min(1, "Contact name is required"),
@@ -87,7 +88,28 @@ export function AddContactDialog({
     },
   });
 
+  // Get all existing contacts for email validation
+  const { data: allContacts = [] } = useQuery<PortAdminContact[]>({
+    queryKey: ["/api/contacts"],
+  });
+
   const handleSubmit = (data: ContactFormData) => {
+    // Check for unique email constraint
+    if (allContacts) {
+      const emailExists = allContacts.find(contact => 
+        contact.email.toLowerCase() === data.email.toLowerCase()
+      );
+
+      if (emailExists) {
+        toast({
+          title: "Duplicate Email",
+          description: "This email address is already registered with another contact. Please use a different email.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     createContactMutation.mutate(data);
   };
 
