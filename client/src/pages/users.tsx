@@ -82,8 +82,8 @@ export function UsersContent() {
       user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.role.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesRole = !roleFilter || user.role === roleFilter;
-    const matchesStatus = !statusFilter || 
+    const matchesRole = !roleFilter || roleFilter === 'all' || user.role === roleFilter;
+    const matchesStatus = !statusFilter || statusFilter === 'all' || 
       (statusFilter === "active" && user.isActive) ||
       (statusFilter === "inactive" && !user.isActive);
     
@@ -356,7 +356,7 @@ export function UsersContent() {
                       <SelectValue placeholder="Select Role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Roles</SelectItem>
+                      <SelectItem value="all">All Roles</SelectItem>
                       {(roles as Role[]).map((role) => (
                         <SelectItem key={role.id} value={role.name}>
                           {role.displayName}
@@ -370,7 +370,7 @@ export function UsersContent() {
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Status</SelectItem>
+                      <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
                     </SelectContent>
