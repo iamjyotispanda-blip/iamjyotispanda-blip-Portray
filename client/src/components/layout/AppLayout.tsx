@@ -330,6 +330,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
           });
 
         console.log("Final navigation items:", dynamicItems);
+        
+        // Debug specific menu items
+        dynamicItems.forEach(item => {
+          console.log(`Menu item: ${item.id} (${item.label}) - Route: ${item.route}, Children: ${item.children?.length || 0}`);
+          if (item.children) {
+            item.children.forEach(child => {
+              console.log(`  - Child: ${child.id} (${child.label}) - Route: ${child.route}`);
+            });
+          }
+        });
+        
         return dynamicItems;
       } else {
         // Loading state or no menus available
@@ -516,6 +527,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   onClick={(e) => {
                     e.preventDefault();
                     console.log('Menu item clicked:', item.id, 'Has children:', !!item.children?.length, 'Route:', item.route);
+                    
+                    // Special debugging for Configuration menu
+                    if (item.id.toLowerCase().includes('config')) {
+                      console.log('Configuration menu clicked! Details:', {
+                        id: item.id,
+                        label: item.label,
+                        route: item.route,
+                        hasChildren: !!item.children?.length,
+                        children: item.children?.map(c => ({ id: c.id, label: c.label, route: c.route }))
+                      });
+                    }
+                    
                     if (item.children && item.children.length > 0) {
                       console.log('Toggling parent menu:', item.id);
                       toggleExpandedItem(item.id);
