@@ -269,8 +269,13 @@ export default function PortFormPage({ params }: PortFormPageProps) {
   });
 
   // Get organizations for dropdown
-  const { data: organizations = [] } = useQuery({
+  const { data: organizations = [] } = useQuery<Organization[]>({
     queryKey: ["/api/organizations"],
+  });
+
+  // Get all ports for validation
+  const { data: allPorts = [] } = useQuery<Port[]>({
+    queryKey: ["/api/ports"],
   });
 
   // Get port data for editing
@@ -358,6 +363,54 @@ export default function PortFormPage({ params }: PortFormPageProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Basic validation
+    if (!formData.portName || !formData.displayName || !formData.organizationId) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for unique constraints - check each field individually for better error reporting
+    if (allPorts) {
+      const duplicateFields: string[] = [];
+      const filteredPorts = allPorts.filter(port => 
+        isEdit && portId ? port.id !== portId : true
+      );
+
+      // Check port name uniqueness
+      const portNameDuplicate = filteredPorts.find(port => 
+        port.portName.toLowerCase() === formData.portName.toLowerCase()
+      );
+      if (portNameDuplicate) {
+        duplicateFields.push("Port Name");
+      }
+
+      // Check display name uniqueness  
+      const displayNameDuplicate = filteredPorts.find(port => 
+        port.displayName.toLowerCase() === formData.displayName.toLowerCase()
+      );
+      if (displayNameDuplicate) {
+        duplicateFields.push("Display Name");
+      }
+
+      // Show error if any duplicates found
+      if (duplicateFields.length > 0) {
+        const fieldText = duplicateFields.length === 1 
+          ? duplicateFields[0] 
+          : `${duplicateFields[0]} and ${duplicateFields[1]}`;
+        
+        toast({
+          title: "Duplicate Entry",
+          description: `${fieldText} already ${duplicateFields.length === 1 ? 'exists' : 'exist'}. Please choose different ${duplicateFields.length === 1 ? 'value' : 'values'}.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     if (isEdit) {
       updatePortMutation.mutate(formData);
     } else {
@@ -425,7 +478,7 @@ export default function PortFormPage({ params }: PortFormPageProps) {
                         <SelectValue placeholder="Select organization" />
                       </SelectTrigger>
                       <SelectContent>
-                        {(organizations as Organization[]).map((org: Organization) => (
+                        {organizations.map((org: Organization) => (
                           <SelectItem key={org.id} value={org.id.toString()}>
                             {org.organizationName}
                           </SelectItem>
