@@ -337,18 +337,20 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   };
 
   const navigationItems = getNavigationItems();
+  
+  // Debug current state
+  React.useEffect(() => {
+    console.log('📊 Current expandedItems:', expandedItems);
+    console.log('📊 Navigation items:', navigationItems.map(item => ({ id: item.id, hasChildren: !!(item.children && item.children.length > 0) })));
+  }, [expandedItems, navigationItems]);
 
   const toggleExpandedItem = (itemId: string) => {
+    console.log('🔄 Toggle clicked:', itemId, 'Current expanded:', expandedItems);
     try {
       setExpandedItems(prev => {
-        // Accordion behavior: only one parent can be expanded at a time
-        if (prev.includes(itemId)) {
-          // If clicking on expanded item, collapse it
-          return [];
-        } else {
-          // If clicking on collapsed item, expand it and collapse others
-          return [itemId];
-        }
+        const newState = prev.includes(itemId) ? [] : [itemId];
+        console.log('🔄 New state will be:', newState);
+        return newState;
       });
     } catch (error) {
       console.error('Error toggling expanded item:', error);
@@ -390,9 +392,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   React.useEffect(() => {
     if (initialized && activeSection) {
       const activeParent = getActiveParent();
+      console.log('🤖 Auto-expand check:', { activeSection, activeParent, expandedItems, initialized });
       // Only auto-expand if no items are currently expanded (avoid interfering with manual toggles)
       if (activeParent && expandedItems.length === 0 && !expandedItems.includes(activeParent)) {
-        // Auto-expanding parent for active child on initialization
+        console.log('🤖 Auto-expanding parent for active child:', activeParent);
         expandItem(activeParent);
       }
     }
@@ -492,10 +495,13 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
+                    console.log('🖱️ Button clicked:', item.id, 'Has children:', !!(item.children && item.children.length > 0));
                     try {
                       if (item.children && item.children.length > 0) {
+                        console.log('🖱️ Calling toggleExpandedItem for:', item.id);
                         toggleExpandedItem(item.id);
                       } else {
+                        console.log('🖱️ Calling handleNavigation for:', item.id);
                         handleNavigation(item);
                       }
                     } catch (error) {
