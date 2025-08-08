@@ -24,6 +24,7 @@ import {
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { User as UserType, Role } from "@shared/schema";
 
 interface UserFormData {
@@ -53,6 +54,7 @@ export function UsersContent() {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { canCreate, canEdit, canManage, canRead, isLoading: permissionsLoading } = usePermissions();
 
   // Get all users
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -248,13 +250,14 @@ export function UsersContent() {
                 data-testid="input-search-users"
               />
             </div>
-            <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
-              <SheetTrigger asChild>
-                <Button className="h-8" data-testid="button-add-user">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add User
-                </Button>
-              </SheetTrigger>
+            {canCreate("users", "user-access") && (
+              <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+                <SheetTrigger asChild>
+                  <Button className="h-8" data-testid="button-add-user">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add User
+                  </Button>
+                </SheetTrigger>
               <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Add User</SheetTitle>
@@ -368,6 +371,7 @@ export function UsersContent() {
                 </div>
               </SheetContent>
             </Sheet>
+            )}
           </div>
 
           {/* Users List */}
@@ -437,30 +441,34 @@ export function UsersContent() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleUserStatus(user.id)}
-                          disabled={toggleUserStatusMutation.isPending || user.id === "admin-001"}
-                          className="h-8"
-                          data-testid={`button-toggle-user-${user.id}`}
-                        >
-                          {user.isActive ? (
-                            <ToggleRight className="w-4 h-4" />
-                          ) : (
-                            <ToggleLeft className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(user)}
-                          className="h-8"
-                          data-testid={`button-edit-user-${user.id}`}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        {user.id !== "admin-001" && (
+                        {canManage("users", "user-access") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleUserStatus(user.id)}
+                            disabled={toggleUserStatusMutation.isPending || user.id === "admin-001"}
+                            className="h-8"
+                            data-testid={`button-toggle-user-${user.id}`}
+                          >
+                            {user.isActive ? (
+                              <ToggleRight className="w-4 h-4" />
+                            ) : (
+                              <ToggleLeft className="w-4 h-4" />
+                            )}
+                          </Button>
+                        )}
+                        {canEdit("users", "user-access") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(user)}
+                            className="h-8"
+                            data-testid={`button-edit-user-${user.id}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canManage("users", "user-access") && user.id !== "admin-001" && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="destructive" size="sm" className="h-8" data-testid={`button-delete-user-${user.id}`}>

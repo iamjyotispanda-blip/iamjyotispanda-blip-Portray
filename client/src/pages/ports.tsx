@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { Port, Organization } from "@shared/schema";
 
 // Component for the ports content without layout
@@ -18,6 +19,7 @@ export function PortsContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { canCreate, canEdit, canManage, canRead, isLoading: permissionsLoading } = usePermissions();
 
   // Get all ports
   const { data: ports = [], isLoading: portsLoading } = useQuery({
@@ -92,12 +94,15 @@ export function PortsContent() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                data-testid="input-search-ports"
               />
             </div>
-            <Button onClick={() => setLocation("/ports/new")} className="h-8">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Port
-            </Button>
+            {canCreate("ports") && (
+              <Button onClick={() => setLocation("/ports/new")} className="h-8" data-testid="button-add-port">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Port
+              </Button>
+            )}
           </div>
 
           {/* Ports List */}
@@ -118,7 +123,7 @@ export function PortsContent() {
           </Card>
         ) : (
           filteredPorts.map((port: Port) => (
-            <Card key={port.id} className="hover:shadow-md transition-shadow">
+            <Card key={port.id} className="hover:shadow-md transition-shadow" data-testid={`card-port-${port.id}`}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
@@ -127,14 +132,15 @@ export function PortsContent() {
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white" data-testid={`text-port-name-${port.id}`}>
                           {port.portName}
                         </h3>
-                        <Badge variant="outline">
+                        <Badge variant="outline" data-testid={`badge-port-display-${port.id}`}>
                           {port.displayName}
                         </Badge>
                         <Badge
                           variant={port.isActive ? "default" : "secondary"}
+                          data-testid={`badge-port-status-${port.id}`}
                         >
                           {port.isActive ? "Active" : "Inactive"}
                         </Badge>
@@ -159,36 +165,45 @@ export function PortsContent() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTogglePortStatus(port.id)}
-                      disabled={togglePortStatusMutation.isPending}
-                      className="h-8"
-                    >
-                      {port.isActive ? (
-                        <ToggleRight className="w-4 h-4" />
-                      ) : (
-                        <ToggleLeft className="w-4 h-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleManageContacts(port.id)}
-                      className="h-8"
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Manage Contacts
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditPort(port.id)}
-                      className="h-8"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                    {canManage("ports") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTogglePortStatus(port.id)}
+                        disabled={togglePortStatusMutation.isPending}
+                        className="h-8"
+                        data-testid={`button-toggle-port-${port.id}`}
+                      >
+                        {port.isActive ? (
+                          <ToggleRight className="w-4 h-4" />
+                        ) : (
+                          <ToggleLeft className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                    {canRead("port-contacts", "ports") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleManageContacts(port.id)}
+                        className="h-8"
+                        data-testid={`button-manage-contacts-${port.id}`}
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Manage Contacts
+                      </Button>
+                    )}
+                    {canEdit("ports") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditPort(port.id)}
+                        className="h-8"
+                        data-testid={`button-edit-port-${port.id}`}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>

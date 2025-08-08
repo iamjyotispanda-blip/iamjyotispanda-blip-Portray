@@ -41,6 +41,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { Role, Menu } from "@shared/schema";
 
 interface RoleFormData {
@@ -74,6 +75,7 @@ export function RolesContent() {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { canCreate, canEdit, canManage, canRead, isLoading: permissionsLoading } = usePermissions();
 
   // Get all roles
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
@@ -339,13 +341,14 @@ export function RolesContent() {
                 data-testid="input-search-roles"
               />
             </div>
-            <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
-              <SheetTrigger asChild>
-                <Button className="h-8" data-testid="button-add-role">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Role
-                </Button>
-              </SheetTrigger>
+            {canCreate("roles", "user-access") && (
+              <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+                <SheetTrigger asChild>
+                  <Button className="h-8" data-testid="button-add-role">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Role
+                  </Button>
+                </SheetTrigger>
               <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Add Role</SheetTitle>
@@ -454,6 +457,7 @@ export function RolesContent() {
                 </div>
               </SheetContent>
             </Sheet>
+            )}
           </div>
 
           {/* Roles List */}
@@ -530,30 +534,34 @@ export function RolesContent() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleRoleStatus(role.id)}
-                          disabled={toggleRoleStatusMutation.isPending || role.name === "SystemAdmin" || role.name === "PortAdmin"}
-                          className="h-8"
-                          data-testid={`button-toggle-role-${role.id}`}
-                        >
-                          {role.isActive ? (
-                            <ToggleRight className="w-4 h-4" />
-                          ) : (
-                            <ToggleLeft className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(role)}
-                          className="h-8"
-                          data-testid={`button-edit-role-${role.id}`}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        {role.name !== "SystemAdmin" && role.name !== "PortAdmin" && (
+                        {canManage("roles", "user-access") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleRoleStatus(role.id)}
+                            disabled={toggleRoleStatusMutation.isPending || role.name === "SystemAdmin" || role.name === "PortAdmin"}
+                            className="h-8"
+                            data-testid={`button-toggle-role-${role.id}`}
+                          >
+                            {role.isActive ? (
+                              <ToggleRight className="w-4 h-4" />
+                            ) : (
+                              <ToggleLeft className="w-4 h-4" />
+                            )}
+                          </Button>
+                        )}
+                        {canEdit("roles", "user-access") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(role)}
+                            className="h-8"
+                            data-testid={`button-edit-role-${role.id}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canManage("roles", "user-access") && role.name !== "SystemAdmin" && role.name !== "PortAdmin" && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="destructive" size="sm" className="h-8" data-testid={`button-delete-role-${role.id}`}>
