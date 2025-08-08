@@ -32,6 +32,11 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
 
+  // Debug state changes
+  React.useEffect(() => {
+    console.log('Sidebar state changed - collapsed:', sidebarCollapsed, 'hovered:', sidebarHovered);
+  }, [sidebarCollapsed, sidebarHovered]);
+
   // Get current user
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -144,11 +149,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200 shadow-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="absolute -right-2 top-1/2 transform -translate-y-1/2 z-10 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all duration-200 shadow-lg border-2 border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Expand button clicked, current collapsed state:', sidebarCollapsed);
+                  setSidebarCollapsed(false);
+                }}
                 title="Expand Sidebar"
               >
-                <PanelLeftClose className="h-3 w-3 rotate-180" />
+                <PanelLeftClose className="h-4 w-4 rotate-180" />
               </Button>
             </div>
           ) : (
@@ -170,7 +180,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   variant="ghost"
                   size="sm"
                   className="hidden lg:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Collapse button clicked, current collapsed state:', sidebarCollapsed);
+                    setSidebarCollapsed(true);
+                  }}
                   title="Collapse Sidebar"
                 >
                   <PanelLeftClose className="h-4 w-4" />
