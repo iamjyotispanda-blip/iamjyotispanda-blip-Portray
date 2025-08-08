@@ -226,7 +226,7 @@ export function TreeNavigation({ activeSection, onNavigate }: TreeNavigationProp
       <div key={node.id} className="relative">
         {/* Node Button */}
         <div
-          className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl mx-2 mb-1 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-[1.02] ${
+          className={`group flex items-center justify-between px-4 py-2 text-sm font-medium rounded-xl mx-2 mb-1 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-[1.02] ${
             isDirectlyActive
               ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
               : isActive && hasChildren
@@ -292,7 +292,7 @@ export function TreeNavigation({ activeSection, onNavigate }: TreeNavigationProp
               {node.children.map(child => (
                 <div
                   key={child.id}
-                  className={`flex items-center space-x-3 px-4 py-2.5 text-sm rounded-lg mx-2 cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.01] ${
+                  className={`flex items-center space-x-3 px-4 py-1.5 text-sm rounded-lg mx-2 cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.01] ${
                     child.id === activeSection
                       ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/20'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-white'
