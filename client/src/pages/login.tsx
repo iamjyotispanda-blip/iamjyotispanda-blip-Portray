@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Ship, Package, TrendingUp, Moon, Sun, Monitor, Truck, FileText } from "lucide-react";
-import portBackgroundImage from "@assets/Vessel & Berth Managment (1)_1754649941437.png";
+import portBackgroundImage from "@assets/Vessel & Berth Managment (1)_1754650065821.png";
 import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
