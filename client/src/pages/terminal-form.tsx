@@ -20,14 +20,15 @@ import { AuthService } from "@/lib/auth";
 
 import type { Terminal, Port, InsertTerminal } from "@shared/schema";
 
-// Terminal form schema
+// Terminal form validation schema
 const terminalFormSchema = z.object({
   // Auto-filled fields
-  portName: z.string().min(1),
-  organization: z.string().min(1),
-  state: z.string().min(1),
-  country: z.string().min(1),
+  portName: z.string().min(1, "Port name is required"),
+  organization: z.string().min(1, "Organization is required"),
+  state: z.string().min(1, "State is required"),
+  country: z.string().min(1, "Country is required"),
   
+  // Terminal details
   terminalName: z.string().min(1, "Terminal name is required"),
   shortCode: z.string().min(1, "Short code is required").max(6, "Short code must be 6 characters or less"),
   gst: z.string().optional(),
@@ -42,7 +43,7 @@ const terminalFormSchema = z.object({
   billingPhone: z.string().min(1, "Billing phone is required"),
   billingFax: z.string().optional(),
   
-  // Shipping Address - conditionally required based on sameAsBilling
+  // Shipping Address
   shippingAddress: z.string().optional(),
   shippingCity: z.string().optional(),
   shippingPinCode: z.string().optional(),
@@ -54,16 +55,13 @@ const terminalFormSchema = z.object({
 
 type TerminalFormData = z.infer<typeof terminalFormSchema>;
 
-
-
-// Timezone options for India
+// Configuration options
 const timezones = [
   { value: "Asia/Kolkata", label: "Asia/Kolkata (IST)" },
   { value: "Asia/Mumbai", label: "Asia/Mumbai (IST)" },
   { value: "Asia/Delhi", label: "Asia/Delhi (IST)" },
 ];
 
-// Currency options
 const currencies = [
   { value: "INR", label: "Indian Rupee (INR)" },
   { value: "USD", label: "US Dollar (USD)" },
@@ -78,24 +76,7 @@ export default function TerminalFormPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get current user
-  const { data: user } = useQuery({
-    queryKey: ["/api/auth/me"],
-    queryFn: AuthService.getCurrentUser,
-  });
-
-  // Get assigned port for Port Admin
-  const { data: assignedPort, isLoading: isPortLoading } = useQuery({
-    queryKey: ["/api/terminals/my-port"],
-    enabled: user?.role === "PortAdmin",
-  });
-
-  // Get terminal data if editing
-  const { data: terminal } = useQuery({
-    queryKey: ["/api/terminals", id],
-    enabled: isEditing,
-  });
-
+  // Initialize form with default values
   const form = useForm<TerminalFormData>({
     resolver: zodResolver(terminalFormSchema),
     defaultValues: {
@@ -123,119 +104,115 @@ export default function TerminalFormPage() {
     },
   });
 
-  // Get current user's contact details
+  // Watch form values
+  const terminalName = form.watch("terminalName");
+  const sameAsBilling = form.watch("sameAsBilling");
+
+  // Data queries
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: AuthService.getCurrentUser,
+  });
+
+  const { data: assignedPort, isLoading: isPortLoading } = useQuery({
+    queryKey: ["/api/terminals/my-port"],
+    enabled: !!user && user.role === "PortAdmin",
+  });
+
+  const { data: terminal } = useQuery({
+    queryKey: ["/api/terminals", id],
+    enabled: !!id && isEditing,
+  });
+
   const { data: userContact } = useQuery({
     queryKey: ["/api/contacts/my-contact"],
     enabled: !!user && user.role === "PortAdmin",
   });
 
-  // Update form with port and contact data when available
+  // Auto-generate short code from terminal name
   useEffect(() => {
-    try {
-      if (assignedPort && form.setValue) {
-        // Auto-fill port information from port admin assignment
-        const portData = assignedPort as any;
-        if (portData?.portName) form.setValue("portName", portData.portName);
-        if (portData?.organizationName) form.setValue("organization", portData.organizationName);
-        if (portData?.state) form.setValue("state", portData.state);
-        if (portData?.country) form.setValue("country", portData.country);
-        else form.setValue("country", "India");
-      }
-      
-      if (userContact && !isEditing && form.setValue) {
-        // Auto-fill contact information from port admin contact details for new terminals
-        const contactData = userContact as any;
-        if (contactData?.mobileNumber) {
-          form.setValue("billingPhone", contactData.mobileNumber);
-          form.setValue("shippingPhone", contactData.mobileNumber);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating form with port/contact data:", error);
+    if (terminalName && !isEditing) {
+      const shortCode = terminalName
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .substring(0, 6);
+      form.setValue("shortCode", shortCode);
     }
-  }, [assignedPort, userContact, form, isEditing]);
+  }, [terminalName, isEditing, form]);
 
-  // Watch for terminal name changes to auto-generate short code
-  const terminalName = form.watch("terminalName");
-  const sameAsBilling = form.watch("sameAsBilling");
-
+  // Copy billing to shipping when toggle is enabled
   useEffect(() => {
-    try {
-      if (terminalName && !isEditing && form.setValue) {
-        const shortCode = terminalName
-          .toUpperCase()
-          .replace(/[^A-Z0-9]/g, "")
-          .substring(0, 6);
-        form.setValue("shortCode", shortCode);
-      }
-    } catch (error) {
-      console.error("Error generating short code:", error);
-    }
-  }, [terminalName, form, isEditing]);
-
-  // Copy billing address to shipping when sameAsBilling is checked
-  useEffect(() => {
-    try {
-      if (sameAsBilling && form.getValues && form.setValue) {
-        const billingData = form.getValues();
-        form.setValue("shippingAddress", billingData.billingAddress || "");
-        form.setValue("shippingCity", billingData.billingCity || "");
-        form.setValue("shippingPinCode", billingData.billingPinCode || "");
-        form.setValue("shippingPhone", billingData.billingPhone || "");
-        form.setValue("shippingFax", billingData.billingFax || "");
-      }
-    } catch (error) {
-      console.error("Error copying billing to shipping:", error);
+    if (sameAsBilling) {
+      const values = form.getValues();
+      form.setValue("shippingAddress", values.billingAddress);
+      form.setValue("shippingCity", values.billingCity);
+      form.setValue("shippingPinCode", values.billingPinCode);
+      form.setValue("shippingPhone", values.billingPhone);
+      form.setValue("shippingFax", values.billingFax);
     }
   }, [sameAsBilling, form]);
 
-  // Populate form when editing
+  // Auto-fill port and contact data
   useEffect(() => {
-    try {
-      if (terminal && isEditing && assignedPort && form.reset) {
-        const portData = assignedPort as any;
-        const terminalData = terminal as any;
-        
-        form.reset({
-          // Port-related fields from assignedPort
-          portName: portData?.portName || "",
-          organization: portData?.organizationName || "",
-          state: portData?.state || "",
-          country: portData?.country || "India",
-          // Terminal-specific fields from terminal data
-          terminalName: terminalData?.terminalName || "",
-          shortCode: terminalData?.shortCode || "",
-          gst: terminalData?.gst || "",
-          pan: terminalData?.pan || "",
-          currency: terminalData?.currency || "INR",
-          timezone: terminalData?.timezone || "Asia/Kolkata",
-          billingAddress: terminalData?.billingAddress || "",
-          billingCity: terminalData?.billingCity || "",
-          billingPinCode: terminalData?.billingPinCode || "",
-          billingPhone: terminalData?.billingPhone || "",
-          billingFax: terminalData?.billingFax || "",
-          shippingAddress: terminalData?.shippingAddress || "",
-          shippingCity: terminalData?.shippingCity || "",
-          shippingPinCode: terminalData?.shippingPinCode || "",
-          shippingPhone: terminalData?.shippingPhone || "",
-          shippingFax: terminalData?.shippingFax || "",
-          sameAsBilling: terminalData?.sameAsBilling || false,
-        });
-      }
-    } catch (error) {
-      console.error("Error populating form during edit:", error);
+    if (assignedPort) {
+      const portData = assignedPort as any;
+      form.setValue("portName", portData?.portName || "");
+      form.setValue("organization", portData?.organizationName || "");
+      form.setValue("state", portData?.state || "");
+      form.setValue("country", portData?.country || "India");
     }
-  }, [terminal, assignedPort, form, isEditing]);
+  }, [assignedPort, form]);
 
-  // Create/Update terminal mutation
+  useEffect(() => {
+    if (userContact && !isEditing) {
+      const contactData = userContact as any;
+      if (contactData?.mobileNumber) {
+        form.setValue("billingPhone", contactData.mobileNumber);
+        form.setValue("shippingPhone", contactData.mobileNumber);
+      }
+    }
+  }, [userContact, isEditing, form]);
+
+  // Populate form for editing
+  useEffect(() => {
+    if (terminal && isEditing && assignedPort) {
+      const terminalData = terminal as any;
+      const portData = assignedPort as any;
+      
+      form.reset({
+        portName: portData?.portName || "",
+        organization: portData?.organizationName || "",
+        state: portData?.state || "",
+        country: portData?.country || "India",
+        terminalName: terminalData?.terminalName || "",
+        shortCode: terminalData?.shortCode || "",
+        gst: terminalData?.gst || "",
+        pan: terminalData?.pan || "",
+        currency: terminalData?.currency || "INR",
+        timezone: terminalData?.timezone || "Asia/Kolkata",
+        billingAddress: terminalData?.billingAddress || "",
+        billingCity: terminalData?.billingCity || "",
+        billingPinCode: terminalData?.billingPinCode || "",
+        billingPhone: terminalData?.billingPhone || "",
+        billingFax: terminalData?.billingFax || "",
+        shippingAddress: terminalData?.shippingAddress || "",
+        shippingCity: terminalData?.shippingCity || "",
+        shippingPinCode: terminalData?.shippingPinCode || "",
+        shippingPhone: terminalData?.shippingPhone || "",
+        shippingFax: terminalData?.shippingFax || "",
+        sameAsBilling: terminalData?.sameAsBilling || false,
+      });
+    }
+  }, [terminal, assignedPort, isEditing, form]);
+
+  // Terminal mutation
   const terminalMutation = useMutation({
     mutationFn: async (data: TerminalFormData) => {
-      // Check if terminal is already activated
       const isActivated = terminal && (terminal as any).status === "Active";
       
       let submissionData;
       if (isEditing && isActivated) {
-        // If terminal is activated, only update basic fields, preserve activation data
+        // For activated terminals, preserve activation status
         submissionData = {
           terminalName: data.terminalName,
           shortCode: data.shortCode,
@@ -254,10 +231,8 @@ export default function TerminalFormPage() {
           shippingPhone: data.shippingPhone,
           shippingFax: data.shippingFax,
           sameAsBilling: data.sameAsBilling,
-          // Do not change status for activated terminals
         };
       } else {
-        // For new terminals or non-activated terminals, include status
         submissionData = {
           ...data,
           status: "Processing for activation"
@@ -291,6 +266,7 @@ export default function TerminalFormPage() {
     terminalMutation.mutate(data);
   };
 
+  // Access control
   if (user?.role !== "PortAdmin") {
     return (
       <AppLayout title="Access Denied" activeSection="terminals">
@@ -308,7 +284,7 @@ export default function TerminalFormPage() {
     );
   }
 
-  // Show loading state while data is being fetched
+  // Loading state
   if (isPortLoading || (user?.role === "PortAdmin" && !assignedPort)) {
     return (
       <AppLayout title="Loading..." activeSection="terminals">
@@ -322,6 +298,7 @@ export default function TerminalFormPage() {
     );
   }
 
+  // No port assigned
   if (user?.role === "PortAdmin" && !assignedPort) {
     return (
       <AppLayout title="No Port Assigned" activeSection="terminals">
@@ -339,244 +316,145 @@ export default function TerminalFormPage() {
   }
 
   return (
-    <AppLayout title={`${isEditing ? "Edit" : "New"} Terminal`} activeSection="terminals">
-      <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => setLocation("/terminals")}
-              className="h-8"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                {isEditing ? "Edit Terminal" : "New Terminal"}
-              </h1>
-            </div>
-          </div>
+    <AppLayout title={isEditing ? "Edit Terminal" : "Add Terminal"} activeSection="terminals">
+      <div className="flex h-full bg-gray-50 dark:bg-gray-900">
+        {/* Breadcrumb Bar */}
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 flex items-center space-x-2 w-full h-12">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/terminals")}
+            className="h-6 px-2 text-xs"
+          >
+            <ArrowLeft className="h-3 w-3 mr-1" />
+            Back
+          </Button>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {isEditing ? "Edit Terminal" : "Add Terminal"}
+          </span>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <main className="p-6">
-            <div className="max-w-6xl mx-auto space-y-6 pb-8">
+        <div className="flex-1 flex">
+          {/* Main Content */}
+          <main className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Auto-filled Port Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Building2 className="h-5 w-5" />
-                      <span>Port Information</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="portName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Port Name</FormLabel>
-                            <FormControl>
-                              <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="organization"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Organization</FormLabel>
-                            <FormControl>
-                              <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>State</FormLabel>
-                            <FormControl>
-                              <Input {...field} readOnly className="bg-gray-50 dark:bg-gray-800" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="country"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Country</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                readOnly 
-                                className="bg-gray-50 dark:bg-gray-800" 
-                                value={field.value ? `🇮🇳 ${field.value}` : ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Terminal Details */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Ship className="h-5 w-5" />
-                      <span>Terminal Details</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Primary Terminal Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="portName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Port Name</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                readOnly 
-                                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 h-10" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="terminalName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Terminal Name</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Enter terminal name" 
-                                {...field} 
-                                className="border-gray-200 dark:border-gray-700 h-10" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* Terminal Code and Configuration */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="shortCode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Short Code</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Auto-generated" 
-                                maxLength={6} 
-                                {...field} 
-                                className="border-gray-200 dark:border-gray-700 h-10 font-mono" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="timezone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Timezone</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {/* Port Information */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Ship className="h-5 w-5" />
+                        <span>Port Information</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="portName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Port Name</FormLabel>
                               <FormControl>
-                                <SelectTrigger className="border-gray-200 dark:border-gray-700 h-10">
-                                  <SelectValue placeholder="Select timezone" />
-                                </SelectTrigger>
+                                <Input {...field} disabled className="bg-gray-100" />
                               </FormControl>
-                              <SelectContent>
-                                {timezones.map((tz) => (
-                                  <SelectItem key={tz.value} value={tz.value}>
-                                    {tz.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="currency"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Currency</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                        <FormField
+                          control={form.control}
+                          name="organization"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Organization</FormLabel>
                               <FormControl>
-                                <SelectTrigger className="border-gray-200 dark:border-gray-700 h-10">
-                                  <SelectValue placeholder="Select currency" />
-                                </SelectTrigger>
+                                <Input {...field} disabled className="bg-gray-100" />
                               </FormControl>
-                              <SelectContent>
-                                {currencies.map((currency) => (
-                                  <SelectItem key={currency.value} value={currency.value}>
-                                    {currency.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    {/* Optional Tax Information */}
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Tax Information (Optional)</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>State</FormLabel>
+                              <FormControl>
+                                <Input {...field} disabled className="bg-gray-100" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Country</FormLabel>
+                              <FormControl>
+                                <Input {...field} disabled className="bg-gray-100" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Terminal Details */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Building2 className="h-5 w-5" />
+                        <span>Terminal Details</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="terminalName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Terminal Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter terminal name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="shortCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Short Code</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Auto-generated" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
                         <FormField
                           control={form.control}
                           name="gst"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">GST Number</FormLabel>
+                              <FormLabel>GST Number (Optional)</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="Enter GST number" 
-                                  {...field} 
-                                  className="border-gray-200 dark:border-gray-700 h-10 bg-white dark:bg-gray-900" 
-                                />
+                                <Input placeholder="Enter GST number" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -588,25 +466,68 @@ export default function TerminalFormPage() {
                           name="pan"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">PAN Number</FormLabel>
+                              <FormLabel>PAN Number (Optional)</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="Enter PAN number" 
-                                  {...field} 
-                                  className="border-gray-200 dark:border-gray-700 h-10 bg-white dark:bg-gray-900" 
-                                />
+                                <Input placeholder="Enter PAN number" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Address Information - Side by Side */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="currency"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Currency</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select currency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {currencies.map((currency) => (
+                                    <SelectItem key={currency.value} value={currency.value}>
+                                      {currency.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="timezone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Timezone</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select timezone" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {timezones.map((timezone) => (
+                                    <SelectItem key={timezone.value} value={timezone.value}>
+                                      {timezone.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   {/* Billing Address */}
                   <Card>
                     <CardHeader>
@@ -630,7 +551,7 @@ export default function TerminalFormPage() {
                         )}
                       />
 
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="billingCity"
@@ -709,7 +630,7 @@ export default function TerminalFormPage() {
                             </div>
                             <FormControl>
                               <Switch
-                                checked={field.value || false}
+                                checked={field.value}
                                 onCheckedChange={field.onChange}
                               />
                             </FormControl>
@@ -733,7 +654,7 @@ export default function TerminalFormPage() {
                             )}
                           />
 
-                          <div className="grid grid-cols-1 gap-4">
+                          <div className="grid grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
                               name="shippingCity"
@@ -794,28 +715,28 @@ export default function TerminalFormPage() {
                       )}
                     </CardContent>
                   </Card>
-                </div>
 
-                {/* Submit Buttons */}
-                <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setLocation("/terminals")}
-                    className="h-8"
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={terminalMutation.isPending}
-                    className="h-8"
-                    data-testid="button-submit"
-                  >
-                    {terminalMutation.isPending ? "Saving..." : isEditing ? "Update Terminal" : "Create Terminal"}
-                  </Button>
-                </div>
+                  {/* Form Actions */}
+                  <div className="flex justify-end space-x-2 pb-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setLocation("/terminals")}
+                      className="h-8"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={terminalMutation.isPending}
+                      className="h-8"
+                    >
+                      {terminalMutation.isPending
+                        ? (isEditing ? "Updating..." : "Creating...")
+                        : (isEditing ? "Update Terminal" : "Create Terminal")
+                      }
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </div>
