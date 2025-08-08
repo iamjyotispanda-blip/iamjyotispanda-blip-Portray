@@ -189,9 +189,10 @@ export default function TerminalsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
+                  data-testid="input-search-terminals"
                 />
               </div>
-              <Button onClick={() => setLocation("/terminals/new")} className="h-8">
+              <Button onClick={() => setLocation("/terminals/new")} className="h-8" data-testid="button-new-terminal">
                 <Plus className="w-4 h-4 mr-2" />
                 New Terminal
               </Button>
@@ -215,7 +216,7 @@ export default function TerminalsPage() {
             ) : (
               <div className="grid gap-4">
                 {filteredTerminals.map((terminal: Terminal) => (
-                  <Card key={terminal.id} className="hover:shadow-md transition-shadow">
+                  <Card key={terminal.id} className="hover:shadow-md transition-shadow" data-testid={`card-terminal-${terminal.id}`}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-start space-x-4">
@@ -224,10 +225,10 @@ export default function TerminalsPage() {
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center space-x-3">
-                              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                              <h3 className="text-lg font-medium text-gray-900 dark:text-white" data-testid={`text-terminal-name-${terminal.id}`}>
                                 {terminal.terminalName}
                               </h3>
-                              <Badge variant="outline">
+                              <Badge variant="outline" data-testid={`badge-terminal-code-${terminal.id}`}>
                                 {terminal.shortCode}
                               </Badge>
                               <div className="flex items-center space-x-3">
@@ -293,6 +294,7 @@ export default function TerminalsPage() {
                             variant="outline"
                             onClick={() => setLocation(`/terminals/${terminal.id}`)}
                             className="h-8"
+                            data-testid={`button-view-profile-${terminal.id}`}
                           >
                             <Ship className="w-4 h-4 mr-2" />
                             View Profile
@@ -301,18 +303,22 @@ export default function TerminalsPage() {
                             variant="outline"
                             onClick={() => setLocation(`/terminals/edit/${terminal.id}`)}
                             className="h-8"
+                            data-testid={`button-edit-terminal-${terminal.id}`}
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                           </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => handleDeleteTerminal(terminal.id)}
-                            className="h-8 text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </Button>
+                          {terminal.status !== "Active" && (
+                            <Button
+                              variant="outline"
+                              onClick={() => handleDeleteTerminal(terminal.id)}
+                              className="h-8 text-red-600 hover:text-red-700"
+                              data-testid={`button-delete-terminal-${terminal.id}`}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
