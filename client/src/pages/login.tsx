@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,38 +26,6 @@ export default function LoginPage() {
   const [currentFeature, setCurrentFeature] = useState(0);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
-
-  // Comprehensive CSS reset to ensure no gaps
-  React.useEffect(() => {
-    // Store original styles
-    const originalBodyStyle = document.body.style.cssText;
-    const originalHtmlStyle = document.documentElement.style.cssText;
-    
-    // Apply comprehensive reset
-    document.documentElement.style.cssText = `
-      margin: 0 !important; 
-      padding: 0 !important; 
-      width: 100% !important; 
-      height: 100% !important;
-      box-sizing: border-box !important;
-      overflow-x: hidden !important;
-    `;
-    
-    document.body.style.cssText = `
-      margin: 0 !important; 
-      padding: 0 !important; 
-      width: 100% !important; 
-      height: 100% !important;
-      box-sizing: border-box !important;
-      overflow-x: hidden !important;
-      position: relative !important;
-    `;
-    
-    return () => {
-      document.body.style.cssText = originalBodyStyle;
-      document.documentElement.style.cssText = originalHtmlStyle;
-    };
-  }, []);
 
   const features = [
     {
@@ -151,16 +119,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
-      className="fixed inset-0 flex"
-      style={{ 
-        width: '100vw', 
-        height: '100vh',
-        margin: 0,
-        padding: 0,
-        boxSizing: 'border-box'
-      }}
-    >
+    <div className="min-h-screen flex w-full">
       {/* Theme Toggle */}
       <Button
         variant="outline"
@@ -172,50 +131,63 @@ export default function LoginPage() {
       </Button>
 
       {/* Left Side - Hero Section */}
-      <div 
-        className="hidden lg:flex relative overflow-hidden"
-        style={{ 
-          width: '50vw', 
-          height: '100vh',
-          margin: 0,
-          padding: 0,
-          boxSizing: 'border-box',
-          flexShrink: 0
-        }}
-      >
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-shrink-0">
         {/* Background Image Overlay */}
         <div 
-          className="absolute inset-0 bg-cover bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${portBackgroundImage})`,
             backgroundSize: 'cover',
-            backgroundPosition: '0% 50%'
+            backgroundPosition: 'center center'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/30 via-blue-600/20 to-purple-500/10" />
         
-        
+        <div className="relative z-10 flex flex-col justify-start pt-16 px-12 text-white w-full">
+          {/* Logo and tagline */}
+          <div className="mb-8">
+            <HeroLogo />
+            <p className="text-sm text-blue-100 mt-2 font-medium">Steering Port Operations into the Future</p>
+          </div>
+
+          {/* Feature Carousel - positioned below logo */}
+          <div className="relative mb-6">
+            <div className="p-6 min-h-[200px]">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  {features[currentFeature].icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-lime-300 mb-3">
+                    {features[currentFeature].title}
+                  </h3>
+                  <p className="text-white text-sm leading-relaxed">
+                    {features[currentFeature].description}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Dots indicator */}
+              <div className="flex justify-center space-x-2 mt-4">
+                {features.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentFeature 
+                        ? 'bg-lime-300 w-6' 
+                        : 'bg-white/30 hover:bg-white/50'
+                    }`}
+                    onClick={() => setCurrentFeature(index)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div 
-        className="flex-1 lg:flex items-center justify-center bg-gray-50 dark:bg-gray-900"
-        style={{ 
-          width: '50vw', 
-          height: '100vh',
-          margin: 0,
-          padding: 0,
-          boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingLeft: '1.5rem',
-          paddingRight: '1.5rem',
-          paddingTop: '3rem',
-          paddingBottom: '3rem',
-          flexShrink: 0
-        }}
-      >
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
         <div className="w-full max-w-md">
           
           {/* Mobile Logo */}
