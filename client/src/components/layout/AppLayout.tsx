@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings, User
+  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings, User, Mail, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -258,7 +258,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {/* Email Configuration */}
+            {/* Email Configuration - Standalone Link */}
             {user && (
               <Button 
                 variant="ghost" 
@@ -267,8 +267,30 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 onClick={() => setLocation('/configuration/email')}
                 title="Email Configuration"
               >
-                <Settings className="h-5 w-5" />
+                <Mail className="h-5 w-5" />
               </Button>
+            )}
+
+            {/* Configuration Dropdown - For future system config items */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b">
+                    System Configuration
+                  </div>
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-gray-500 dark:text-gray-400"
+                    disabled
+                  >
+                    No additional config items
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             
             {/* Notifications */}
