@@ -50,15 +50,6 @@ const terminalFormSchema = z.object({
   shippingFax: z.string().optional(),
   
   sameAsBilling: z.boolean().default(false),
-}).refine((data) => {
-  // If sameAsBilling is false, shipping fields are required
-  if (!data.sameAsBilling) {
-    return !!(data.shippingAddress && data.shippingCity && data.shippingPinCode && data.shippingPhone);
-  }
-  return true;
-}, {
-  message: "Shipping address details are required when not using billing address",
-  path: ["shippingAddress"]
 });
 
 type TerminalFormData = z.infer<typeof terminalFormSchema>;
@@ -176,30 +167,13 @@ export default function TerminalFormPage() {
 
   // Copy billing address to shipping when sameAsBilling is checked
   useEffect(() => {
-    try {
-      if (sameAsBilling) {
-        const billingData = form.getValues();
-        console.log("Copying billing data to shipping:", billingData);
-        
-        // Safely set values with validation
-        const updates = {
-          shippingAddress: billingData.billingAddress || "",
-          shippingCity: billingData.billingCity || "",
-          shippingPinCode: billingData.billingPinCode || "",
-          shippingPhone: billingData.billingPhone || "",
-          shippingFax: billingData.billingFax || "",
-        };
-        
-        Object.entries(updates).forEach(([key, value]) => {
-          try {
-            form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true });
-          } catch (fieldError) {
-            console.error(`Error setting field ${key}:`, fieldError);
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error copying billing to shipping:", error);
+    if (sameAsBilling) {
+      const billingData = form.getValues();
+      form.setValue("shippingAddress", billingData.billingAddress || "");
+      form.setValue("shippingCity", billingData.billingCity || "");
+      form.setValue("shippingPinCode", billingData.billingPinCode || "");
+      form.setValue("shippingPhone", billingData.billingPhone || "");
+      form.setValue("shippingFax", billingData.billingFax || "");
     }
   }, [sameAsBilling, form]);
 
@@ -718,14 +692,7 @@ export default function TerminalFormPage() {
                             <FormControl>
                               <Checkbox
                                 checked={field.value || false}
-                                onCheckedChange={(checked) => {
-                                  try {
-                                    console.log("Same as billing checkbox changed:", checked);
-                                    field.onChange(checked);
-                                  } catch (error) {
-                                    console.error("Error handling checkbox change:", error);
-                                  }
-                                }}
+                                onCheckedChange={field.onChange}
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
