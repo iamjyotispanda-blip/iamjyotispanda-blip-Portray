@@ -62,10 +62,15 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const shouldMenuBeExpanded = (menuId: string) => {
     // If user manually toggled, respect that choice
     if (manualToggle) {
-      return expandedMenu === menuId;
+      const result = expandedMenu === menuId;
+      console.log(`Should ${menuId} be expanded (manual)? ${result} (expandedMenu: ${expandedMenu})`);
+      return result;
     }
     // Auto-expand if this menu contains the active section
-    return getActiveParent() === menuId;
+    const activeParent = getActiveParent();
+    const result = activeParent === menuId;
+    console.log(`Should ${menuId} be expanded (auto)? ${result} (activeParent: ${activeParent}, activeSection: ${activeSection})`);
+    return result;
   };
 
   // Get current user
@@ -351,15 +356,30 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   };
 
   const navigationItems = getNavigationItems();
+  
+  // Debug navigation items
+  React.useEffect(() => {
+    if (navigationItems.length > 0) {
+      console.log('Navigation items loaded:', navigationItems.map(item => ({ 
+        id: item.id, 
+        label: item.label, 
+        hasChildren: !!item.children?.length,
+        route: item.route 
+      })));
+    }
+  }, [navigationItems]);
 
   const toggleMenu = (menuId: string) => {
+    console.log('Toggle menu clicked:', menuId, 'Current expanded:', expandedMenu);
     setManualToggle(true);
     setExpandedMenu(prev => {
       // If clicking on currently expanded menu, collapse it
       if (prev === menuId) {
+        console.log('Collapsing menu:', menuId);
         return null;
       }
       // Otherwise, expand this menu (accordion behavior)
+      console.log('Expanding menu:', menuId);
       return menuId;
     });
   };
@@ -473,11 +493,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
+                    console.log('Menu item clicked:', item.id, 'Has children:', !!item.children?.length);
                     if (item.children && item.children.length > 0) {
                       // Parent menu - toggle expand/collapse
+                      console.log('Calling toggleMenu for:', item.id);
                       toggleMenu(item.id);
                     } else {
                       // Leaf menu - navigate
+                      console.log('Navigating to:', item.id);
                       handleNavigation(item);
                     }
                   }}
