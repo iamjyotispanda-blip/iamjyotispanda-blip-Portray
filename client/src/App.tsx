@@ -27,7 +27,6 @@ import TerminalActivationPage from "@/pages/terminal-activation";
 import NotificationsPage from "@/pages/notifications";
 import RolesPage from "@/pages/roles";
 import UsersPage from "@/pages/users";
-import ProfilePage from "@/pages/profile";
 import PermissionAssignmentPage from "@/pages/permission-assignment";
 import { AuthService } from "@/lib/auth";
 
@@ -150,9 +149,6 @@ function Router() {
       </Route>
       <Route path="/permission-assignment">
         {() => <ProtectedRoute component={PermissionAssignmentPage} />}
-      </Route>
-      <Route path="/profile">
-        {() => <ProtectedRoute component={ProfilePage} />}
       </Route>
       <Route path="/">
         {() => <ProtectedRoute component={DashboardPage} />}

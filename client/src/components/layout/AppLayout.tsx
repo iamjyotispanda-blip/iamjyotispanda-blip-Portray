@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings, User
+  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -141,100 +141,73 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         onMouseLeave={() => setSidebarHovered(false)}
       >
         {/* Sidebar Header */}
-        <div className={`flex items-center h-16 ${sidebarCollapsed && !sidebarHovered ? 'px-2 justify-center' : 'px-4 justify-between'} border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative`}>
-          {sidebarCollapsed && !sidebarHovered ? (
-            <div className="flex justify-center w-full">
-              <PortrayLogo size="xs" />
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center">
-                <PortrayLogo size="sm" />
-              </div>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative">
+          <div className="flex items-center justify-between w-full">
+            <PortrayLogo size={sidebarCollapsed && !sidebarHovered ? "xs" : "sm"} />
+            
+            <div className="flex items-center space-x-2">
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <MenuIcon className="h-5 w-5" />
+              </Button>
               
-              <div className="flex items-center space-x-2">
-                {/* Mobile Menu Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="lg:hidden"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <MenuIcon className="h-5 w-5" />
-                </Button>
-                
-                {/* Unified Desktop Toggle Button - Vuexy Style */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden lg:flex h-9 w-9 p-0 items-center justify-center rounded-lg transition-all duration-300 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const newState = !sidebarCollapsed;
-                    console.log('Toggle button clicked, changing collapsed state from', sidebarCollapsed, 'to', newState);
-                    setSidebarCollapsed(newState);
-                  }}
-                  title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                >
-                  {sidebarCollapsed ? (
-                    <MenuIcon className="h-5 w-5 transition-transform duration-300" />
-                  ) : (
-                    <PanelLeftClose className="h-5 w-5 transition-transform duration-300" />
-                  )}
-                </Button>
-              </div>
-            </>
-          )}
+              {/* Unified Desktop Toggle Button - Vuexy Style */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex h-9 w-9 p-0 items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300 shadow-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:shadow-md hover:scale-105"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const newState = !sidebarCollapsed;
+                  console.log('Toggle button clicked, changing collapsed state from', sidebarCollapsed, 'to', newState);
+                  setSidebarCollapsed(newState);
+                }}
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              >
+                {sidebarCollapsed ? (
+                  <MenuIcon className="h-4 w-4 transition-transform duration-300" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4 transition-transform duration-300" />
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Navigation */}
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <TreeNavigation 
-              activeSection={activeSection}
-              onNavigate={handleNavigation}
-              collapsed={sidebarCollapsed && !sidebarHovered}
-            />
+            {(!sidebarCollapsed || sidebarHovered) && (
+              <TreeNavigation 
+                activeSection={activeSection}
+                onNavigate={handleNavigation}
+              />
+            )}
           </ScrollArea>
         </div>
 
         {/* Sidebar Footer */}
-        {user && (
-          <div className={`${sidebarCollapsed && !sidebarHovered ? 'p-2' : 'p-4'} border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750`}>
-            {sidebarCollapsed && !sidebarHovered ? (
-              <div className="flex justify-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                  {user.firstName && user.lastName ? 
-                    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
-                    user.firstName ? 
-                    `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
-                    user.email ? 
-                    `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'US'
-                  }
-                </div>
+        {(!sidebarCollapsed || sidebarHovered) && user && (
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+            <div className="flex items-center space-x-3 text-sm">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
               </div>
-            ) : (
-              <div className="flex items-center space-x-3 text-sm">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                  {user.firstName && user.lastName ? 
-                    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
-                    user.firstName ? 
-                    `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
-                    user.email ? 
-                    `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'US'
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 dark:text-white truncate">
-                    {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {user.email}
-                  </p>
-                </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 dark:text-white truncate">
+                  {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {user.email}
+                </p>
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>
@@ -376,13 +349,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                      {user.firstName && user.lastName ? 
-                        `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
-                        user.firstName ? 
-                        `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
-                        user.email ? 
-                        `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'US'
-                      }
+                      {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
                     <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -395,25 +362,19 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem 
-                    onClick={() => setLocation('/profile')}
-                    className="cursor-pointer"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
+                  <div className="p-2">
+                    <p className="text-sm font-medium">{user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <p className="text-xs text-gray-500">{user.role || 'User'}</p>
+                  </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 text-white focus:bg-red-700 focus:text-white cursor-pointer"
-                  >
+                  <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-
           </div>
         </header>
 

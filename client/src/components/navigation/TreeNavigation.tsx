@@ -21,10 +21,9 @@ interface TreeNodeData {
 interface TreeNavigationProps {
   activeSection?: string;
   onNavigate: (route: string) => void;
-  collapsed?: boolean;
 }
 
-export function TreeNavigation({ activeSection, onNavigate, collapsed = false }: TreeNavigationProps) {
+export function TreeNavigation({ activeSection, onNavigate }: TreeNavigationProps) {
   const [, setLocation] = useLocation();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [treeData, setTreeData] = useState<TreeNodeData[]>([]);
@@ -225,34 +224,6 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     const isDirectlyActive = node.id === activeSection;
     const IconComponent = getIconComponent(node.icon);
 
-    // In collapsed mode, only show parent nodes as icons
-    if (collapsed) {
-      return (
-        <div key={node.id} className="relative mb-2">
-          <div
-            className={`group flex items-center justify-center w-10 h-10 rounded-xl mx-auto cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-110 ${
-              isDirectlyActive
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
-                : isActive
-                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-            onClick={() => {
-              if (hasChildren && node.children.length > 0) {
-                // Navigate to first child if has children
-                handleNavigation(node.children[0]);
-              } else {
-                handleNavigation(node);
-              }
-            }}
-            title={node.label}
-          >
-            <IconComponent className="w-5 h-5" />
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div key={node.id} className="relative">
         {/* Node Button */}
@@ -365,7 +336,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
   }
 
   return (
-    <div className={`py-4 ${collapsed ? 'space-y-1' : 'space-y-2'}`}>
+    <div className="py-4 space-y-2">
       {treeData.map(node => renderTreeNode(node))}
       
       {treeData.length === 0 && user && (
