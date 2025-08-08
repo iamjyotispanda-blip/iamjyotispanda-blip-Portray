@@ -317,9 +317,9 @@ export default function TerminalFormPage() {
 
   return (
     <AppLayout title={`${isEditing ? "Edit" : "New"} Terminal`} activeSection="terminals">
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
@@ -339,10 +339,11 @@ export default function TerminalFormPage() {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-6xl mx-auto space-y-6 pb-8">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex-1 overflow-y-auto">
+          <main className="p-6">
+            <div className="max-w-6xl mx-auto space-y-6 pb-8">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Auto-filled Port Information */}
                 <Card>
                   <CardHeader>
@@ -582,7 +583,7 @@ export default function TerminalFormPage() {
                 </Card>
 
                 {/* Address Information - Side by Side */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-fit">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Billing Address */}
                   <Card>
                     <CardHeader>
@@ -792,10 +793,11 @@ export default function TerminalFormPage() {
                     {terminalMutation.isPending ? "Saving..." : isEditing ? "Update Terminal" : "Create Terminal"}
                   </Button>
                 </div>
-              </form>
-            </Form>
-          </div>
-        </main>
+                </form>
+              </Form>
+            </div>
+          </main>
+        </div>
       </div>
     </AppLayout>
   );
