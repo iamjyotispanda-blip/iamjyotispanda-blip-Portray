@@ -45,7 +45,7 @@ export default function LoginPage() {
     },
     {
       title: "Auto-Invoice & Financial Analysis",
-      description: "Generate invoices instantly from vessel berthing, cargo handling, storage, and logistics events",
+      description: " Generate invoices instantly from vessel berthing, cargo handling, storage, and logistics events",
       icon: <FileText className="h-16 w-16 text-white" />,
     },
   ];
