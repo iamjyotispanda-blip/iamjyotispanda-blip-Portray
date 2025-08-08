@@ -141,58 +141,43 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         onMouseLeave={() => setSidebarHovered(false)}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750">
-          {sidebarCollapsed && !sidebarHovered ? (
-            <div className="hidden lg:flex items-center justify-center w-full relative">
-              <PortrayLogo size="xs" />
-              {/* Always show toggle button even when collapsed */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative">
+          <div className="flex items-center justify-between w-full">
+            <PortrayLogo size={sidebarCollapsed && !sidebarHovered ? "xs" : "sm"} />
+            
+            <div className="flex items-center space-x-2">
+              {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute -right-2 top-1/2 transform -translate-y-1/2 z-10 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all duration-200 shadow-lg border-2 border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                className="lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <MenuIcon className="h-5 w-5" />
+              </Button>
+              
+              {/* Unified Desktop Toggle Button - Vuexy Style */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex h-9 w-9 p-0 items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300 shadow-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:shadow-md hover:scale-105"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Expand button clicked, current collapsed state:', sidebarCollapsed);
-                  setSidebarCollapsed(false);
+                  const newState = !sidebarCollapsed;
+                  console.log('Toggle button clicked, changing collapsed state from', sidebarCollapsed, 'to', newState);
+                  setSidebarCollapsed(newState);
                 }}
-                title="Expand Sidebar"
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               >
-                <PanelLeftClose className="h-4 w-4 rotate-180" />
+                {sidebarCollapsed ? (
+                  <MenuIcon className="h-4 w-4 transition-transform duration-300" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4 transition-transform duration-300" />
+                )}
               </Button>
             </div>
-          ) : (
-            <div className="flex items-center justify-between w-full">
-              <PortrayLogo size="sm" />
-              <div className="flex items-center space-x-2">
-                {/* Mobile Menu Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="lg:hidden"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <MenuIcon className="h-5 w-5" />
-                </Button>
-                
-                {/* Desktop Collapse Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden lg:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Collapse button clicked, current collapsed state:', sidebarCollapsed);
-                    setSidebarCollapsed(true);
-                  }}
-                  title="Collapse Sidebar"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Navigation */}
