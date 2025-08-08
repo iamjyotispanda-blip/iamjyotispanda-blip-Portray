@@ -141,9 +141,15 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         onMouseLeave={() => setSidebarHovered(false)}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative">
+        <div className={`flex items-center justify-between h-16 ${sidebarCollapsed && !sidebarHovered ? 'px-2' : 'px-4'} border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative`}>
           <div className="flex items-center justify-between w-full">
-            <PortrayLogo size={sidebarCollapsed && !sidebarHovered ? "xs" : "sm"} />
+            {sidebarCollapsed && !sidebarHovered ? (
+              <div className="w-10 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm mx-auto">
+                P
+              </div>
+            ) : (
+              <PortrayLogo size="sm" />
+            )}
             
             <div className="flex items-center space-x-2">
               {/* Mobile Menu Button */}
@@ -183,31 +189,38 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         {/* Navigation */}
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            {(!sidebarCollapsed || sidebarHovered) && (
-              <TreeNavigation 
-                activeSection={activeSection}
-                onNavigate={handleNavigation}
-              />
-            )}
+            <TreeNavigation 
+              activeSection={activeSection}
+              onNavigate={handleNavigation}
+              collapsed={sidebarCollapsed && !sidebarHovered}
+            />
           </ScrollArea>
         </div>
 
         {/* Sidebar Footer */}
-        {(!sidebarCollapsed || sidebarHovered) && user && (
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
-            <div className="flex items-center space-x-3 text-sm">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+        {user && (
+          <div className={`${sidebarCollapsed && !sidebarHovered ? 'p-2' : 'p-4'} border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750`}>
+            {sidebarCollapsed && !sidebarHovered ? (
+              <div className="flex justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                  {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 dark:text-white truncate">
-                  {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {user.email}
-                </p>
+            ) : (
+              <div className="flex items-center space-x-3 text-sm">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                  {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 dark:text-white truncate">
+                    {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
