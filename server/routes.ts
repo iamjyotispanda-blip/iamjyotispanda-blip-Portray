@@ -1723,27 +1723,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (terminal.status === "Processing for activation") {
         console.log("Creating notification for new terminal activation request");
         try {
-          // Find the system admin user
+          // Find all system admin users
           const systemAdminUsers = await storage.getUsersByRole("SystemAdmin");
           if (systemAdminUsers.length > 0) {
-            const systemAdmin = systemAdminUsers[0];
-            await storage.createNotification({
-              userId: systemAdmin.id,
-              type: "terminal_activation_request",
-              title: "Terminal Activation Request",
-              message: `New terminal "${terminal.terminalName}" (${terminal.shortCode}) has been submitted for activation review.`,
-              data: JSON.stringify({
-                terminalId: terminal.id,
-                terminalName: terminal.terminalName,
-                shortCode: terminal.shortCode,
-                portId: terminal.portId,
-                createdBy: req.user.id,
-                action: "created"
+            // Create notifications for all SystemAdmin users
+            const notificationPromises = systemAdminUsers.map(systemAdmin => 
+              storage.createNotification({
+                userId: systemAdmin.id,
+                type: "terminal_activation_request",
+                title: "Terminal Activation Request",
+                message: `New terminal "${terminal.terminalName}" (${terminal.shortCode}) has been submitted for activation review.`,
+                data: JSON.stringify({
+                  terminalId: terminal.id,
+                  terminalName: terminal.terminalName,
+                  shortCode: terminal.shortCode,
+                  portId: terminal.portId,
+                  createdBy: req.user.id,
+                  action: "created"
+                })
               })
-            });
-            console.log("Notification created successfully for new terminal");
+            );
+            
+            await Promise.all(notificationPromises);
+            console.log(`Notifications created successfully for ${systemAdminUsers.length} SystemAdmin users`);
           } else {
-            console.log("No SystemAdmin user found for notification");
+            console.log("No SystemAdmin users found for notification");
           }
         } catch (notificationError) {
           console.error("Failed to create notification:", notificationError);
