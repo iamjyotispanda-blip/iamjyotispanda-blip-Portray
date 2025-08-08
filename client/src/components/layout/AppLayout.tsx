@@ -205,13 +205,25 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             {sidebarCollapsed && !sidebarHovered ? (
               <div className="flex justify-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                  {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  {user.firstName && user.lastName ? 
+                    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
+                    user.firstName ? 
+                    `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
+                    user.email ? 
+                    `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'US'
+                  }
                 </div>
               </div>
             ) : (
               <div className="flex items-center space-x-3 text-sm">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                  {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  {user.firstName && user.lastName ? 
+                    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
+                    user.firstName ? 
+                    `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
+                    user.email ? 
+                    `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'US'
+                  }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 dark:text-white truncate">
@@ -364,7 +376,13 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                      {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      {user.firstName && user.lastName ? 
+                        `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
+                        user.firstName ? 
+                        `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
+                        user.email ? 
+                        `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'US'
+                      }
                     </div>
                     <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
