@@ -42,14 +42,23 @@ const terminalFormSchema = z.object({
   billingPhone: z.string().min(1, "Billing phone is required"),
   billingFax: z.string().optional(),
   
-  // Shipping Address
-  shippingAddress: z.string().min(1, "Shipping address is required"),
-  shippingCity: z.string().min(1, "Shipping city is required"),
-  shippingPinCode: z.string().min(1, "Shipping pin code is required"),
-  shippingPhone: z.string().min(1, "Shipping phone is required"),
+  // Shipping Address - conditionally required based on sameAsBilling
+  shippingAddress: z.string().optional(),
+  shippingCity: z.string().optional(),
+  shippingPinCode: z.string().optional(),
+  shippingPhone: z.string().optional(),
   shippingFax: z.string().optional(),
   
   sameAsBilling: z.boolean().default(false),
+}).refine((data) => {
+  // If sameAsBilling is false, shipping fields are required
+  if (!data.sameAsBilling) {
+    return !!(data.shippingAddress && data.shippingCity && data.shippingPinCode && data.shippingPhone);
+  }
+  return true;
+}, {
+  message: "Shipping address details are required when not using billing address",
+  path: ["shippingAddress"]
 });
 
 type TerminalFormData = z.infer<typeof terminalFormSchema>;
@@ -183,7 +192,7 @@ export default function TerminalFormPage() {
         
         Object.entries(updates).forEach(([key, value]) => {
           try {
-            form.setValue(key as any, value, { shouldValidate: false });
+            form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true });
           } catch (fieldError) {
             console.error(`Error setting field ${key}:`, fieldError);
           }
