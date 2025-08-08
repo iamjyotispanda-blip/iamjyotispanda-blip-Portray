@@ -45,7 +45,7 @@ export default function LoginPage() {
     },
     {
       title: "Auto-Invoice & Financial Analysis",
-      description: " Generate invoices instantly from vessel berthing, cargo handling, storage, and logistics events",
+      description: "Generate invoices instantly from vessel berthing, cargo handling, storage, and logistics events",
       icon: <FileText className="h-16 w-16 text-white" />,
     },
   ];
@@ -134,9 +134,11 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         {/* Background Image Overlay */}
         <div 
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${portBackgroundImage})`
+            backgroundImage: `url(${portBackgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/30 via-blue-600/20 to-purple-500/10" />
