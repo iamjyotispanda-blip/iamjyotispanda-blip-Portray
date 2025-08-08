@@ -682,7 +682,29 @@ export default function MenuManagementPage() {
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <div className="space-y-6 pb-8 max-w-none">
-      {/* FIRST FIELD: Menu Type - Must be at the top */}
+      {/* FIRST FIELD: System Configuration Flag */}
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="isSystemConfig"
+            checked={formData.isSystemConfig}
+            onCheckedChange={(checked) => setFormData({ 
+              ...formData, 
+              isSystemConfig: checked,
+              parentId: checked ? null : formData.parentId // Clear parent if system config
+            })}
+            data-testid="switch-system-config"
+          />
+          <Label htmlFor="isSystemConfig" className="text-sm font-medium">
+            System Configuration
+          </Label>
+        </div>
+        <p className="text-xs text-gray-500">
+          When enabled, this menu item will appear in the header configuration section (no parent menu required)
+        </p>
+      </div>
+
+      {/* Menu Type */}
       <div className="space-y-2">
         <Label htmlFor="menuType">Menu Type *</Label>
         <Select
@@ -707,8 +729,8 @@ export default function MenuManagementPage() {
         </p>
       </div>
 
-      {/* Parent Menu Selection - Only for PLink */}
-      {formData.menuType === 'plink' && (
+      {/* Parent Menu Selection - Only for PLink and not System Config */}
+      {formData.menuType === 'plink' && !formData.isSystemConfig && (
         <div className="space-y-2">
           <Label htmlFor="parentId">Parent GLink Menu *</Label>
           <Select
@@ -745,26 +767,6 @@ export default function MenuManagementPage() {
             </SelectContent>
           </Select>
           <p className="text-xs text-gray-500">All GLink menus are bound as parent options for PLink</p>
-        </div>
-      )}
-
-      {/* System Configuration Flag - Only for PLink */}
-      {formData.menuType === 'plink' && (
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isSystemConfig"
-              checked={formData.isSystemConfig}
-              onCheckedChange={(checked) => setFormData({ ...formData, isSystemConfig: checked })}
-              data-testid="switch-system-config"
-            />
-            <Label htmlFor="isSystemConfig" className="text-sm font-medium">
-              System Configuration
-            </Label>
-          </div>
-          <p className="text-xs text-gray-500">
-            When enabled, this menu item will appear in the header configuration section alongside Email Configuration
-          </p>
         </div>
       )}
 
