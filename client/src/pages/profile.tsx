@@ -238,7 +238,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
-                        <span>Joined {format(new Date(user.createdAt), "MMM yyyy")}</span>
+                        <span>Joined {user.createdAt ? format(new Date(user.createdAt), "MMM yyyy") : 'N/A'}</span>
                       </div>
                       {user.lastLogin && (
                         <div className="flex items-center space-x-1">
@@ -373,7 +373,7 @@ export default function ProfilePage() {
                         </p>
                         <div className="flex items-center space-x-2 mt-2">
                           <Badge variant="outline" className="text-xs">
-                            Created: {format(new Date(user.createdAt), "MMM dd, yyyy")}
+                            Created: {user.createdAt ? format(new Date(user.createdAt), "MMM dd, yyyy") : 'N/A'}
                           </Badge>
                           {userRole?.isActive && (
                             <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
@@ -458,7 +458,7 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <Label>Account Created</Label>
                         <p className="text-sm text-gray-900 dark:text-white">
-                          {format(new Date(user.createdAt), "MMM dd, yyyy 'at' hh:mm a")}
+                          {user.createdAt ? format(new Date(user.createdAt), "MMM dd, yyyy 'at' hh:mm a") : 'N/A'}
                         </p>
                       </div>
                     </div>
