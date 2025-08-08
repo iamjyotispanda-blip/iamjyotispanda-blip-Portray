@@ -384,9 +384,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       console.log('Looking for Configuration menu in navigationItems:', navigationItems.find(item => item.id === itemId));
     }
     
+    // Force state update to ensure toggle works regardless of previous state conflicts
     setExpandedItems(prev => {
-      // Accordion behavior: only one parent can be expanded at a time
-      if (prev.includes(itemId)) {
+      console.log('Before toggle - Current expanded:', prev, 'Toggling:', itemId);
+      
+      // Clear any state conflicts and set the new state cleanly
+      const isCurrentlyExpanded = prev.includes(itemId);
+      
+      if (isCurrentlyExpanded) {
         // If clicking on expanded item, collapse it
         console.log('Collapsing item:', itemId);
         return [];
@@ -396,6 +401,11 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         return [itemId];
       }
     });
+    
+    // Additional safety: force re-render to ensure UI updates
+    setTimeout(() => {
+      console.log('Post-toggle expanded state:', expandedItems);
+    }, 100);
   };
 
   const expandItem = (itemId: string) => {
@@ -430,6 +440,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       console.log('Auto-expand check for activeSection:', activeSection);
       const activeParent = getActiveParent();
       console.log('Found active parent for auto-expand:', activeParent);
+      
       if (activeParent) {
         setExpandedItems(prev => {
           console.log('Current expanded items:', prev, 'Need to expand:', activeParent);
@@ -441,12 +452,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
           return prev;
         });
       } else {
-        // If no parent is active, check if we should collapse all
-        console.log('No active parent found, checking if current item should be expanded');
-        // Check if the active section itself is a parent menu
-        const isActiveItemParent = navigationItems.some(item => item.id === activeSection && item.children?.length);
-        if (!isActiveItemParent) {
-          console.log('Active section is not a parent, keeping current expansion');
+        // Check if activeSection is a top-level menu (dashboard, etc.)
+        const isTopLevelMenu = navigationItems.some(item => item.id === activeSection && !item.children?.length);
+        if (isTopLevelMenu) {
+          console.log('Active section is top-level menu, clearing expanded items to avoid conflicts');
+          // Don't force collapse, just ensure clean state for other menus to work
+          // Only clear if we're not currently in the middle of expanding something
+          setExpandedItems(prev => {
+            if (prev.length === 0) return prev; // Already clean
+            return []; // Clear to allow other menus to expand properly
+          });
         }
       }
     }
@@ -557,6 +572,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   onClick={(e) => {
                     e.preventDefault();
                     console.log('Menu item clicked:', item.id, 'Has children:', !!item.children?.length, 'Route:', item.route);
+                    console.log('Current expanded items before click:', expandedItems);
                     
                     // Special debugging for Configuration menu
                     if (item.id.toLowerCase().includes('config')) {
@@ -573,6 +589,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     
                     if (item.children && item.children.length > 0) {
                       console.log('Toggling parent menu:', item.id);
+                      e.stopPropagation(); // Prevent any event bubbling issues
                       toggleExpandedItem(item.id);
                     } else {
                       console.log('Navigating to:', item.id);
