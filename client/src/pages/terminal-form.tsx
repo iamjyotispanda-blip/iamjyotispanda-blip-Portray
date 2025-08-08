@@ -317,7 +317,7 @@ export default function TerminalFormPage() {
 
   return (
     <AppLayout title={`${isEditing ? "Edit" : "New"} Terminal`} activeSection="terminals">
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* Header */}
         <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center space-x-4">
@@ -338,11 +338,9 @@ export default function TerminalFormPage() {
           </div>
         </div>
 
-
-
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="space-y-6">
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="max-w-6xl mx-auto space-y-6 pb-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Auto-filled Port Information */}
@@ -584,7 +582,7 @@ export default function TerminalFormPage() {
                 </Card>
 
                 {/* Address Information - Side by Side */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-fit">
                   {/* Billing Address */}
                   <Card>
                     <CardHeader>
