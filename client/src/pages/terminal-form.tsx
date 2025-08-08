@@ -285,7 +285,21 @@ export default function TerminalFormPage() {
     );
   }
 
-  if (!assignedPort) {
+  // Show loading state while data is being fetched
+  if (portLoading || (user?.role === "PortAdmin" && !assignedPort)) {
+    return (
+      <AppLayout title="Loading..." activeSection="terminals">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading terminal form...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (user?.role === "PortAdmin" && !assignedPort) {
     return (
       <AppLayout title="No Port Assigned" activeSection="terminals">
         <div className="flex-1 flex items-center justify-center p-4">
@@ -761,12 +775,13 @@ export default function TerminalFormPage() {
                 </div>
 
                 {/* Submit Buttons */}
-                <div className="flex items-center justify-end space-x-4">
+                <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setLocation("/terminals")}
                     className="h-8"
+                    data-testid="button-cancel"
                   >
                     Cancel
                   </Button>
@@ -774,6 +789,7 @@ export default function TerminalFormPage() {
                     type="submit"
                     disabled={terminalMutation.isPending}
                     className="h-8"
+                    data-testid="button-submit"
                   >
                     {terminalMutation.isPending ? "Saving..." : isEditing ? "Update Terminal" : "Create Terminal"}
                   </Button>
