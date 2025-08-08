@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle
+  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -231,6 +231,19 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
+            {/* Email Configuration */}
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="relative"
+                onClick={() => setLocation('/configuration/email')}
+                title="Email Configuration"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            )}
+            
             {/* Notifications */}
             {user && (
               <DropdownMenu>

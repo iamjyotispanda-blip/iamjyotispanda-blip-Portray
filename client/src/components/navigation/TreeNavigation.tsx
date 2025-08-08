@@ -102,17 +102,19 @@ export function TreeNavigation({ activeSection, onNavigate }: TreeNavigationProp
   const buildTreeFromMenus = (): TreeNodeData[] => {
     if (!allMenus.length) return [];
 
-    // Get parent menus (glink type)
+    // Get parent menus (glink type) - exclude Email Configuration as it's now in header
     const parentMenus = allMenus.filter((menu: Menu) => 
       menu.menuType === 'glink' && 
       menu.isActive && 
+      menu.name !== 'email-config' &&
       hasMenuPermission(menu.name)
     ).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
 
-    // Get child menus (plink type)
+    // Get child menus (plink type) - exclude Email Configuration as it's now in header
     const childMenus = allMenus.filter((menu: Menu) => 
       menu.menuType === 'plink' && 
-      menu.isActive
+      menu.isActive &&
+      menu.name !== 'email-config'
     );
 
     return parentMenus.map((parentMenu: Menu): TreeNodeData => {
