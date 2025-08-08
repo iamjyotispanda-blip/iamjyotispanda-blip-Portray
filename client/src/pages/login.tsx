@@ -135,13 +135,17 @@ export default function LoginPage() {
 
   return (
     <div 
-      className="h-screen w-screen flex"
       style={{ 
         margin: 0, 
         padding: 0, 
         width: '100vw', 
         height: '100vh',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        display: 'grid',
+        gridTemplateColumns: window.innerWidth >= 1024 ? '1fr 1fr' : '1fr',
+        gridTemplateRows: '1fr',
+        gap: 0,
+        boxSizing: 'border-box'
       }}
     >
       {/* Theme Toggle */}
@@ -157,7 +161,15 @@ export default function LoginPage() {
       {/* Left Side - Hero Section */}
       <div 
         className="hidden lg:block relative overflow-hidden"
-        style={{ width: '50vw', height: '100vh' }}
+        style={{ 
+          gridColumn: 1,
+          gridRow: 1,
+          width: '100%', 
+          height: '100%',
+          margin: 0,
+          padding: 0,
+          boxSizing: 'border-box'
+        }}
       >
         {/* Background Image Overlay */}
         <div 
@@ -216,7 +228,22 @@ export default function LoginPage() {
       {/* Right Side - Login Form */}
       <div 
         className="w-full lg:flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900"
-        style={{ width: '50vw', height: '100vh' }}
+        style={{ 
+          gridColumn: window.innerWidth >= 1024 ? 2 : 1,
+          gridRow: 1,
+          width: '100%', 
+          height: '100%',
+          margin: 0,
+          padding: 0,
+          boxSizing: 'border-box',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingLeft: '1.5rem',
+          paddingRight: '1.5rem',
+          paddingTop: '3rem',
+          paddingBottom: '3rem'
+        }}
       >
         <div className="w-full max-w-md">
           
