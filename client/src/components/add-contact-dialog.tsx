@@ -102,8 +102,8 @@ export function AddContactDialog({
 
       if (emailExists) {
         toast({
-          title: "Duplicate Email",
-          description: "This email address is already registered with another contact. Please use a different email.",
+          title: "Duplicate Entry",
+          description: "Email already exists. Please choose different value.",
           variant: "destructive",
         });
         return;
