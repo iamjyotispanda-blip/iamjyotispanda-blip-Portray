@@ -377,12 +377,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <div className="p-2">
-                    <p className="text-sm font-medium">{user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                    <p className="text-xs text-gray-500">{user.role || 'User'}</p>
-                  </div>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleLogout}
                     className="bg-red-600 hover:bg-red-700 text-white focus:bg-red-700 focus:text-white cursor-pointer"
