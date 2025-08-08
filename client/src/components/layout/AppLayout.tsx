@@ -147,6 +147,21 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       try {
         const response = await apiRequest("GET", "/api/menus");
         const data = await response.json();
+        console.log('All menus fetched:', data);
+        
+        // Debug Configuration-related menus
+        const configMenus = data.filter((menu: Menu) => 
+          menu.name.toLowerCase().includes('config') || 
+          menu.label.toLowerCase().includes('config')
+        );
+        console.log('Configuration-related menus:', configMenus);
+        
+        // Debug system config menus
+        const systemConfigMenus = data.filter((menu: Menu) => 
+          menu.menuType === 'plink' && (menu as any).isSystemConfig && menu.isActive
+        );
+        console.log('System config menus:', systemConfigMenus);
+        
         return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error("Failed to fetch all menus:", error);
@@ -364,8 +379,22 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         id: item.id, 
         label: item.label, 
         hasChildren: !!item.children?.length,
+        childrenCount: item.children?.length || 0,
         route: item.route 
       })));
+      
+      // Specifically debug Configuration menu
+      const configMenu = navigationItems.find(item => item.id.toLowerCase().includes('config'));
+      if (configMenu) {
+        console.log('Configuration menu found:', {
+          id: configMenu.id,
+          label: configMenu.label,
+          hasChildren: !!configMenu.children?.length,
+          children: configMenu.children?.map(child => ({ id: child.id, label: child.label, route: child.route })) || []
+        });
+      } else {
+        console.log('No Configuration menu found in navigation items');
+      }
     }
   }, [navigationItems]);
 
