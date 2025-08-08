@@ -337,20 +337,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   };
 
   const navigationItems = getNavigationItems();
-  
-  // Debug current state
-  React.useEffect(() => {
-    console.log('📊 Current expandedItems:', expandedItems);
-    console.log('📊 Navigation items:', navigationItems.map(item => ({ id: item.id, hasChildren: !!(item.children && item.children.length > 0) })));
-  }, [expandedItems, navigationItems]);
 
   const toggleExpandedItem = (itemId: string) => {
-    console.log('🔄 Toggle clicked:', itemId, 'Current expanded:', expandedItems);
     try {
       setExpandedItems(prev => {
-        const newState = prev.includes(itemId) ? [] : [itemId];
-        console.log('🔄 New state will be:', newState);
-        return newState;
+        // Accordion behavior: only one parent can be expanded at a time
+        if (prev.includes(itemId)) {
+          // If clicking on expanded item, collapse it
+          return [];
+        } else {
+          // If clicking on collapsed item, expand it and collapse others
+          return [itemId];
+        }
       });
     } catch (error) {
       console.error('Error toggling expanded item:', error);
@@ -388,18 +386,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     }
   }, [navigationItems, initialized]);
 
-  // Auto-expand parent menu when child is active (only on initialization)
+  // Auto-expand parent menu when child is active
   React.useEffect(() => {
-    if (initialized && activeSection) {
+    if (initialized && activeSection && navigationItems.length > 0) {
       const activeParent = getActiveParent();
-      console.log('🤖 Auto-expand check:', { activeSection, activeParent, expandedItems, initialized });
-      // Only auto-expand if no items are currently expanded (avoid interfering with manual toggles)
-      if (activeParent && expandedItems.length === 0 && !expandedItems.includes(activeParent)) {
-        console.log('🤖 Auto-expanding parent for active child:', activeParent);
-        expandItem(activeParent);
+      if (activeParent && !expandedItems.includes(activeParent)) {
+        // Auto-expand parent when navigating to a child page
+        setExpandedItems([activeParent]);
       }
     }
-  }, [activeSection, initialized, navigationItems]); // Removed expandedItems from dependencies to avoid conflict
+  }, [activeSection, initialized, navigationItems]);
 
   const handleNavigation = (item: NavigationItem) => {
     if (item.route) {
@@ -495,13 +491,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    console.log('🖱️ Button clicked:', item.id, 'Has children:', !!(item.children && item.children.length > 0));
                     try {
                       if (item.children && item.children.length > 0) {
-                        console.log('🖱️ Calling toggleExpandedItem for:', item.id);
                         toggleExpandedItem(item.id);
                       } else {
-                        console.log('🖱️ Calling handleNavigation for:', item.id);
                         handleNavigation(item);
                       }
                     } catch (error) {
@@ -509,7 +502,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     }
                   }}
                   className={`group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-300 ease-in-out transform hover:bg-opacity-80 ${
-                    activeSection === item.id || (isParentActive(item) && expandedItems.includes(item.id))
+                    activeSection === item.id || isParentActive(item)
                       ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium'
                       : expandedItems.includes(item.id) && item.children && item.children.length > 0
                       ? 'bg-gray-50 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200'
