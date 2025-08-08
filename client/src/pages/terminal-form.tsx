@@ -7,7 +7,7 @@ import { z } from "zod";
 import { ArrowLeft, Ship, Building2, MapPin, Globe, Clock, CreditCard, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -688,16 +688,16 @@ export default function TerminalFormPage() {
                         control={form.control}
                         name="sameAsBilling"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormItem className="flex flex-row items-center justify-between">
+                            <div className="space-y-0.5">
+                              <FormLabel>Same as billing address</FormLabel>
+                            </div>
                             <FormControl>
-                              <Checkbox
+                              <Switch
                                 checked={field.value || false}
                                 onCheckedChange={field.onChange}
                               />
                             </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Same as billing address</FormLabel>
-                            </div>
                           </FormItem>
                         )}
                       />
