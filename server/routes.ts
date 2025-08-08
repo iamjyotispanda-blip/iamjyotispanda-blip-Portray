@@ -962,55 +962,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      console.log("User details for menu filtering:", {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        roleId: user.roleId,
-        isSystemAdmin: user.is_system_admin,
-        totalMenus: menus.length
-      });
-
       // If user is system admin, return all menus
       if (user.is_system_admin || user.role === "SystemAdmin") {
-        console.log("System admin detected, returning all menus");
         return res.json(menus);
       }
 
       // Get user's role permissions
       const userRole = await storage.getRoleById(user.roleId);
-      console.log("User role permissions:", userRole?.permissions);
       
       if (!userRole || !userRole.permissions) {
-        console.log("No role or permissions found, returning empty menus");
         return res.json([]); // No permissions, no menus
       }
 
       // Filter menus based on permissions from role
       const filteredMenus = menus.filter(menu => {
-        console.log(`Checking menu: ${menu.name} (type: ${menu.menuType})`);
-        
         if (!userRole.permissions || !Array.isArray(userRole.permissions)) {
-          console.log("No permissions array found");
           return false;
         }
         
         // Check permissions based on menu hierarchy
-        const hasPermission = userRole.permissions.some((permission: string) => {
-          console.log(`Checking permission: ${permission} against menu: ${menu.name}`);
-          
+        return userRole.permissions.some((permission: string) => {
           // Direct menu name match
           if (permission === menu.name) {
-            console.log(`Direct match found for: ${menu.name}`);
             return true;
           }
           
           // For glink menus, check if they have permission for the section
           if (menu.menuType === "glink") {
-            // Check if permission allows access to this glink section
             const parts = permission.split(':');
             if (parts[0] === menu.name) {
-              console.log(`Glink permission found for: ${menu.name}`);
               return true;
             }
           }
@@ -1023,7 +1003,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (parts.length >= 2) {
                 const [parentName, childName] = parts;
                 if (parentMenu.name === parentName && menu.name === childName) {
-                  console.log(`Plink permission found for: ${parentMenu.name}:${menu.name}`);
                   return true;
                 }
               }
@@ -1032,9 +1011,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           return false;
         });
-        
-        console.log(`Menu ${menu.name} permission result: ${hasPermission}`);
-        return hasPermission;
       });
 
       res.json(filteredMenus);
@@ -1711,6 +1687,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         portId,
         createdBy: req.user.id
       });
+
+      // Check for duplicate terminal name
+      const existingTerminalByName = await storage.getTerminalByName(terminalData.terminalName);
+      if (existingTerminalByName) {
+        return res.status(400).json({ message: "Duplicate Entry" });
+      }
+
+      // Check for duplicate short code
+      const existingTerminalByCode = await storage.getTerminalByShortCode(terminalData.shortCode);
+      if (existingTerminalByCode) {
+        return res.status(400).json({ message: "Duplicate Entry" });
+      }
       
       const terminal = await storage.createTerminal(terminalData);
       

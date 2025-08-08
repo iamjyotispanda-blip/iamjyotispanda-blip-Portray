@@ -65,6 +65,8 @@ export interface IStorage {
   // Terminal operations
   getTerminalsByPortId(portId: number): Promise<Terminal[]>;
   getTerminalById(id: number): Promise<Terminal | undefined>;
+  getTerminalByName(terminalName: string): Promise<Terminal | undefined>;
+  getTerminalByShortCode(shortCode: string): Promise<Terminal | undefined>;
   createTerminal(terminal: InsertTerminal): Promise<Terminal>;
   updateTerminal(id: number, updates: UpdateTerminal): Promise<Terminal | undefined>;
   deleteTerminal(id: number): Promise<void>;
@@ -440,6 +442,16 @@ export class DatabaseStorage implements IStorage {
 
   async getTerminalById(id: number): Promise<Terminal | undefined> {
     const [terminal] = await db.select().from(terminals).where(eq(terminals.id, id));
+    return terminal || undefined;
+  }
+
+  async getTerminalByName(terminalName: string): Promise<Terminal | undefined> {
+    const [terminal] = await db.select().from(terminals).where(eq(terminals.terminalName, terminalName));
+    return terminal || undefined;
+  }
+
+  async getTerminalByShortCode(shortCode: string): Promise<Terminal | undefined> {
+    const [terminal] = await db.select().from(terminals).where(eq(terminals.shortCode, shortCode));
     return terminal || undefined;
   }
 

@@ -99,7 +99,7 @@ export const emailConfigurations = pgTable("email_configurations", {
 export const terminals = pgTable("terminals", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   portId: integer("port_id").notNull().references(() => ports.id),
-  terminalName: text("terminal_name").notNull(),
+  terminalName: text("terminal_name").notNull().unique(),
   shortCode: varchar("short_code", { length: 6 }).notNull().unique(),
   gst: text("gst"),
   pan: text("pan"),
