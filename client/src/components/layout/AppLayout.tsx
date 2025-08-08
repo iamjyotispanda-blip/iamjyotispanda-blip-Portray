@@ -339,25 +339,30 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const navigationItems = getNavigationItems();
 
   const toggleExpandedItem = (itemId: string) => {
-    console.log('Toggling item:', itemId, 'Current expanded:', expandedItems);
-    setExpandedItems(prev => {
-      // Accordion behavior: only one parent can be expanded at a time
-      if (prev.includes(itemId)) {
-        // If clicking on expanded item, collapse it
-        console.log('Collapsing item:', itemId);
-        return [];
-      } else {
-        // If clicking on collapsed item, expand it and collapse others
-        console.log('Expanding item:', itemId, 'Collapsing others');
-        return [itemId];
-      }
-    });
+    try {
+      setExpandedItems(prev => {
+        // Accordion behavior: only one parent can be expanded at a time
+        if (prev.includes(itemId)) {
+          // If clicking on expanded item, collapse it
+          return [];
+        } else {
+          // If clicking on collapsed item, expand it and collapse others
+          return [itemId];
+        }
+      });
+    } catch (error) {
+      console.error('Error toggling expanded item:', error);
+    }
   };
 
   const expandItem = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId) ? prev : [...prev, itemId]
-    );
+    try {
+      setExpandedItems(prev => 
+        prev.includes(itemId) ? prev : [...prev, itemId]
+      );
+    } catch (error) {
+      console.error('Error expanding item:', error);
+    }
   };
 
   // Initialize parent menus based on active section for tree structure
@@ -492,11 +497,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    console.log('Clicked item:', item.id, 'Has children:', !!(item.children && item.children.length > 0));
-                    if (item.children && item.children.length > 0) {
-                      toggleExpandedItem(item.id);
-                    } else {
-                      handleNavigation(item);
+                    try {
+                      if (item.children && item.children.length > 0) {
+                        toggleExpandedItem(item.id);
+                      } else {
+                        handleNavigation(item);
+                      }
+                    } catch (error) {
+                      console.error('Navigation error:', error);
                     }
                   }}
                   className={`group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-300 ease-in-out transform hover:bg-opacity-80 ${
