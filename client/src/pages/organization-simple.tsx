@@ -439,28 +439,48 @@ export default function OrganizationPage() {
       return;
     }
 
-    // Check for unique constraints
+    // Check for unique constraints - check each field individually for better error reporting
     if (organizations) {
-      const existingOrg = organizations.find(org => 
-        (isEditMode && selectedOrganization ? org.id !== selectedOrganization.id : true) &&
-        (org.organizationName.toLowerCase() === formData.organizationName.toLowerCase() ||
-         org.displayName.toLowerCase() === formData.displayName.toLowerCase() ||
-         org.organizationCode.toLowerCase() === formData.organizationCode.toLowerCase())
+      const duplicateFields: string[] = [];
+      const filteredOrgs = organizations.filter(org => 
+        isEditMode && selectedOrganization ? org.id !== selectedOrganization.id : true
       );
 
-      if (existingOrg) {
-        let duplicateField = "";
-        if (existingOrg.organizationName.toLowerCase() === formData.organizationName.toLowerCase()) {
-          duplicateField = "Organization Name";
-        } else if (existingOrg.displayName.toLowerCase() === formData.displayName.toLowerCase()) {
-          duplicateField = "Display Name";
-        } else if (existingOrg.organizationCode.toLowerCase() === formData.organizationCode.toLowerCase()) {
-          duplicateField = "Organization Code";
-        }
+      // Check organization name uniqueness
+      const orgNameDuplicate = filteredOrgs.find(org => 
+        org.organizationName.toLowerCase() === formData.organizationName.toLowerCase()
+      );
+      if (orgNameDuplicate) {
+        duplicateFields.push("Organization Name");
+      }
 
+      // Check display name uniqueness  
+      const displayNameDuplicate = filteredOrgs.find(org => 
+        org.displayName.toLowerCase() === formData.displayName.toLowerCase()
+      );
+      if (displayNameDuplicate) {
+        duplicateFields.push("Display Name");
+      }
+
+      // Check organization code uniqueness
+      const orgCodeDuplicate = filteredOrgs.find(org => 
+        org.organizationCode.toLowerCase() === formData.organizationCode.toLowerCase()
+      );
+      if (orgCodeDuplicate) {
+        duplicateFields.push("Organization Code");
+      }
+
+      // Show error if any duplicates found
+      if (duplicateFields.length > 0) {
+        const fieldText = duplicateFields.length === 1 
+          ? duplicateFields[0] 
+          : duplicateFields.length === 2
+          ? `${duplicateFields[0]} and ${duplicateFields[1]}`
+          : `${duplicateFields.slice(0, -1).join(', ')}, and ${duplicateFields[duplicateFields.length - 1]}`;
+        
         toast({
           title: "Duplicate Entry",
-          description: `${duplicateField} already exists. Please choose a different ${duplicateField.toLowerCase()}.`,
+          description: `${fieldText} already ${duplicateFields.length === 1 ? 'exists' : 'exist'}. Please choose different ${duplicateFields.length === 1 ? 'value' : 'values'}.`,
           variant: "destructive",
         });
         return;
