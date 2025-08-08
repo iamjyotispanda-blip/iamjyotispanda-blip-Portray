@@ -667,6 +667,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all port admin contacts (for validation purposes)
+  app.get("/api/contacts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contacts = await storage.getAllPortAdminContacts();
+      res.json(contacts);
+    } catch (error) {
+      console.error("Get all contacts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get current user's contact details (for Port Admin users)
   app.get("/api/contacts/my-contact", authenticateToken, async (req: Request, res: Response) => {
     try {

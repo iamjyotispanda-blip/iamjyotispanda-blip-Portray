@@ -42,6 +42,7 @@ export interface IStorage {
   deletePort(id: number): Promise<void>;
 
   // Port Admin Contact operations
+  getAllPortAdminContacts(): Promise<PortAdminContact[]>;
   getPortAdminContactsByPortId(portId: number): Promise<PortAdminContact[]>;
   getPortAdminContactById(id: number): Promise<PortAdminContact | undefined>;
   getPortAdminContactByEmail(email: string): Promise<PortAdminContact | undefined>;
@@ -268,6 +269,10 @@ export class DatabaseStorage implements IStorage {
 
   async deletePort(id: number): Promise<void> {
     await db.delete(ports).where(eq(ports.id, id));
+  }
+
+  async getAllPortAdminContacts(): Promise<PortAdminContact[]> {
+    return db.select().from(portAdminContacts);
   }
 
   async getPortAdminContactsByPortId(portId: number): Promise<PortAdminContact[]> {
@@ -1205,6 +1210,10 @@ export class MemStorage implements IStorage {
   }
 
   // Port Admin Contact methods
+  async getAllPortAdminContacts(): Promise<PortAdminContact[]> {
+    return Array.from(this.portAdminContacts.values());
+  }
+
   async getPortAdminContactsByPortId(portId: number): Promise<PortAdminContact[]> {
     return Array.from(this.portAdminContacts.values()).filter(
       (contact) => contact.portId === portId
