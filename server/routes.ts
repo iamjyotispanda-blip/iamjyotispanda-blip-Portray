@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const session = await storage.getSessionByToken(token);
         if (session) {
           const user = await storage.getUser(session.userId);
-          if (user && user.email === "superadmin@Portray.com") {
+          if (user && user.isSystemAdmin) {
             req.user = { ...user, password: undefined };
             return next();
           }
@@ -64,24 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const credentials = loginSchema.parse(req.body);
       
-      // Check for system admin credentials
-      if (credentials.email === "superadmin@Portray.com" && credentials.password === "Csmpl@123") {
-        // Get the actual system admin user from database
-        const adminUser = await storage.validateUserCredentials(credentials.email, credentials.password);
-        if (adminUser) {
-          await storage.updateUserLastLogin(adminUser.id);
-          const adminSession = await storage.createSession(adminUser.id, credentials.rememberMe || false);
-          
-          const { password, ...userWithoutPassword } = adminUser;
-          return res.json({
-            user: userWithoutPassword,
-            token: adminSession.token,
-            expiresAt: adminSession.expiresAt,
-            redirectPath: "/dashboard"
-          });
-        }
-      }
-      
+      // Validate user credentials
       const user = await storage.validateUserCredentials(credentials.email, credentials.password);
       if (!user) {
         return res.status(401).json({ 
@@ -97,15 +80,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Return user info and token (exclude password)
       const { password, ...userWithoutPassword } = user;
-      const redirectPath = user.role === "PortAdmin" ? "/port-admin-dashboard" : 
-                          user.role === "SystemAdmin" ? "/portal/welcome" : "/dashboard";
       
-      res.json({
+      // Determine redirect path based on system admin flag and role
+      let redirectPath = "/dashboard";
+      if (user.isSystemAdmin) {
+        redirectPath = "/dashboard";
+      } else if (user.role === "PortAdmin") {
+        redirectPath = "/port-admin-dashboard";
+      }
+      
+      return res.json({
         user: userWithoutPassword,
         token: session.token,
         expiresAt: session.expiresAt,
         redirectPath
       });
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 

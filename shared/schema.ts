@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("PortAdmin"), // Will reference roles.name
   roleId: integer("role_id").references(() => roles.id),
   isActive: boolean("is_active").notNull().default(true),
+  isSystemAdmin: boolean("is_system_admin").notNull().default(false),
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
@@ -199,6 +200,7 @@ export const updateUserSchema = createInsertSchema(users).pick({
   role: true,
   roleId: true,
   isActive: true,
+  isSystemAdmin: true,
 }).partial();
 
 export type UpdateUser = z.infer<typeof updateUserSchema>;
