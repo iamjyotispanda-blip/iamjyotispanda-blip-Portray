@@ -185,11 +185,11 @@ export default function LoginPage() {
       >
         {/* Background Image Overlay */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-right bg-no-repeat"
           style={{
             backgroundImage: `url(${portBackgroundImage})`,
             backgroundSize: 'cover',
-            backgroundPosition: 'center center'
+            backgroundPosition: 'right center'
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-blue-700/30 via-blue-600/20 to-purple-500/10" />
