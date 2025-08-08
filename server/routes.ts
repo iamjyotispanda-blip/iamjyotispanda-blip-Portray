@@ -1727,7 +1727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const systemAdminUsers = await storage.getUsersByRole("SystemAdmin");
           if (systemAdminUsers.length > 0) {
             // Create notifications for all SystemAdmin users
-            const notificationPromises = systemAdminUsers.map(systemAdmin => 
+            const notificationPromises = systemAdminUsers.map((systemAdmin: any) => 
               storage.createNotification({
                 userId: systemAdmin.id,
                 type: "terminal_activation_request",
