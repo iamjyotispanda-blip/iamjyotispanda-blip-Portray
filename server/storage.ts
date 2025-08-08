@@ -478,8 +478,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTerminal(id: number): Promise<void> {
-    // First delete all activation logs for this terminal to avoid foreign key constraint violation
+    // First delete all related records to avoid foreign key constraint violations
+    
+    // Delete activation logs for this terminal
     await db.delete(activationLogs).where(eq(activationLogs.terminalId, id));
+    
+    // Delete notifications that reference this specific terminal
+    const terminalNotifications = await db.select().from(notifications)
+      .where(eq(notifications.type, "terminal_activation_request"));
+    
+    for (const notification of terminalNotifications) {
+      try {
+        const data = JSON.parse(notification.data || '{}');
+        if (data.terminalId === id) {
+          await db.delete(notifications).where(eq(notifications.id, notification.id));
+        }
+      } catch (e) {
+        // Skip if data is not valid JSON
+      }
+    }
     
     // Then delete the terminal
     await db.delete(terminals).where(eq(terminals.id, id));
