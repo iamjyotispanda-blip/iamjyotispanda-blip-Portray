@@ -170,11 +170,24 @@ export default function TerminalFormPage() {
     try {
       if (sameAsBilling) {
         const billingData = form.getValues();
-        form.setValue("shippingAddress", billingData.billingAddress || "");
-        form.setValue("shippingCity", billingData.billingCity || "");
-        form.setValue("shippingPinCode", billingData.billingPinCode || "");
-        form.setValue("shippingPhone", billingData.billingPhone || "");
-        form.setValue("shippingFax", billingData.billingFax || "");
+        console.log("Copying billing data to shipping:", billingData);
+        
+        // Safely set values with validation
+        const updates = {
+          shippingAddress: billingData.billingAddress || "",
+          shippingCity: billingData.billingCity || "",
+          shippingPinCode: billingData.billingPinCode || "",
+          shippingPhone: billingData.billingPhone || "",
+          shippingFax: billingData.billingFax || "",
+        };
+        
+        Object.entries(updates).forEach(([key, value]) => {
+          try {
+            form.setValue(key as any, value, { shouldValidate: false });
+          } catch (fieldError) {
+            console.error(`Error setting field ${key}:`, fieldError);
+          }
+        });
       }
     } catch (error) {
       console.error("Error copying billing to shipping:", error);
@@ -695,8 +708,15 @@ export default function TerminalFormPage() {
                           <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
                               <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
+                                checked={field.value || false}
+                                onCheckedChange={(checked) => {
+                                  try {
+                                    console.log("Same as billing checkbox changed:", checked);
+                                    field.onChange(checked);
+                                  } catch (error) {
+                                    console.error("Error handling checkbox change:", error);
+                                  }
+                                }}
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
