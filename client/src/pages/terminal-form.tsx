@@ -132,19 +132,23 @@ export default function TerminalFormPage() {
   // Update form with port and contact data when available
   useEffect(() => {
     try {
-      if (assignedPort) {
+      if (assignedPort && form.setValue) {
         // Auto-fill port information from port admin assignment
-        form.setValue("portName", (assignedPort as any)?.portName || "");
-        form.setValue("organization", (assignedPort as any)?.organizationName || "");
-        form.setValue("state", (assignedPort as any)?.state || "");
-        form.setValue("country", (assignedPort as any)?.country || "India");
+        const portData = assignedPort as any;
+        if (portData?.portName) form.setValue("portName", portData.portName);
+        if (portData?.organizationName) form.setValue("organization", portData.organizationName);
+        if (portData?.state) form.setValue("state", portData.state);
+        if (portData?.country) form.setValue("country", portData.country);
+        else form.setValue("country", "India");
       }
       
-      if (userContact && !isEditing) {
+      if (userContact && !isEditing && form.setValue) {
         // Auto-fill contact information from port admin contact details for new terminals
-        const contactName = (userContact as any)?.contactName || "";
-        form.setValue("billingPhone", (userContact as any)?.mobileNumber || "");
-        form.setValue("shippingPhone", (userContact as any)?.mobileNumber || "");
+        const contactData = userContact as any;
+        if (contactData?.mobileNumber) {
+          form.setValue("billingPhone", contactData.mobileNumber);
+          form.setValue("shippingPhone", contactData.mobileNumber);
+        }
       }
     } catch (error) {
       console.error("Error updating form with port/contact data:", error);
@@ -156,55 +160,66 @@ export default function TerminalFormPage() {
   const sameAsBilling = form.watch("sameAsBilling");
 
   useEffect(() => {
-    if (terminalName && !isEditing) {
-      const shortCode = terminalName
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .substring(0, 6);
-      form.setValue("shortCode", shortCode);
+    try {
+      if (terminalName && !isEditing && form.setValue) {
+        const shortCode = terminalName
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "")
+          .substring(0, 6);
+        form.setValue("shortCode", shortCode);
+      }
+    } catch (error) {
+      console.error("Error generating short code:", error);
     }
   }, [terminalName, form, isEditing]);
 
   // Copy billing address to shipping when sameAsBilling is checked
   useEffect(() => {
-    if (sameAsBilling) {
-      const billingData = form.getValues();
-      form.setValue("shippingAddress", billingData.billingAddress || "");
-      form.setValue("shippingCity", billingData.billingCity || "");
-      form.setValue("shippingPinCode", billingData.billingPinCode || "");
-      form.setValue("shippingPhone", billingData.billingPhone || "");
-      form.setValue("shippingFax", billingData.billingFax || "");
+    try {
+      if (sameAsBilling && form.getValues && form.setValue) {
+        const billingData = form.getValues();
+        form.setValue("shippingAddress", billingData.billingAddress || "");
+        form.setValue("shippingCity", billingData.billingCity || "");
+        form.setValue("shippingPinCode", billingData.billingPinCode || "");
+        form.setValue("shippingPhone", billingData.billingPhone || "");
+        form.setValue("shippingFax", billingData.billingFax || "");
+      }
+    } catch (error) {
+      console.error("Error copying billing to shipping:", error);
     }
   }, [sameAsBilling, form]);
 
   // Populate form when editing
   useEffect(() => {
     try {
-      if (terminal && isEditing && assignedPort) {
+      if (terminal && isEditing && assignedPort && form.reset) {
+        const portData = assignedPort as any;
+        const terminalData = terminal as any;
+        
         form.reset({
           // Port-related fields from assignedPort
-          portName: (assignedPort as any)?.portName || "",
-          organization: (assignedPort as any)?.organizationName || "",
-          state: (assignedPort as any)?.state || "",
-          country: (assignedPort as any)?.country || "India",
+          portName: portData?.portName || "",
+          organization: portData?.organizationName || "",
+          state: portData?.state || "",
+          country: portData?.country || "India",
           // Terminal-specific fields from terminal data
-          terminalName: (terminal as any)?.terminalName || "",
-          shortCode: (terminal as any)?.shortCode || "",
-          gst: (terminal as any)?.gst || "",
-          pan: (terminal as any)?.pan || "",
-          currency: (terminal as any)?.currency || "INR",
-          timezone: (terminal as any)?.timezone || "Asia/Kolkata",
-          billingAddress: (terminal as any)?.billingAddress || "",
-          billingCity: (terminal as any)?.billingCity || "",
-          billingPinCode: (terminal as any)?.billingPinCode || "",
-          billingPhone: (terminal as any)?.billingPhone || "",
-          billingFax: (terminal as any)?.billingFax || "",
-          shippingAddress: (terminal as any)?.shippingAddress || "",
-          shippingCity: (terminal as any)?.shippingCity || "",
-          shippingPinCode: (terminal as any)?.shippingPinCode || "",
-          shippingPhone: (terminal as any)?.shippingPhone || "",
-          shippingFax: (terminal as any)?.shippingFax || "",
-          sameAsBilling: (terminal as any)?.sameAsBilling || false,
+          terminalName: terminalData?.terminalName || "",
+          shortCode: terminalData?.shortCode || "",
+          gst: terminalData?.gst || "",
+          pan: terminalData?.pan || "",
+          currency: terminalData?.currency || "INR",
+          timezone: terminalData?.timezone || "Asia/Kolkata",
+          billingAddress: terminalData?.billingAddress || "",
+          billingCity: terminalData?.billingCity || "",
+          billingPinCode: terminalData?.billingPinCode || "",
+          billingPhone: terminalData?.billingPhone || "",
+          billingFax: terminalData?.billingFax || "",
+          shippingAddress: terminalData?.shippingAddress || "",
+          shippingCity: terminalData?.shippingCity || "",
+          shippingPinCode: terminalData?.shippingPinCode || "",
+          shippingPhone: terminalData?.shippingPhone || "",
+          shippingFax: terminalData?.shippingFax || "",
+          sameAsBilling: terminalData?.sameAsBilling || false,
         });
       }
     } catch (error) {
