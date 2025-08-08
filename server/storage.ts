@@ -866,11 +866,9 @@ export class MemStorage implements IStorage {
       firstName: "System",
       lastName: "Administrator",
       role: "SystemAdmin",
-      roleId: null,
       isActive: true,
       lastLogin: null,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
     this.users.set(adminUser.id, adminUser);
   }
@@ -939,7 +937,6 @@ export class MemStorage implements IStorage {
       parentId: null,
       sortOrder: 1,
       menuType: "glink",
-      isSystemConfig: false,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -955,7 +952,6 @@ export class MemStorage implements IStorage {
       parentId: null,
       sortOrder: 2,
       menuType: "glink",
-      isSystemConfig: false,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -971,7 +967,6 @@ export class MemStorage implements IStorage {
       parentId: null,
       sortOrder: 3,
       menuType: "glink",
-      isSystemConfig: false,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -987,7 +982,6 @@ export class MemStorage implements IStorage {
       parentId: null,
       sortOrder: 4,
       menuType: "glink",
-      isSystemConfig: false,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -1016,7 +1010,6 @@ export class MemStorage implements IStorage {
       isActive: true,
       lastLogin: null,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
     this.users.set(id, user);
     return user;
@@ -1618,7 +1611,6 @@ export class MemStorage implements IStorage {
       icon: menuData.icon ?? null,
       route: menuData.route ?? null,
       parentId: menuData.parentId ?? null,
-      isSystemConfig: menuData.isSystemConfig ?? false,
       sortOrder: menuData.sortOrder ?? 0,
       isActive: true,
       createdAt: new Date(),
