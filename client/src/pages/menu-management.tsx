@@ -570,10 +570,10 @@ export default function MenuManagementPage() {
       return;
     }
     
-    if (formData.menuType === 'plink' && !formData.parentId) {
+    if (formData.menuType === 'plink' && !formData.isSystemConfig && !formData.parentId) {
       toast({
         title: "Error",
-        description: "Parent GLink menu is required for PLink menus",
+        description: "Parent GLink menu is required for PLink menus (unless System Configuration is enabled)",
         variant: "destructive",
       });
       return;
