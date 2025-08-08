@@ -27,14 +27,31 @@ export default function LoginPage() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
-  // Add CSS reset to ensure no gaps
+  // Comprehensive CSS reset to ensure no gaps
   React.useEffect(() => {
-    // Temporarily set body and html to have no margins/padding
+    // Store original styles
     const originalBodyStyle = document.body.style.cssText;
     const originalHtmlStyle = document.documentElement.style.cssText;
     
-    document.body.style.cssText = 'margin: 0 !important; padding: 0 !important; overflow-x: hidden !important;';
-    document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important;';
+    // Apply comprehensive reset
+    document.documentElement.style.cssText = `
+      margin: 0 !important; 
+      padding: 0 !important; 
+      width: 100% !important; 
+      height: 100% !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+    `;
+    
+    document.body.style.cssText = `
+      margin: 0 !important; 
+      padding: 0 !important; 
+      width: 100% !important; 
+      height: 100% !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+      position: relative !important;
+    `;
     
     return () => {
       document.body.style.cssText = originalBodyStyle;
@@ -136,15 +153,16 @@ export default function LoginPage() {
   return (
     <div 
       style={{ 
-        margin: 0, 
-        padding: 0, 
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         width: '100vw', 
         height: '100vh',
+        margin: 0,
+        padding: 0,
         overflow: 'hidden',
-        display: 'grid',
-        gridTemplateColumns: window.innerWidth >= 1024 ? '1fr 1fr' : '1fr',
-        gridTemplateRows: '1fr',
-        gap: 0,
         boxSizing: 'border-box'
       }}
     >
@@ -160,11 +178,11 @@ export default function LoginPage() {
 
       {/* Left Side - Hero Section */}
       <div 
-        className="hidden lg:block relative overflow-hidden"
+        className="hidden lg:block absolute overflow-hidden"
         style={{ 
-          gridColumn: 1,
-          gridRow: 1,
-          width: '100%', 
+          top: 0,
+          left: 0,
+          width: '50%', 
           height: '100%',
           margin: 0,
           padding: 0,
@@ -227,11 +245,11 @@ export default function LoginPage() {
 
       {/* Right Side - Login Form */}
       <div 
-        className="w-full lg:flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900"
+        className="absolute bg-gray-50 dark:bg-gray-900"
         style={{ 
-          gridColumn: window.innerWidth >= 1024 ? 2 : 1,
-          gridRow: 1,
-          width: '100%', 
+          top: 0,
+          left: window.innerWidth >= 1024 ? '50%' : '0',
+          width: window.innerWidth >= 1024 ? '50%' : '100%', 
           height: '100%',
           margin: 0,
           padding: 0,
