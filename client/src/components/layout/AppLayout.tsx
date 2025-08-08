@@ -141,43 +141,51 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         onMouseLeave={() => setSidebarHovered(false)}
       >
         {/* Sidebar Header */}
-        <div className={`flex items-center justify-between h-16 ${sidebarCollapsed && !sidebarHovered ? 'px-2' : 'px-4'} border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative`}>
-          <div className="flex items-center justify-between w-full">
-            <PortrayLogo size={sidebarCollapsed && !sidebarHovered ? "xs" : "sm"} />
-            
-            <div className="flex items-center space-x-2">
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <MenuIcon className="h-5 w-5" />
-              </Button>
-              
-              {/* Unified Desktop Toggle Button - Vuexy Style */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hidden lg:flex h-9 w-9 p-0 items-center justify-center rounded-lg transition-all duration-300 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const newState = !sidebarCollapsed;
-                  console.log('Toggle button clicked, changing collapsed state from', sidebarCollapsed, 'to', newState);
-                  setSidebarCollapsed(newState);
-                }}
-                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-              >
-                {sidebarCollapsed ? (
-                  <MenuIcon className="h-5 w-5 transition-transform duration-300" />
-                ) : (
-                  <PanelLeftClose className="h-5 w-5 transition-transform duration-300" />
-                )}
-              </Button>
+        <div className={`flex items-center h-16 ${sidebarCollapsed && !sidebarHovered ? 'px-2 justify-center' : 'px-4 justify-between'} border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 relative`}>
+          {sidebarCollapsed && !sidebarHovered ? (
+            <div className="flex justify-center w-full">
+              <PortrayLogo size="xs" />
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center">
+                <PortrayLogo size="sm" />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {/* Mobile Menu Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <MenuIcon className="h-5 w-5" />
+                </Button>
+                
+                {/* Unified Desktop Toggle Button - Vuexy Style */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden lg:flex h-9 w-9 p-0 items-center justify-center rounded-lg transition-all duration-300 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const newState = !sidebarCollapsed;
+                    console.log('Toggle button clicked, changing collapsed state from', sidebarCollapsed, 'to', newState);
+                    setSidebarCollapsed(newState);
+                  }}
+                  title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                  {sidebarCollapsed ? (
+                    <MenuIcon className="h-5 w-5 transition-transform duration-300" />
+                  ) : (
+                    <PanelLeftClose className="h-5 w-5 transition-transform duration-300" />
+                  )}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Navigation */}
