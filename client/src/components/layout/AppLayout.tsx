@@ -308,8 +308,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         const dynamicItems: NavigationItem[] = parentMenus
           .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
           .map((menu: Menu): NavigationItem => {
+            // For Configuration menu, include system config items
+            const includeSystemConfig = menu.name.toLowerCase().includes('config');
+            
             const children = childMenus
-              .filter((plink: Menu) => plink.parentId === menu.id && !(plink as any).isSystemConfig)
+              .filter((plink: Menu) => {
+                const matchesParent = plink.parentId === menu.id;
+                const isSystemConfig = (plink as any).isSystemConfig;
+                
+                // Include system config items only for Configuration parent menu
+                return matchesParent && (includeSystemConfig || !isSystemConfig);
+              })
               .sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder)
               .map((plink: Menu): NavigationItem => ({
                 id: plink.name,
@@ -318,7 +327,21 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 route: plink.route
               }));
             
-            console.log(`Menu ${menu.label} has ${children.length} children:`, children.map(c => c.label));
+            console.log(`Menu ${menu.label} (${menu.name}) has ${children.length} children:`, children.map(c => `${c.label} (${c.id})`));
+            
+            // Special debug for Configuration menu
+            if (menu.name.toLowerCase().includes('config')) {
+              console.log('Configuration menu details:', {
+                id: menu.name,
+                label: menu.label,
+                childrenCount: children.length,
+                childMenus: childMenus.filter(plink => plink.parentId === menu.id).map(p => ({ 
+                  name: p.name, 
+                  label: p.label, 
+                  isSystemConfig: (p as any).isSystemConfig 
+                }))
+              });
+            }
             
             return {
               id: menu.name,
@@ -354,6 +377,13 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   const toggleExpandedItem = (itemId: string) => {
     console.log('Toggling expanded item:', itemId, 'Current expanded:', expandedItems);
+    
+    // Special handling for Configuration menu
+    if (itemId.toLowerCase().includes('config')) {
+      console.log('Configuration menu toggle detected! ID:', itemId);
+      console.log('Looking for Configuration menu in navigationItems:', navigationItems.find(item => item.id === itemId));
+    }
+    
     setExpandedItems(prev => {
       // Accordion behavior: only one parent can be expanded at a time
       if (prev.includes(itemId)) {
@@ -362,7 +392,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         return [];
       } else {
         // If clicking on collapsed item, expand it and collapse others
-        console.log('Expanding item:', itemId);
+        console.log('Expanding item:', itemId, 'New expanded state will be:', [itemId]);
         return [itemId];
       }
     });
@@ -535,7 +565,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                         label: item.label,
                         route: item.route,
                         hasChildren: !!item.children?.length,
-                        children: item.children?.map(c => ({ id: c.id, label: c.label, route: c.route }))
+                        children: item.children?.map(c => ({ id: c.id, label: c.label, route: c.route })),
+                        currentExpandedItems: expandedItems,
+                        isExpanded: expandedItems.includes(item.id)
                       });
                     }
                     
