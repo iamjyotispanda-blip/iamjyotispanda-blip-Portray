@@ -39,8 +39,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [initialized, setInitialized] = useState(false);
+  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const [manualToggle, setManualToggle] = useState(false);
 
   // Helper function to check if any child of an item is active
   const isParentActive = (item: NavigationItem) => {
@@ -50,15 +50,22 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   // Helper function to get the parent of the active section
   const getActiveParent = () => {
-    console.log('Getting active parent for section:', activeSection, 'from', navigationItems.length, 'navigation items');
     for (const item of navigationItems) {
       if (item.children?.some((child: NavigationItem) => child.id === activeSection)) {
-        console.log('Found parent:', item.id, 'for child:', activeSection);
         return item.id;
       }
     }
-    console.log('No parent found for active section:', activeSection);
     return null;
+  };
+
+  // Helper function to check if a menu should be expanded
+  const shouldMenuBeExpanded = (menuId: string) => {
+    // If user manually toggled, respect that choice
+    if (manualToggle) {
+      return expandedMenu === menuId;
+    }
+    // Auto-expand if this menu contains the active section
+    return getActiveParent() === menuId;
   };
 
   // Get current user
@@ -295,14 +302,11 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     } else {
       // System Admin sees all navigation (backward compatibility)
       const hasMenuData = Array.isArray(allMenus) && allMenus.length > 0;
-      console.log("Navigation check - hasMenuData:", hasMenuData, "allMenus length:", allMenus.length);
       
       if (hasMenuData) {
         // For SystemAdmin, show all menus (existing behavior)
         const parentMenus = allMenus.filter((menu: Menu) => menu.menuType === 'glink' && menu.isActive);
         const childMenus = allMenus.filter((menu: Menu) => menu.menuType === 'plink' && menu.isActive);
-        
-        console.log("Parent menus:", parentMenus.length, "Child menus:", childMenus.length);
         
         // Dynamic GLink menus with their PLink children (excluding system config items)
         const dynamicItems: NavigationItem[] = parentMenus
@@ -327,21 +331,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 route: plink.route
               }));
             
-            console.log(`Menu ${menu.label} (${menu.name}) has ${children.length} children:`, children.map(c => `${c.label} (${c.id})`));
-            
-            // Special debug for Configuration menu
-            if (menu.name.toLowerCase().includes('config')) {
-              console.log('Configuration menu details:', {
-                id: menu.name,
-                label: menu.label,
-                childrenCount: children.length,
-                childMenus: childMenus.filter(plink => plink.parentId === menu.id).map(p => ({ 
-                  name: p.name, 
-                  label: p.label, 
-                  isSystemConfig: (p as any).isSystemConfig 
-                }))
-              });
-            }
             
             return {
               id: menu.name,
@@ -352,22 +341,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
             };
           });
 
-        console.log("Final navigation items:", dynamicItems);
-        
-        // Debug specific menu items
-        dynamicItems.forEach(item => {
-          console.log(`Menu item: ${item.id} (${item.label}) - Route: ${item.route}, Children: ${item.children?.length || 0}`);
-          if (item.children) {
-            item.children.forEach(child => {
-              console.log(`  - Child: ${child.id} (${child.label}) - Route: ${child.route}`);
-            });
-          }
-        });
         
         return dynamicItems;
       } else {
         // Loading state or no menus available
-        console.log("No menu data available, showing loading state");
         return [];
       }
     }
@@ -375,107 +352,33 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   const navigationItems = getNavigationItems();
 
-  const toggleExpandedItem = (itemId: string) => {
-    console.log('Toggling expanded item:', itemId, 'Current expanded:', expandedItems);
-    
-    // Special handling for Configuration menu
-    if (itemId.toLowerCase().includes('config')) {
-      console.log('Configuration menu toggle detected! ID:', itemId);
-      console.log('Looking for Configuration menu in navigationItems:', navigationItems.find(item => item.id === itemId));
-    }
-    
-    // Force state update to ensure toggle works regardless of previous state conflicts
-    setExpandedItems(prev => {
-      console.log('Before toggle - Current expanded:', prev, 'Toggling:', itemId);
-      
-      // Clear any state conflicts and set the new state cleanly
-      const isCurrentlyExpanded = prev.includes(itemId);
-      
-      if (isCurrentlyExpanded) {
-        // If clicking on expanded item, collapse it
-        console.log('Collapsing item:', itemId);
-        return [];
-      } else {
-        // If clicking on collapsed item, expand it and collapse others
-        console.log('Expanding item:', itemId, 'New expanded state will be:', [itemId]);
-        return [itemId];
+  const toggleMenu = (menuId: string) => {
+    setManualToggle(true);
+    setExpandedMenu(prev => {
+      // If clicking on currently expanded menu, collapse it
+      if (prev === menuId) {
+        return null;
       }
+      // Otherwise, expand this menu (accordion behavior)
+      return menuId;
     });
-    
-    // Additional safety: force re-render to ensure UI updates
-    setTimeout(() => {
-      console.log('Post-toggle expanded state:', expandedItems);
-    }, 100);
   };
 
-  const expandItem = (itemId: string) => {
-    try {
-      setExpandedItems(prev => 
-        prev.includes(itemId) ? prev : [...prev, itemId]
-      );
-    } catch (error) {
-      console.error('Error expanding item:', error);
-    }
-  };
 
-  // Initialize parent menus based on active section for tree structure
+  // Reset manual toggle when navigating to different sections
   React.useEffect(() => {
-    if (!initialized && navigationItems.length > 0) {
-      console.log('Initializing navigation, activeSection:', activeSection, 'navigationItems:', navigationItems.length);
-      const activeParent = getActiveParent();
-      console.log('Active parent found:', activeParent);
-      if (activeParent) {
-        console.log('Setting initial expanded items to:', [activeParent]);
-        setExpandedItems([activeParent]);
-      } else {
-        setExpandedItems([]);
-      }
-      setInitialized(true);
+    if (activeSection && navigationItems.length > 0) {
+      // Reset manual toggle flag when active section changes
+      // This allows auto-expand to work for new navigation
+      setManualToggle(false);
     }
-  }, [navigationItems, initialized, activeSection]);
-
-  // Auto-expand parent menu when navigating to child pages
-  React.useEffect(() => {
-    if (initialized && activeSection && navigationItems.length > 0) {
-      console.log('Auto-expand check for activeSection:', activeSection);
-      const activeParent = getActiveParent();
-      console.log('Found active parent for auto-expand:', activeParent);
-      
-      if (activeParent) {
-        setExpandedItems(prev => {
-          console.log('Current expanded items:', prev, 'Need to expand:', activeParent);
-          // Only update if the parent is not already expanded
-          if (!prev.includes(activeParent)) {
-            console.log('Auto-expanding parent:', activeParent);
-            return [activeParent];
-          }
-          return prev;
-        });
-      } else {
-        // Check if activeSection is a top-level menu (dashboard, etc.)
-        const isTopLevelMenu = navigationItems.some(item => item.id === activeSection && !item.children?.length);
-        if (isTopLevelMenu) {
-          console.log('Active section is top-level menu, clearing expanded items to avoid conflicts');
-          // Don't force collapse, just ensure clean state for other menus to work
-          // Only clear if we're not currently in the middle of expanding something
-          setExpandedItems(prev => {
-            if (prev.length === 0) return prev; // Already clean
-            return []; // Clear to allow other menus to expand properly
-          });
-        }
-      }
-    }
-  }, [activeSection, initialized, navigationItems]);
+  }, [activeSection, navigationItems]);
 
   const handleNavigation = (item: NavigationItem) => {
-    console.log('Navigating to item:', item.id, 'Route:', item.route);
-    
     if (item.route) {
-      console.log('Using explicit route:', item.route);
       setLocation(item.route);
     } else {
       // Fallback routes for items without explicit routes
-      console.log('Using fallback route for:', item.id);
       switch (item.id) {
         case "dashboard":
           setLocation("/dashboard");
@@ -517,7 +420,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
           setLocation("/roles");
           break;
         default:
-          console.warn(`No route defined for menu item: ${item.id}`);
           break;
       }
     }
@@ -571,35 +473,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    console.log('Menu item clicked:', item.id, 'Has children:', !!item.children?.length, 'Route:', item.route);
-                    console.log('Current expanded items before click:', expandedItems);
-                    
-                    // Special debugging for Configuration menu
-                    if (item.id.toLowerCase().includes('config')) {
-                      console.log('Configuration menu clicked! Details:', {
-                        id: item.id,
-                        label: item.label,
-                        route: item.route,
-                        hasChildren: !!item.children?.length,
-                        children: item.children?.map(c => ({ id: c.id, label: c.label, route: c.route })),
-                        currentExpandedItems: expandedItems,
-                        isExpanded: expandedItems.includes(item.id)
-                      });
-                    }
-                    
                     if (item.children && item.children.length > 0) {
-                      console.log('Toggling parent menu:', item.id);
-                      e.stopPropagation(); // Prevent any event bubbling issues
-                      toggleExpandedItem(item.id);
+                      // Parent menu - toggle expand/collapse
+                      toggleMenu(item.id);
                     } else {
-                      console.log('Navigating to:', item.id);
+                      // Leaf menu - navigate
                       handleNavigation(item);
                     }
                   }}
-                  className={`group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-300 ease-in-out transform hover:bg-opacity-80 ${
+                  className={`group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-200 ease-in-out ${
                     activeSection === item.id || isParentActive(item)
                       ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 font-medium'
-                      : expandedItems.includes(item.id) && item.children && item.children.length > 0
+                      : shouldMenuBeExpanded(item.id) && item.children && item.children.length > 0
                       ? 'bg-gray-50 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
                   }`}
@@ -621,7 +506,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     <div className="ml-2 flex items-center space-x-1">
                       {/* Smooth rotating chevron */}
                       <div className={`transition-all duration-200 ease-in-out transform ${
-                        expandedItems.includes(item.id) 
+                        shouldMenuBeExpanded(item.id)
                           ? 'rotate-90 text-blue-600 dark:text-blue-400' 
                           : 'rotate-0 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300'
                       }`}>
@@ -633,20 +518,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 
                 {/* Accordion-style smooth expansion */}
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && expandedItems.includes(item.id)
-                    ? 'max-h-[800px] opacity-100'
+                  item.children && item.children.length > 0 && (!sidebarCollapsed || sidebarHovered) && shouldMenuBeExpanded(item.id)
+                    ? 'max-h-[500px] opacity-100'
                     : 'max-h-0 opacity-0'
                 }`}>
-                  {item.children && item.children.length > 0 && expandedItems.includes(item.id) && (
-                    <div className={`ml-6 mt-1 space-y-1 transition-all duration-300 ease-in-out ${
-                      expandedItems.includes(item.id) ? 'pl-4 py-2' : 'pl-0 py-0'
-                    }`}>
-                      {item.children.map((child: NavigationItem, index) => (
-                        <div key={child.id} className={`transition-all duration-200 ease-in-out ${
-                          expandedItems.includes(item.id) 
-                            ? 'opacity-100' 
-                            : 'opacity-0'
-                        }`} style={{ transitionDelay: expandedItems.includes(item.id) ? `${index * 50}ms` : '0ms' }}>
+                  {item.children && item.children.length > 0 && shouldMenuBeExpanded(item.id) && (
+                    <div className="ml-6 mt-1 space-y-1 pl-4 py-2">
+                      {item.children.map((child: NavigationItem) => (
+                        <div key={child.id} className="transition-all duration-200 ease-in-out opacity-100">
                           
                           <button
                             onClick={() => handleNavigation(child)}
