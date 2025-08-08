@@ -27,6 +27,7 @@ import TerminalActivationPage from "@/pages/terminal-activation";
 import NotificationsPage from "@/pages/notifications";
 import RolesPage from "@/pages/roles";
 import UsersPage from "@/pages/users";
+import PermissionAssignmentPage from "@/pages/permission-assignment";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -145,6 +146,9 @@ function Router() {
       </Route>
       <Route path="/users">
         {() => <ProtectedRoute component={UsersPage} />}
+      </Route>
+      <Route path="/permission-assignment">
+        {() => <ProtectedRoute component={PermissionAssignmentPage} />}
       </Route>
       <Route path="/">
         {() => <ProtectedRoute component={DashboardPage} />}

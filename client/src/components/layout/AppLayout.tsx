@@ -434,6 +434,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         case "menu-management":
           setLocation("/menu-management");
           break;
+        case "permission-assignment":
+          setLocation("/permission-assignment");
+          break;
         default:
           console.warn(`No route defined for menu item: ${item.id}`);
           break;
