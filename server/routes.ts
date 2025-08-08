@@ -986,54 +986,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]); // No permissions, no menus
       }
 
-      // Filter menus based on permissions
+      // Filter menus based on permissions from role
       const filteredMenus = menus.filter(menu => {
-        // For PortAdmin, apply specific filtering logic
-        if (user.role === "PortAdmin") {
-          // Only show specific menus for PortAdmin
-          const allowedMenus = [
-            "dashboard",
-            "terminals", 
-            "terminal-activation",
-            "port-active"
-          ];
+        console.log(`Checking menu: ${menu.name} (type: ${menu.menuType})`);
+        
+        if (!userRole.permissions || !Array.isArray(userRole.permissions)) {
+          console.log("No permissions array found");
+          return false;
+        }
+        
+        // Check permissions based on menu hierarchy
+        const hasPermission = userRole.permissions.some((permission: string) => {
+          console.log(`Checking permission: ${permission} against menu: ${menu.name}`);
           
-          // Check if it's a top-level allowed menu
-          if (allowedMenus.includes(menu.name)) {
+          // Direct menu name match
+          if (permission === menu.name) {
+            console.log(`Direct match found for: ${menu.name}`);
             return true;
           }
           
-          // For plink menus, check if parent is in allowed menus
+          // For glink menus, check if they have permission for the section
+          if (menu.menuType === "glink") {
+            // Check if permission allows access to this glink section
+            const parts = permission.split(':');
+            if (parts[0] === menu.name) {
+              console.log(`Glink permission found for: ${menu.name}`);
+              return true;
+            }
+          }
+          
+          // For plink menus, check parent:child format
           if (menu.menuType === "plink" && menu.parentId) {
             const parentMenu = menus.find(m => m.id === menu.parentId);
-            return parentMenu && allowedMenus.includes(parentMenu.name);
+            if (parentMenu) {
+              const parts = permission.split(':');
+              if (parts.length >= 2) {
+                const [parentName, childName] = parts;
+                if (parentMenu.name === parentName && menu.name === childName) {
+                  console.log(`Plink permission found for: ${parentMenu.name}:${menu.name}`);
+                  return true;
+                }
+              }
+            }
           }
           
           return false;
-        }
-        
-        // For other roles, check permissions normally
-        if (!userRole.permissions || !Array.isArray(userRole.permissions)) {
-          return false;
-        }
-        
-        return userRole.permissions.some((permission: string) => {
-          const parts = permission.split(':');
-          if (parts.length === 1) {
-            // Top-level permission
-            return parts[0] === menu.name;
-          } else if (parts.length >= 2) {
-            // Nested permission (parent:child)
-            const [parentName, childName] = parts;
-            if (menu.menuType === "plink" && menu.parentId) {
-              const parentMenu = menus.find(m => m.id === menu.parentId);
-              return parentMenu && parentMenu.name === parentName && menu.name === childName;
-            } else {
-              return parentName === menu.name;
-            }
-          }
-          return false;
         });
+        
+        console.log(`Menu ${menu.name} permission result: ${hasPermission}`);
+        return hasPermission;
       });
 
       res.json(filteredMenus);
