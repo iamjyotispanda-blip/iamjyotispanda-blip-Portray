@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, Settings, BarChart3, Ship, Package, Truck, FileText, LogOut, Building2 } from "lucide-react";
+import { Shield, Users, Settings, BarChart3, Ship, Package, Truck, FileText, LogOut } from "lucide-react";
 import { AuthService } from "@/lib/auth";
 import { HeroLogo } from "@/components/hero-logo";
 

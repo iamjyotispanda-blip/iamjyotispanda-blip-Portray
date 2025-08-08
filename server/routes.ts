@@ -30,6 +30,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      // Check for admin token first
+      if (token.length > 30) { // Admin session tokens are longer
+        const session = await storage.getSessionByToken(token);
+        if (session && session.userId === "admin-001") {
+          req.user = {
+            id: "admin-001",
+            email: "superadmin@Portray.com",
+            firstName: "System",
+            lastName: "Administrator",
+            role: "SystemAdmin",
+            isVerified: true,
+            isActive: true
+          };
+          return next();
+        }
+      }
+
       const session = await storage.getSessionByToken(token);
       if (!session) {
         return res.status(401).json({ message: "Invalid or expired token" });
@@ -51,6 +68,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
       const credentials = loginSchema.parse(req.body);
+      
+      // Check for system admin credentials
+      if (credentials.email === "superadmin@Portray.com" && credentials.password === "Csmpl@123") {
+        const adminSession = await storage.createSession("admin-001", credentials.rememberMe || false);
+        
+        return res.json({
+          user: {
+            id: "admin-001",
+            email: "superadmin@Portray.com",
+            firstName: "System",
+            lastName: "Administrator", 
+            role: "SystemAdmin",
+            isVerified: true,
+            isActive: true
+          },
+          token: adminSession.token,
+          expiresAt: adminSession.expiresAt,
+          redirectPath: "/dashboard"
+        });
+      }
       
       const user = await storage.validateUserCredentials(credentials.email, credentials.password);
       if (!user) {
@@ -1417,7 +1454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prevent deletion of system admin
-      if (user.id === "3c4cdb58-7fb2-4ec2-9dc1-24c4c1e428d4") {
+      if (user.id === "admin-001") {
         return res.status(400).json({ message: "Cannot delete system administrator" });
       }
       
@@ -1623,7 +1660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Creating notification for new terminal activation request");
         try {
           await storage.createNotification({
-            userId: "3c4cdb58-7fb2-4ec2-9dc1-24c4c1e428d4", // System admin user ID
+            userId: "admin-001", // System admin user ID
             type: "terminal_activation_request",
             title: "Terminal Activation Request",
             message: `New terminal "${terminal.terminalName}" (${terminal.shortCode}) has been submitted for activation review.`,
@@ -1729,7 +1766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Creating notification for terminal activation request");
         try {
           await storage.createNotification({
-            userId: "3c4cdb58-7fb2-4ec2-9dc1-24c4c1e428d4", // System admin user ID
+            userId: "admin-001", // System admin user ID
             type: "terminal_activation_request",
             title: "Terminal Activation Request",
             message: `Terminal "${terminal.terminalName}" (${terminal.shortCode}) status has been updated to processing for activation review.`,
