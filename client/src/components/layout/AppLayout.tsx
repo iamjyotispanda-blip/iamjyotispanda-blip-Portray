@@ -50,11 +50,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   // Helper function to get the parent of the active section
   const getActiveParent = () => {
+    console.log('Getting active parent for section:', activeSection, 'from', navigationItems.length, 'navigation items');
     for (const item of navigationItems) {
       if (item.children?.some((child: NavigationItem) => child.id === activeSection)) {
+        console.log('Found parent:', item.id, 'for child:', activeSection);
         return item.id;
       }
     }
+    console.log('No parent found for active section:', activeSection);
     return null;
   };
 
@@ -339,20 +342,19 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const navigationItems = getNavigationItems();
 
   const toggleExpandedItem = (itemId: string) => {
-    try {
-      setExpandedItems(prev => {
-        // Accordion behavior: only one parent can be expanded at a time
-        if (prev.includes(itemId)) {
-          // If clicking on expanded item, collapse it
-          return [];
-        } else {
-          // If clicking on collapsed item, expand it and collapse others
-          return [itemId];
-        }
-      });
-    } catch (error) {
-      console.error('Error toggling expanded item:', error);
-    }
+    console.log('Toggling expanded item:', itemId, 'Current expanded:', expandedItems);
+    setExpandedItems(prev => {
+      // Accordion behavior: only one parent can be expanded at a time
+      if (prev.includes(itemId)) {
+        // If clicking on expanded item, collapse it
+        console.log('Collapsing item:', itemId);
+        return [];
+      } else {
+        // If clicking on collapsed item, expand it and collapse others
+        console.log('Expanding item:', itemId);
+        return [itemId];
+      }
+    });
   };
 
   const expandItem = (itemId: string) => {
@@ -368,37 +370,56 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   // Initialize parent menus based on active section for tree structure
   React.useEffect(() => {
     if (!initialized && navigationItems.length > 0) {
+      console.log('Initializing navigation, activeSection:', activeSection, 'navigationItems:', navigationItems.length);
       const activeParent = getActiveParent();
+      console.log('Active parent found:', activeParent);
       if (activeParent) {
+        console.log('Setting initial expanded items to:', [activeParent]);
         setExpandedItems([activeParent]);
       } else {
         setExpandedItems([]);
       }
       setInitialized(true);
     }
-  }, [navigationItems, initialized]);
+  }, [navigationItems, initialized, activeSection]);
 
   // Auto-expand parent menu when navigating to child pages
   React.useEffect(() => {
     if (initialized && activeSection && navigationItems.length > 0) {
+      console.log('Auto-expand check for activeSection:', activeSection);
       const activeParent = getActiveParent();
+      console.log('Found active parent for auto-expand:', activeParent);
       if (activeParent) {
         setExpandedItems(prev => {
+          console.log('Current expanded items:', prev, 'Need to expand:', activeParent);
           // Only update if the parent is not already expanded
           if (!prev.includes(activeParent)) {
+            console.log('Auto-expanding parent:', activeParent);
             return [activeParent];
           }
           return prev;
         });
+      } else {
+        // If no parent is active, check if we should collapse all
+        console.log('No active parent found, checking if current item should be expanded');
+        // Check if the active section itself is a parent menu
+        const isActiveItemParent = navigationItems.some(item => item.id === activeSection && item.children?.length);
+        if (!isActiveItemParent) {
+          console.log('Active section is not a parent, keeping current expansion');
+        }
       }
     }
   }, [activeSection, initialized, navigationItems]);
 
   const handleNavigation = (item: NavigationItem) => {
+    console.log('Navigating to item:', item.id, 'Route:', item.route);
+    
     if (item.route) {
+      console.log('Using explicit route:', item.route);
       setLocation(item.route);
     } else {
       // Fallback routes for items without explicit routes
+      console.log('Using fallback route for:', item.id);
       switch (item.id) {
         case "dashboard":
           setLocation("/dashboard");
@@ -432,6 +453,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
           break;
         case "permission-assignment":
           setLocation("/permission-assignment");
+          break;
+        case "users":
+          setLocation("/users");
+          break;
+        case "roles":
+          setLocation("/roles");
           break;
         default:
           console.warn(`No route defined for menu item: ${item.id}`);
@@ -488,14 +515,13 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    try {
-                      if (item.children && item.children.length > 0) {
-                        toggleExpandedItem(item.id);
-                      } else {
-                        handleNavigation(item);
-                      }
-                    } catch (error) {
-                      console.error('Navigation error:', error);
+                    console.log('Menu item clicked:', item.id, 'Has children:', !!item.children?.length, 'Route:', item.route);
+                    if (item.children && item.children.length > 0) {
+                      console.log('Toggling parent menu:', item.id);
+                      toggleExpandedItem(item.id);
+                    } else {
+                      console.log('Navigating to:', item.id);
+                      handleNavigation(item);
                     }
                   }}
                   className={`group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-300 ease-in-out transform hover:bg-opacity-80 ${
