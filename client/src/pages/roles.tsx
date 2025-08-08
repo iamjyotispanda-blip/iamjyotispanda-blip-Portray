@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Shield, Edit, ToggleLeft, ToggleRight, Trash2, Search } from "lucide-react";
+import { Plus, Shield, Edit, ToggleLeft, ToggleRight, Trash2, Search, Users } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -460,87 +460,121 @@ export function RolesContent() {
             )}
           </div>
 
-          {/* Roles List */}
-          <div className="grid gap-4">
+          {/* Roles Grid - Vuexy Style */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {rolesLoading ? (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center text-gray-500">Loading roles...</div>
-                </CardContent>
-              </Card>
-            ) : filteredRoles.length === 0 ? (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center text-gray-500">
-                    {searchTerm ? "No roles found matching your search." : "No roles found."}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              filteredRoles.map((role: Role) => (
-                <Card key={role.id} className="hover:shadow-md transition-shadow" data-testid={`card-role-${role.id}`}>
+              <div className="col-span-full">
+                <Card>
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                          <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    <div className="text-center text-gray-500">Loading roles...</div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : filteredRoles.length === 0 ? (
+              <div className="col-span-full">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-gray-500">
+                      {searchTerm ? "No roles found matching your search." : "No roles found."}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              filteredRoles.map((role: Role, index) => {
+                const roleColors = [
+                  { bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-600 dark:text-blue-400", border: "border-blue-200 dark:border-blue-800" },
+                  { bg: "bg-purple-50 dark:bg-purple-900/20", text: "text-purple-600 dark:text-purple-400", border: "border-purple-200 dark:border-purple-800" },
+                  { bg: "bg-green-50 dark:bg-green-900/20", text: "text-green-600 dark:text-green-400", border: "border-green-200 dark:border-green-800" },
+                  { bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-600 dark:text-orange-400", border: "border-orange-200 dark:border-orange-800" },
+                  { bg: "bg-pink-50 dark:bg-pink-900/20", text: "text-pink-600 dark:text-pink-400", border: "border-pink-200 dark:border-pink-800" },
+                  { bg: "bg-indigo-50 dark:bg-indigo-900/20", text: "text-indigo-600 dark:text-indigo-400", border: "border-indigo-200 dark:border-indigo-800" }
+                ];
+                const colorScheme = roleColors[index % roleColors.length];
+                
+                return (
+                  <Card key={role.id} className={`relative overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-l-4 ${colorScheme.border}`} data-testid={`card-role-${role.id}`}>
+                    <CardContent className="p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`w-12 h-12 ${colorScheme.bg} rounded-xl flex items-center justify-center`}>
+                          <Shield className={`w-6 h-6 ${colorScheme.text}`} />
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-3">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white" data-testid={`text-role-name-${role.id}`}>
-                              {role.displayName}
-                            </h3>
-                            <Badge variant="outline" data-testid={`badge-role-key-${role.id}`}>
-                              {role.name}
-                            </Badge>
-                            <Badge
-                              variant={role.isActive ? "default" : "secondary"}
-                              data-testid={`badge-role-status-${role.id}`}
-                            >
-                              {role.isActive ? "Active" : "Inactive"}
-                            </Badge>
-                          </div>
-                          {role.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400" data-testid={`text-role-description-${role.id}`}>
-                              {role.description}
-                            </p>
-                          )}
-                          <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                            <div className="flex items-center space-x-1">
-                              <span data-testid={`text-role-permissions-${role.id}`}>
-                                Permissions: {role.permissions?.length || 0}
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <span data-testid={`text-role-created-${role.id}`}>
-                                Created: {format(new Date(role.createdAt), "MMM dd, yyyy")}
-                              </span>
-                            </div>
-                          </div>
-                          {role.permissions && role.permissions.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {role.permissions.slice(0, 5).map((permission, index) => (
-                                <Badge key={index} variant="outline" className="text-xs" data-testid={`badge-permission-preview-${role.id}-${index}`}>
-                                  {permission}
-                                </Badge>
-                              ))}
-                              {role.permissions.length > 5 && (
-                                <Badge variant="outline" className="text-xs" data-testid={`badge-permission-more-${role.id}`}>
-                                  +{role.permissions.length - 5} more
-                                </Badge>
-                              )}
-                            </div>
-                          )}
+                        <div className="flex items-center space-x-2">
+                          <Badge
+                            variant={role.isActive ? "default" : "secondary"}
+                            className={role.isActive ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" : ""}
+                            data-testid={`badge-role-status-${role.id}`}
+                          >
+                            {role.isActive ? "Active" : "Inactive"}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+
+                      {/* Role Info */}
+                      <div className="space-y-3">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white" data-testid={`text-role-name-${role.id}`}>
+                            {role.displayName}
+                          </h3>
+                          <p className={`text-sm font-medium ${colorScheme.text}`} data-testid={`badge-role-key-${role.id}`}>
+                            @{role.name}
+                          </p>
+                        </div>
+                        
+                        {role.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2" data-testid={`text-role-description-${role.id}`}>
+                            {role.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Statistics */}
+                      <div className="flex items-center justify-between py-4 border-t border-gray-100 dark:border-gray-800 mt-4">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-gray-900 dark:text-white" data-testid={`text-role-permissions-${role.id}`}>
+                            {role.permissions?.length || 0}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Permissions</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                            0
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Users</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500 dark:text-gray-400" data-testid={`text-role-created-${role.id}`}>
+                            Created
+                          </p>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {format(new Date(role.createdAt), "MMM dd")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-center space-x-2 pt-4">
+                        {canEdit("roles", "user-access") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(role)}
+                            className="flex-1 h-9"
+                            data-testid={`button-edit-role-${role.id}`}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                        )}
+                        
                         {canManage("roles", "user-access") && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleToggleRoleStatus(role.id)}
                             disabled={toggleRoleStatusMutation.isPending || role.name === "SystemAdmin" || role.name === "PortAdmin"}
-                            className="h-8"
+                            className="h-9 px-3"
                             data-testid={`button-toggle-role-${role.id}`}
                           >
                             {role.isActive ? (
@@ -550,21 +584,11 @@ export function RolesContent() {
                             )}
                           </Button>
                         )}
-                        {canEdit("roles", "user-access") && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(role)}
-                            className="h-8"
-                            data-testid={`button-edit-role-${role.id}`}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        )}
+                        
                         {canManage("roles", "user-access") && role.name !== "SystemAdmin" && role.name !== "PortAdmin" && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm" className="h-8" data-testid={`button-delete-role-${role.id}`}>
+                              <Button variant="destructive" size="sm" className="h-9 px-3" data-testid={`button-delete-role-${role.id}`}>
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -589,10 +613,10 @@ export function RolesContent() {
                           </AlertDialog>
                         )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
 
