@@ -962,14 +962,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
+      console.log("User details for menu filtering:", {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        roleId: user.roleId,
+        isSystemAdmin: user.is_system_admin,
+        totalMenus: menus.length
+      });
+
       // If user is system admin, return all menus
-      if (user.isSystemAdmin || user.role === "SystemAdmin") {
+      if (user.is_system_admin || user.role === "SystemAdmin") {
+        console.log("System admin detected, returning all menus");
         return res.json(menus);
       }
 
       // Get user's role permissions
       const userRole = await storage.getRoleById(user.roleId);
+      console.log("User role permissions:", userRole?.permissions);
+      
       if (!userRole || !userRole.permissions) {
+        console.log("No role or permissions found, returning empty menus");
         return res.json([]); // No permissions, no menus
       }
 
