@@ -378,7 +378,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       
       if (activeParent && parentMenuIds.includes(activeParent)) {
         initialExpanded = [activeParent];
-        console.log('Initializing with active parent expanded:', activeParent);
+        // Initializing with active parent expanded
       }
       
       setExpandedItems(initialExpanded);
@@ -386,22 +386,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     }
   }, [navigationItems, initialized]);
 
-  // Auto-expand parent menu when child is active
+  // Auto-expand parent menu when child is active (only on initialization)
   React.useEffect(() => {
     if (initialized && activeSection) {
       const activeParent = getActiveParent();
-      console.log('🎯 Navigation Debug:', {
-        activeSection,
-        activeParent,
-        expandedItems,
-        availableMenus: navigationItems.map(item => ({ id: item.id, children: item.children?.map(c => c.id) }))
-      });
-      if (activeParent && !expandedItems.includes(activeParent)) {
-        console.log('🔥 Auto-expanding parent for active child:', activeParent);
+      // Only auto-expand if no items are currently expanded (avoid interfering with manual toggles)
+      if (activeParent && expandedItems.length === 0 && !expandedItems.includes(activeParent)) {
+        // Auto-expanding parent for active child on initialization
         expandItem(activeParent);
       }
     }
-  }, [activeSection, initialized, expandedItems, navigationItems]);
+  }, [activeSection, initialized, navigationItems]); // Removed expandedItems from dependencies to avoid conflict
 
   const handleNavigation = (item: NavigationItem) => {
     if (item.route) {
