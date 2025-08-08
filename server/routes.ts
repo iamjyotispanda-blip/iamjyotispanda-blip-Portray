@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, insertUserSchema, updateUserSchema, insertRoleSchema, updateRoleSchema, type InsertUser } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, insertUserSchema, updateUserSchema, insertRoleSchema, updateRoleSchema, type InsertUser, type Menu } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -946,16 +946,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const menuType = req.query.type as string;
       const parentId = req.query.parentId ? parseInt(req.query.parentId as string) : undefined;
       
+      // Get all menus first
+      let menus: Menu[];
       if (menuType) {
-        const menus = await storage.getMenusByType(menuType as 'glink' | 'plink');
-        res.json(menus);
+        menus = await storage.getMenusByType(menuType as 'glink' | 'plink');
       } else if (parentId !== undefined) {
-        const menus = await storage.getMenusByParentId(parentId === 0 ? null : parentId);
-        res.json(menus);
+        menus = await storage.getMenusByParentId(parentId === 0 ? null : parentId);
       } else {
-        const menus = await storage.getAllMenus();
-        res.json(menus);
+        menus = await storage.getAllMenus();
       }
+
+      // Filter menus based on user role and system admin flag
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // If user is system admin, return all menus
+      if (user.isSystemAdmin || user.role === "SystemAdmin") {
+        return res.json(menus);
+      }
+
+      // Get user's role permissions
+      const userRole = await storage.getRoleById(user.roleId);
+      if (!userRole || !userRole.permissions) {
+        return res.json([]); // No permissions, no menus
+      }
+
+      // Filter menus based on permissions
+      const filteredMenus = menus.filter(menu => {
+        // For PortAdmin, apply specific filtering logic
+        if (user.role === "PortAdmin") {
+          // Only show specific menus for PortAdmin
+          const allowedMenus = [
+            "dashboard",
+            "terminals", 
+            "terminal-activation",
+            "port-active"
+          ];
+          
+          // Check if it's a top-level allowed menu
+          if (allowedMenus.includes(menu.name)) {
+            return true;
+          }
+          
+          // For plink menus, check if parent is in allowed menus
+          if (menu.menuType === "plink" && menu.parentId) {
+            const parentMenu = menus.find(m => m.id === menu.parentId);
+            return parentMenu && allowedMenus.includes(parentMenu.name);
+          }
+          
+          return false;
+        }
+        
+        // For other roles, check permissions normally
+        if (!userRole.permissions || !Array.isArray(userRole.permissions)) {
+          return false;
+        }
+        
+        return userRole.permissions.some((permission: string) => {
+          const parts = permission.split(':');
+          if (parts.length === 1) {
+            // Top-level permission
+            return parts[0] === menu.name;
+          } else if (parts.length >= 2) {
+            // Nested permission (parent:child)
+            const [parentName, childName] = parts;
+            if (menu.menuType === "plink" && menu.parentId) {
+              const parentMenu = menus.find(m => m.id === menu.parentId);
+              return parentMenu && parentMenu.name === parentName && menu.name === childName;
+            } else {
+              return parentName === menu.name;
+            }
+          }
+          return false;
+        });
+      });
+
+      res.json(filteredMenus);
     } catch (error) {
       console.error("Get menus error:", error);
       res.status(500).json({ message: "Internal server error" });
