@@ -33,17 +33,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check for admin token first
       if (token.length > 30) { // Admin session tokens are longer
         const session = await storage.getSessionByToken(token);
-        if (session && session.userId === "admin-001") {
-          req.user = {
-            id: "admin-001",
-            email: "superadmin@Portray.com",
-            firstName: "System",
-            lastName: "Administrator",
-            role: "SystemAdmin",
-            isVerified: true,
-            isActive: true
-          };
-          return next();
+        if (session) {
+          const user = await storage.getUser(session.userId);
+          if (user && user.email === "superadmin@Portray.com") {
+            req.user = { ...user, password: undefined };
+            return next();
+          }
         }
       }
 
@@ -71,22 +66,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check for system admin credentials
       if (credentials.email === "superadmin@Portray.com" && credentials.password === "Csmpl@123") {
-        const adminSession = await storage.createSession("admin-001", credentials.rememberMe || false);
-        
-        return res.json({
-          user: {
-            id: "admin-001",
-            email: "superadmin@Portray.com",
-            firstName: "System",
-            lastName: "Administrator", 
-            role: "SystemAdmin",
-            isVerified: true,
-            isActive: true
-          },
-          token: adminSession.token,
-          expiresAt: adminSession.expiresAt,
-          redirectPath: "/dashboard"
-        });
+        // Get the actual system admin user from database
+        const adminUser = await storage.validateUserCredentials(credentials.email, credentials.password);
+        if (adminUser) {
+          await storage.updateUserLastLogin(adminUser.id);
+          const adminSession = await storage.createSession(adminUser.id, credentials.rememberMe || false);
+          
+          const { password, ...userWithoutPassword } = adminUser;
+          return res.json({
+            user: userWithoutPassword,
+            token: adminSession.token,
+            expiresAt: adminSession.expiresAt,
+            redirectPath: "/dashboard"
+          });
+        }
       }
       
       const user = await storage.validateUserCredentials(credentials.email, credentials.password);
