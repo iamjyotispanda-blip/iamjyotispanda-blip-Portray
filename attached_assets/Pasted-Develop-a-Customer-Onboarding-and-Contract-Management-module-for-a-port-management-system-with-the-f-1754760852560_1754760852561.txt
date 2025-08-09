@@ -1,0 +1,117 @@
+Develop a Customer Onboarding and Contract Management module for a port management system with the following flow:
+
+1. Customer Details Form (Marketing Manager role)
+	•	Marketing Manager logs in and opens “Add New Customer.”
+	•	Port and Terminal details should auto-fill based on the logged-in Marketing Manager’s assigned terminals.
+	•	If the Marketing Manager is tagged with multiple terminals, show a terminal selection dropdown before filling customer details.
+
+Customer Details fields:
+	•	Customer Name (text, must be unique)
+	•	Display Name (text)
+	•	Country (dropdown with flag icons)
+	•	State (dropdown)
+	•	PAN (text, Indian PAN format validation, must be unique)
+	•	GST (text, Indian GST format validation, must be unique)
+	•	Email (email format validation, must be unique in both Customers table and Users table)
+
+Validation Rules:
+	•	Before saving, check:
+	•	No duplicate customer_name exists in Customers table.
+	•	No duplicate PAN exists in Customers table.
+	•	No duplicate GST exists in Customers table.
+	•	No duplicate email exists in Customers table or Users table.
+	•	If any duplicate found, show specific error message (e.g., “Email already exists as a registered user”).
+
+Customer Code Generation Rule:
+	•	Format: {YEAR}_{TERMINAL_SHORTCODE}_{COUNTER}
+	•	YEAR = Current year in YYYY format (e.g., 2025).
+	•	TERMINAL_SHORTCODE = Short code from the terminal master table assigned to this customer.
+	•	COUNTER = Auto-incremented number (3-digit, zero-padded) for each terminal within the year.
+	•	Example: 2025_VPT_001.
+
+On Submit:
+	•	Generate Customer Code as per above rule.
+	•	Save customer details to database.
+	•	Show in Customer List View with status = "Activation in Progress".
+	•	Each row should have a “Create Contract” button.
+
+2. Customer Contact Details (linked to Customer)
+	•	Multiple contacts allowed (Add More option).
+	•	Fields:
+	•	Contact Name (text)
+	•	Designation (text)
+	•	Email (email format validation)
+	•	Contact Number (mobile validation)
+	•	Is Primary Contact? (Yes/No)
+
+3. Customer Address Details (linked to Customer)
+	•	Multiple addresses allowed (Add More option).
+	•	Fields:
+	•	Address Type (Billing / Shipping / Other)
+	•	Address Line 1 (text)
+	•	Address Line 2 (optional text)
+	•	City (text)
+	•	State (dropdown)
+	•	Country (dropdown)
+	•	Pincode (number)
+	•	Is Default Address? (Yes/No)
+
+4. Contract Form (Redirect Page, NOT popup)
+	•	Clicking “Create Contract” redirects to a Contract Creation Form pre-filled with:
+	•	Customer Code (read-only)
+	•	Customer Name (read-only)
+	•	Terminal (read-only)
+
+Contract Fields:
+	•	Contract Number (manual input)
+	•	Upload Contract Copy (PDF/Doc upload, max 5MB)
+	•	Valid From (date)
+	•	Valid To (date)
+
+Tariff Details Section:
+	•	CHC (Cargo Handling Charge): Rate to Customer, Rate to Port
+	•	BHC (Berth Handling Charge): Rate to Customer, Rate to Port
+
+Cargo Details Section:
+	•	Cargo Type (dropdown)
+	•	Expected Cargo per Year (optional number input)
+	•	Assigned Plots (multi-select dropdown)
+
+Storage Rate Details Section:
+	•	Storage Free Time (days)
+	•	Charge per Day (after free time)
+	•	Charge Applicable Days (input field)
+	•	Allow “Add More” for multiple charge slabs.
+
+Special Conditions Section:
+	•	Add more rows for “Condition / Responsibility / Charge (Including or Excluding)” fields.
+
+On Submit:
+	•	Save contract details.
+	•	Update Customer Status to "Customer TC".
+	•	Redirect to Customer List View.
+
+UI Requirements:
+	•	Responsive forms with clean labels and section dividers.
+	•	All validations with clear error messages.
+	•	Dropdowns should load from master tables (Country, State, Cargo, Plots, Terminal).
+
+Database Structure:
+	•	Customers Table (unique constraints on customer_name, pan, gst, email)
+	•	Customer Contacts Table (linked via customer_id)
+	•	Customer Addresses Table (linked via customer_id)
+	•	Contracts Table (linked via customer_id)
+	•	Tariffs Table (linked to Contract)
+	•	Cargo Details Table (linked to Contract)
+	•	Storage Charges Table (linked to Contract)
+	•	Special Conditions Table (linked to Contract)
+	•	Users Table (for login accounts — check against this before saving email)
+
+Additional Notes:
+	•	Ensure “Add More” functionality for contacts, addresses, tariffs, cargo, storage slabs, and special conditions.
+	•	Show proper success messages after save.
+	•	Maintain audit trail with created_by, created_at, updated_by, updated_at.
+
+⸻
+
+This now ensures your customer code is generated dynamically per year and per terminal, with a counter reset each year for each terminal.
