@@ -2153,15 +2153,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.get('User-Agent')
       );
 
-      // Send password setup email using port-specific configuration
-      try {
-        const { sendPasswordSetupEmail } = await import("./emailService.js");
-        await sendPasswordSetupEmail(user.email, user.firstName, passwordSetupToken, user.portId || undefined);
-      } catch (emailError) {
-        console.error("Failed to send password setup email:", emailError);
-      }
-
-      res.json({ message: "Email verified successfully. Please check your email for password setup instructions." });
+      // Return password setup token for direct redirect
+      res.json({ 
+        message: "Email verified successfully. Redirecting to password setup.", 
+        passwordSetupToken: passwordSetupToken 
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
