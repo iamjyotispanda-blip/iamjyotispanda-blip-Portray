@@ -79,9 +79,64 @@ This email was sent automatically by PortRay at ${new Date().toLocaleString()}.
 
       const info = await transporter.sendMail(mailOptions);
       console.log('Test email sent successfully:', info.messageId);
+      
+      // Find email configuration by matching SMTP settings to log the test email
+      try {
+        const emailConfigs = await storage.getAllEmailConfigurations();
+        const matchingConfig = emailConfigs.find(cfg => 
+          cfg.smtpHost === config.smtpHost && 
+          cfg.smtpUser === config.smtpUser &&
+          cfg.fromEmail === config.fromEmail
+        );
+        
+        if (matchingConfig) {
+          await storage.createEmailLog({
+            emailConfigurationId: matchingConfig.id,
+            portId: matchingConfig.portId,
+            toEmail: testEmailAddress,
+            fromEmail: config.fromEmail,
+            fromName: config.fromName,
+            subject: 'PortRay - Test Email Configuration',
+            emailType: 'test',
+            status: 'sent',
+            userId: undefined,
+          });
+        }
+      } catch (logError) {
+        console.error('Failed to log test email:', logError);
+      }
+      
       return true;
     } catch (error) {
       console.error('Failed to send test email:', error);
+      
+      // Log failed test email
+      try {
+        const emailConfigs = await storage.getAllEmailConfigurations();
+        const matchingConfig = emailConfigs.find(cfg => 
+          cfg.smtpHost === config.smtpHost && 
+          cfg.smtpUser === config.smtpUser &&
+          cfg.fromEmail === config.fromEmail
+        );
+        
+        if (matchingConfig) {
+          await storage.createEmailLog({
+            emailConfigurationId: matchingConfig.id,
+            portId: matchingConfig.portId,
+            toEmail: testEmailAddress,
+            fromEmail: config.fromEmail,
+            fromName: config.fromName,
+            subject: 'PortRay - Test Email Configuration',
+            emailType: 'test',
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            userId: undefined,
+          });
+        }
+      } catch (logError) {
+        console.error('Failed to log failed test email:', logError);
+      }
+      
       return false;
     }
   }
@@ -232,9 +287,46 @@ This verification link will expire in 24 hours. If you didn't create this accoun
       };
 
       await transporter.sendMail(mailOptions);
+      
+      // Log the email
+      try {
+        await storage.createEmailLog({
+          emailConfigurationId: emailConfig.id,
+          portId: portId,
+          toEmail: userEmail,
+          fromEmail: emailConfig.fromEmail,
+          fromName: emailConfig.fromName,
+          subject: 'PortRay - Verify Your Email Address',
+          emailType: 'verification',
+          status: 'sent',
+          userId: undefined,
+        });
+      } catch (logError) {
+        console.error('Failed to log verification email:', logError);
+      }
+      
       return true;
     } catch (error) {
       console.error('Error sending verification email:', error);
+      
+      // Log the failed email
+      try {
+        await storage.createEmailLog({
+          emailConfigurationId: emailConfig.id,
+          portId: portId,
+          toEmail: userEmail,
+          fromEmail: emailConfig.fromEmail,
+          fromName: emailConfig.fromName,
+          subject: 'PortRay - Verify Your Email Address',
+          emailType: 'verification',
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          userId: undefined,
+        });
+      } catch (logError) {
+        console.error('Failed to log failed verification email:', logError);
+      }
+      
       return false;
     }
   }
@@ -304,9 +396,46 @@ This setup link will expire in 24 hours.
       };
 
       await transporter.sendMail(mailOptions);
+      
+      // Log the email
+      try {
+        await storage.createEmailLog({
+          emailConfigurationId: emailConfig.id,
+          portId: portId,
+          toEmail: userEmail,
+          fromEmail: emailConfig.fromEmail,
+          fromName: emailConfig.fromName,
+          subject: 'PortRay - Set Up Your Password',
+          emailType: 'password_setup',
+          status: 'sent',
+          userId: undefined,
+        });
+      } catch (logError) {
+        console.error('Failed to log password setup email:', logError);
+      }
+      
       return true;
     } catch (error) {
       console.error('Error sending password setup email:', error);
+      
+      // Log the failed email
+      try {
+        await storage.createEmailLog({
+          emailConfigurationId: emailConfig.id,
+          portId: portId,
+          toEmail: userEmail,
+          fromEmail: emailConfig.fromEmail,
+          fromName: emailConfig.fromName,
+          subject: 'PortRay - Set Up Your Password',
+          emailType: 'password_setup',
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          userId: undefined,
+        });
+      } catch (logError) {
+        console.error('Failed to log failed password setup email:', logError);
+      }
+      
       return false;
     }
   }

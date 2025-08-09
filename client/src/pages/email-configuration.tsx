@@ -28,7 +28,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Plus, Mail, Trash2, Eye, EyeOff, Edit, Ship } from "lucide-react";
+import { Plus, Mail, Trash2, Eye, EyeOff, Edit, Ship, FileText } from "lucide-react";
+import { EmailLogDialog } from "@/components/EmailLogDialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,6 +64,15 @@ export default function EmailConfigurationPage() {
   const [editingConfig, setEditingConfig] = useState<EmailConfiguration | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [testEmailAddress, setTestEmailAddress] = useState("");
+  const [emailLogDialog, setEmailLogDialog] = useState<{
+    open: boolean;
+    configId: number | null;
+    portName: string | null;
+  }>({
+    open: false,
+    configId: null,
+    portName: null,
+  });
   const [formData, setFormData] = useState<EmailConfigFormData>({
     portId: 0,
     smtpHost: "smtp.gmail.com",
@@ -189,6 +199,15 @@ export default function EmailConfigurationPage() {
   const getPortName = (portId: number) => {
     const port = (ports as any[]).find((p: any) => p.id === portId);
     return port ? port.portName : "Unknown Port";
+  };
+
+  const handleViewLogs = (config: EmailConfiguration) => {
+    const portName = getPortName(config.portId);
+    setEmailLogDialog({
+      open: true,
+      configId: config.id,
+      portName,
+    });
   };
 
   const handleSaveConfig = () => {
@@ -436,6 +455,7 @@ export default function EmailConfigurationPage() {
                               value={testEmailAddress}
                               onChange={(e) => setTestEmailAddress(e.target.value)}
                               className="w-32 h-8"
+                              data-testid="input-test-email"
                             />
                             <Button
                               size="sm"
@@ -443,6 +463,7 @@ export default function EmailConfigurationPage() {
                               onClick={() => handleSendTest(config.id)}
                               disabled={testEmailMutation.isPending}
                               className="h-8"
+                              data-testid="button-send-test"
                             >
                               Test
                             </Button>
@@ -450,8 +471,19 @@ export default function EmailConfigurationPage() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleViewLogs(config)}
+                            className="h-8"
+                            title="View Email Logs"
+                            data-testid={`button-view-logs-${config.id}`}
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleEdit(config)}
                             className="h-8"
+                            data-testid={`button-edit-config-${config.id}`}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -638,6 +670,14 @@ export default function EmailConfigurationPage() {
           </div>
         </main>
       </div>
+
+      {/* Email Log Dialog */}
+      <EmailLogDialog
+        open={emailLogDialog.open}
+        onOpenChange={(open) => setEmailLogDialog(prev => ({ ...prev, open }))}
+        configurationId={emailLogDialog.configId || 0}
+        portName={emailLogDialog.portName || ""}
+      />
     </AppLayout>
   );
 }

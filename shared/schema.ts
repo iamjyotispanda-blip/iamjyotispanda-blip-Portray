@@ -157,6 +157,23 @@ export const notifications = pgTable("notifications", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Email logs table - tracks all emails sent through the system
+export const emailLogs = pgTable("email_logs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  emailConfigurationId: integer("email_configuration_id").references(() => emailConfigurations.id),
+  portId: integer("port_id").references(() => ports.id),
+  toEmail: text("to_email").notNull(),
+  fromEmail: text("from_email").notNull(),
+  fromName: text("from_name").notNull(),
+  subject: text("subject").notNull(),
+  emailType: text("email_type").notNull(), // "verification", "password_setup", "test", "notification"
+  status: text("status").notNull().default("sent"), // "sent", "failed", "pending"
+  errorMessage: text("error_message"), // Store error details if failed
+  sentAt: timestamp("sent_at").notNull().default(sql`now()`),
+  userId: varchar("user_id").references(() => users.id), // For user-related emails
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
 // Relations
 export const portAdminContactsRelations = relations(portAdminContacts, ({ one }) => ({
   port: one(ports, {
@@ -188,6 +205,21 @@ export const terminalsRelations = relations(terminals, ({ one }) => ({
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, {
     fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const emailLogsRelations = relations(emailLogs, ({ one }) => ({
+  emailConfiguration: one(emailConfigurations, {
+    fields: [emailLogs.emailConfigurationId],
+    references: [emailConfigurations.id],
+  }),
+  port: one(ports, {
+    fields: [emailLogs.portId],
+    references: [ports.id],
+  }),
+  user: one(users, {
+    fields: [emailLogs.userId],
     references: [users.id],
   }),
 }));
@@ -295,6 +327,22 @@ export const updateEmailConfigurationSchema = createInsertSchema(emailConfigurat
   fromName: true,
   enableTLS: true,
 }).partial();
+
+export const insertEmailLogSchema = createInsertSchema(emailLogs).pick({
+  emailConfigurationId: true,
+  portId: true,
+  toEmail: true,
+  fromEmail: true,
+  fromName: true,
+  subject: true,
+  emailType: true,
+  status: true,
+  errorMessage: true,
+  userId: true,
+});
+
+export type EmailLog = typeof emailLogs.$inferSelect;
+export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
 
 // Type definitions
 export const insertTerminalSchema = createInsertSchema(terminals).pick({

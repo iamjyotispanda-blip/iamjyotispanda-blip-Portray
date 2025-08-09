@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles } from "@shared/schema";
+import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -64,6 +64,12 @@ export interface IStorage {
   createEmailConfiguration(config: InsertEmailConfiguration): Promise<EmailConfiguration>;
   updateEmailConfiguration(id: number, updates: Partial<EmailConfiguration>): Promise<EmailConfiguration | undefined>;
   deleteEmailConfiguration(id: number): Promise<void>;
+
+  // Email Log operations
+  getAllEmailLogs(): Promise<EmailLog[]>;
+  getEmailLogsByConfigurationId(configurationId: number): Promise<EmailLog[]>;
+  getEmailLogsByPortId(portId: number): Promise<EmailLog[]>;
+  createEmailLog(log: InsertEmailLog): Promise<EmailLog>;
 
   // Terminal operations
   getAllTerminals(): Promise<Terminal[]>;
@@ -404,6 +410,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEmailConfiguration(id: number): Promise<void> {
     await db.delete(emailConfigurations).where(eq(emailConfigurations.id, id));
+  }
+
+  // Email Log operations
+  async getAllEmailLogs(): Promise<EmailLog[]> {
+    return db.select().from(emailLogs).orderBy(emailLogs.sentAt);
+  }
+
+  async getEmailLogsByConfigurationId(configurationId: number): Promise<EmailLog[]> {
+    return db.select().from(emailLogs)
+      .where(eq(emailLogs.emailConfigurationId, configurationId))
+      .orderBy(emailLogs.sentAt);
+  }
+
+  async getEmailLogsByPortId(portId: number): Promise<EmailLog[]> {
+    return db.select().from(emailLogs)
+      .where(eq(emailLogs.portId, portId))
+      .orderBy(emailLogs.sentAt);
+  }
+
+  async createEmailLog(logData: InsertEmailLog): Promise<EmailLog> {
+    const [log] = await db
+      .insert(emailLogs)
+      .values(logData)
+      .returning();
+    return log;
   }
 
   async getAllUsers(): Promise<User[]> {

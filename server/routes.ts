@@ -950,6 +950,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email logs endpoints
+  app.get("/api/email-logs", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { configId, portId } = req.query;
+      
+      let logs;
+      if (configId) {
+        logs = await storage.getEmailLogsByConfigurationId(parseInt(configId as string));
+      } else if (portId) {
+        logs = await storage.getEmailLogsByPortId(parseInt(portId as string));
+      } else {
+        logs = await storage.getAllEmailLogs();
+      }
+      
+      res.json(logs);
+    } catch (error) {
+      console.error("Get email logs error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Menu Management endpoints
   app.get("/api/menus", authenticateToken, async (req: Request, res: Response) => {
     try {
