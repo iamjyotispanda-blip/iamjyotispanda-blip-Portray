@@ -18,10 +18,25 @@ interface UserAuditLogDialogProps {
 
 export function UserAuditLogDialog({ open, onOpenChange, userId, userName }: UserAuditLogDialogProps) {
   // Get audit logs for this user
-  const { data: auditLogs = [], isLoading } = useQuery<UserAuditLog[]>({
+  const { data: auditLogs = [], isLoading, error } = useQuery<UserAuditLog[]>({
     queryKey: ["/api/user-audit-logs", userId],
-    queryFn: () => fetch(`/api/user-audit-logs?userId=${userId}`).then(res => res.json()),
-    enabled: open,
+    queryFn: async () => {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/user-audit-logs?userId=${userId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audit logs: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: open && !!userId,
   });
 
   const getActionIcon = (action: string) => {
@@ -129,6 +144,16 @@ export function UserAuditLogDialog({ open, onOpenChange, userId, userName }: Use
               <div className="text-center space-y-2">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="text-sm text-muted-foreground">Loading activity logs...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center space-y-2">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+                <h3 className="text-lg font-medium">Failed to load activity logs</h3>
+                <p className="text-sm text-muted-foreground">
+                  {error instanceof Error ? error.message : "An unexpected error occurred"}
+                </p>
               </div>
             </div>
           ) : auditLogs.length === 0 ? (
