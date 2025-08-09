@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,13 +22,7 @@ export function UserAuditLogDialog({ open, onOpenChange, userId, userName }: Use
   const { data: auditLogs = [], isLoading, error } = useQuery<UserAuditLog[]>({
     queryKey: ["/api/user-audit-logs", userId],
     queryFn: async () => {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(`/api/user-audit-logs?userId=${userId}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await apiRequest("GET", `/api/user-audit-logs?userId=${userId}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch audit logs: ${response.status}`);
