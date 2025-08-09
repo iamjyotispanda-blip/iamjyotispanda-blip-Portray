@@ -2116,27 +2116,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Email verification endpoint
-  app.post("/api/auth/verify-email", async (req: Request, res: Response) => {
+  // Email verification endpoint for users (GET request like port admin)
+  app.get("/api/auth/verify-user", async (req: Request, res: Response) => {
     try {
-      const { token } = verifyEmailSchema.parse(req.body);
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Verification token required" });
+      }
       
       // Find user by verification token
       const user = await storage.getUserByVerificationToken(token);
       if (!user) {
         return res.status(400).json({ message: "Invalid or expired verification token" });
       }
-
+      
       // Check if token is expired
       if (user.verificationTokenExpires && new Date() > user.verificationTokenExpires) {
         return res.status(400).json({ message: "Verification token has expired" });
       }
-
+      
+      // Check if already verified
+      if (user.isVerified && user.isActive) {
+        return res.json({ 
+          message: "Email already verified and account is active. You can log in.",
+          action: "login_required"
+        });
+      }
+      
       // Generate password setup token
       const passwordSetupToken = randomUUID();
       const passwordSetupTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-      // Update user - mark as verified and add password setup token
+      
+      // Update user - mark as verified and set password setup token
       await storage.updateUser(user.id, {
         isVerified: true,
         verificationToken: null,
@@ -2144,19 +2156,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         passwordSetupToken,
         passwordSetupTokenExpires
       } as any);
-
+      
       // Log email verification for audit trail
       await AuditService.logUserVerification(
         user.id,
-        user.id, // User verifies themselves
+        user.id, // User verifies their own email
         req.ip,
         req.get('User-Agent')
       );
-
-      // Return password setup token for direct redirect
+      
       res.json({ 
-        message: "Email verified successfully. Redirecting to password setup.", 
-        passwordSetupToken: passwordSetupToken 
+        message: "Email verified successfully. Redirecting to password setup.",
+        action: "setup_password",
+        passwordSetupToken,
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
