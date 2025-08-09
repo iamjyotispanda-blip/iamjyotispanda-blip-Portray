@@ -349,7 +349,7 @@ export function RolesContent() {
                     Add Role
                   </Button>
                 </SheetTrigger>
-              <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+              <SheetContent className="w-[95vw] sm:w-[500px] lg:w-[600px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Add Role</SheetTitle>
                   <SheetDescription>
@@ -392,7 +392,7 @@ export function RolesContent() {
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <Label>Permissions</Label>
                       <Button 
                         type="button" 
@@ -400,6 +400,7 @@ export function RolesContent() {
                         size="sm"
                         onClick={handleAddPermission}
                         data-testid="button-add-permission"
+                        className="w-full sm:w-auto"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Permission
@@ -628,7 +629,7 @@ export function RolesContent() {
               resetForm();
             }
           }}>
-            <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+            <SheetContent className="w-[95vw] sm:w-[500px] lg:w-[600px] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Edit Role</SheetTitle>
                 <SheetDescription>
@@ -672,7 +673,7 @@ export function RolesContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <Label>Permissions</Label>
                     <Button 
                       type="button" 
@@ -680,6 +681,7 @@ export function RolesContent() {
                       size="sm"
                       onClick={handleAddPermission}
                       data-testid="button-edit-add-permission"
+                      className="w-full sm:w-auto"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Permission
@@ -742,7 +744,7 @@ export function RolesContent() {
 
           {/* Permission Management Dialog */}
           <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add Permission</DialogTitle>
                 <DialogDescription>
