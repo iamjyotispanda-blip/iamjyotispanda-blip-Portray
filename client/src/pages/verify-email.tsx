@@ -7,7 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyEmailPage() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [, params] = useRoute("/verify-email");
   const [status, setStatus] = useState<"loading" | "success" | "error" | "expired">("loading");
   const [message, setMessage] = useState("");
@@ -42,7 +42,7 @@ export default function VerifyEmailPage() {
       setStatus("loading");
       const response = await apiRequest("POST", "/api/auth/verify-email", { token });
       
-      if (response && response.passwordSetupToken) {
+      if (response && (response as any).passwordSetupToken) {
         setStatus("success");
         setMessage("Email verified successfully! Redirecting to password setup...");
         
@@ -53,7 +53,7 @@ export default function VerifyEmailPage() {
         
         // Redirect to password setup page with token
         setTimeout(() => {
-          window.location.href = `/setup-password?token=${response.passwordSetupToken}`;
+          setLocation(`/setup-password?token=${(response as any).passwordSetupToken}`);
         }, 2000);
       }
     } catch (error: any) {
