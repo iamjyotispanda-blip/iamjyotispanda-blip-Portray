@@ -603,3 +603,384 @@ export const insertUserAuditLogSchema = createInsertSchema(userAuditLogs).pick({
 
 export type UserAuditLog = typeof userAuditLogs.$inferSelect;
 export type InsertUserAuditLog = z.infer<typeof insertUserAuditLogSchema>;
+
+// Customer Management Tables
+export const customers = pgTable("customers", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  customerCode: text("customer_code").notNull().unique(), // Format: 2025_VPT_001
+  customerName: text("customer_name").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  country: text("country").notNull(),
+  state: text("state").notNull(),
+  pan: text("pan").notNull().unique(), // Indian PAN format validation
+  gst: text("gst").notNull().unique(), // Indian GST format validation
+  email: text("email").notNull().unique(), // Must be unique in both customers and users tables
+  terminalId: integer("terminal_id").notNull().references(() => terminals.id),
+  portId: integer("port_id").notNull().references(() => ports.id),
+  status: text("status").notNull().default("Activation in Progress"), // "Activation in Progress", "Customer TC"
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const customerContacts = pgTable("customer_contacts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  customerId: integer("customer_id").notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  contactName: text("contact_name").notNull(),
+  designation: text("designation").notNull(),
+  email: text("email").notNull(),
+  contactNumber: text("contact_number").notNull(),
+  isPrimaryContact: boolean("is_primary_contact").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const customerAddresses = pgTable("customer_addresses", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  customerId: integer("customer_id").notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  addressType: text("address_type").notNull(), // "Billing", "Shipping", "Other"
+  addressLine1: text("address_line_1").notNull(),
+  addressLine2: text("address_line_2"),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  country: text("country").notNull(),
+  pincode: text("pincode").notNull(),
+  isDefaultAddress: boolean("is_default_address").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const contracts = pgTable("contracts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  customerId: integer("customer_id").notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  contractNumber: text("contract_number").notNull().unique(),
+  contractCopyUrl: text("contract_copy_url"), // PDF/Doc upload URL
+  validFrom: timestamp("valid_from").notNull(),
+  validTo: timestamp("valid_to").notNull(),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const contractTariffs = pgTable("contract_tariffs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  contractId: integer("contract_id").notNull().references(() => contracts.id, { onDelete: 'cascade' }),
+  chcRateToCustomer: text("chc_rate_to_customer"), // CHC - Cargo Handling Charge
+  chcRateToPort: text("chc_rate_to_port"),
+  bhcRateToCustomer: text("bhc_rate_to_customer"), // BHC - Berth Handling Charge
+  bhcRateToPort: text("bhc_rate_to_port"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const contractCargoDetails = pgTable("contract_cargo_details", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  contractId: integer("contract_id").notNull().references(() => contracts.id, { onDelete: 'cascade' }),
+  cargoType: text("cargo_type").notNull(),
+  expectedCargoPerYear: integer("expected_cargo_per_year"),
+  assignedPlots: text("assigned_plots").array(), // Multi-select array
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const contractStorageCharges = pgTable("contract_storage_charges", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  contractId: integer("contract_id").notNull().references(() => contracts.id, { onDelete: 'cascade' }),
+  storageFreeTime: integer("storage_free_time").notNull(), // in days
+  chargePerDay: text("charge_per_day").notNull(), // after free time
+  chargeApplicableDays: text("charge_applicable_days").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const contractSpecialConditions = pgTable("contract_special_conditions", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  contractId: integer("contract_id").notNull().references(() => contracts.id, { onDelete: 'cascade' }),
+  condition: text("condition").notNull(),
+  responsibility: text("responsibility").notNull(),
+  charge: text("charge").notNull(),
+  chargeType: text("charge_type").notNull(), // "Including" or "Excluding"
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// Master Data Tables for Dropdowns
+export const countries = pgTable("countries", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull().unique(),
+  code: text("code").notNull().unique(), // ISO country code
+  flagIcon: text("flag_icon"), // Unicode flag or icon path
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+export const states = pgTable("states", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull(),
+  code: text("code").notNull(),
+  countryId: integer("country_id").notNull().references(() => countries.id),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+export const cargoTypes = pgTable("cargo_types", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+export const plots = pgTable("plots", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  plotNumber: text("plot_number").notNull().unique(),
+  plotName: text("plot_name").notNull(),
+  terminalId: integer("terminal_id").notNull().references(() => terminals.id),
+  area: text("area"), // plot area
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+// Relations
+export const customersRelations = relations(customers, ({ one, many }) => ({
+  terminal: one(terminals, {
+    fields: [customers.terminalId],
+    references: [terminals.id],
+  }),
+  port: one(ports, {
+    fields: [customers.portId],
+    references: [ports.id],
+  }),
+  createdByUser: one(users, {
+    fields: [customers.createdBy],
+    references: [users.id],
+    relationName: "CustomerCreatedBy",
+  }),
+  updatedByUser: one(users, {
+    fields: [customers.updatedBy],
+    references: [users.id],
+    relationName: "CustomerUpdatedBy",
+  }),
+  contacts: many(customerContacts),
+  addresses: many(customerAddresses),
+  contracts: many(contracts),
+}));
+
+export const customerContactsRelations = relations(customerContacts, ({ one }) => ({
+  customer: one(customers, {
+    fields: [customerContacts.customerId],
+    references: [customers.id],
+  }),
+}));
+
+export const customerAddressesRelations = relations(customerAddresses, ({ one }) => ({
+  customer: one(customers, {
+    fields: [customerAddresses.customerId],
+    references: [customers.id],
+  }),
+}));
+
+export const contractsRelations = relations(contracts, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [contracts.customerId],
+    references: [customers.id],
+  }),
+  createdByUser: one(users, {
+    fields: [contracts.createdBy],
+    references: [users.id],
+    relationName: "ContractCreatedBy",
+  }),
+  updatedByUser: one(users, {
+    fields: [contracts.updatedBy],
+    references: [users.id],
+    relationName: "ContractUpdatedBy",
+  }),
+  tariffs: many(contractTariffs),
+  cargoDetails: many(contractCargoDetails),
+  storageCharges: many(contractStorageCharges),
+  specialConditions: many(contractSpecialConditions),
+}));
+
+export const contractTariffsRelations = relations(contractTariffs, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractTariffs.contractId],
+    references: [contracts.id],
+  }),
+}));
+
+export const contractCargoDetailsRelations = relations(contractCargoDetails, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractCargoDetails.contractId],
+    references: [contracts.id],
+  }),
+}));
+
+export const contractStorageChargesRelations = relations(contractStorageCharges, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractStorageCharges.contractId],
+    references: [contracts.id],
+  }),
+}));
+
+export const contractSpecialConditionsRelations = relations(contractSpecialConditions, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractSpecialConditions.contractId],
+    references: [contracts.id],
+  }),
+}));
+
+export const statesRelations = relations(states, ({ one }) => ({
+  country: one(countries, {
+    fields: [states.countryId],
+    references: [countries.id],
+  }),
+}));
+
+export const plotsRelations = relations(plots, ({ one }) => ({
+  terminal: one(terminals, {
+    fields: [plots.terminalId],
+    references: [terminals.id],
+  }),
+}));
+
+// Validation schemas with Indian format validation
+const indianPANRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+const indianGSTRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+const indianMobileRegex = /^[6-9]\d{9}$/;
+const indianPincodeRegex = /^[1-9][0-9]{5}$/;
+
+export const insertCustomerSchema = createInsertSchema(customers).pick({
+  customerName: true,
+  displayName: true,
+  country: true,
+  state: true,
+  pan: true,
+  gst: true,
+  email: true,
+  terminalId: true,
+  portId: true,
+  status: true,
+  createdBy: true,
+}).extend({
+  pan: z.string().regex(indianPANRegex, "Please enter a valid PAN number (e.g., ABCDE1234F)"),
+  gst: z.string().regex(indianGSTRegex, "Please enter a valid GST number"),
+  email: z.string().email("Please enter a valid email address"),
+});
+
+export const insertCustomerContactSchema = createInsertSchema(customerContacts).pick({
+  customerId: true,
+  contactName: true,
+  designation: true,
+  email: true,
+  contactNumber: true,
+  isPrimaryContact: true,
+}).extend({
+  email: z.string().email("Please enter a valid email address"),
+  contactNumber: z.string().regex(indianMobileRegex, "Please enter a valid 10-digit mobile number"),
+});
+
+export const insertCustomerAddressSchema = createInsertSchema(customerAddresses).pick({
+  customerId: true,
+  addressType: true,
+  addressLine1: true,
+  addressLine2: true,
+  city: true,
+  state: true,
+  country: true,
+  pincode: true,
+  isDefaultAddress: true,
+}).extend({
+  pincode: z.string().regex(indianPincodeRegex, "Please enter a valid 6-digit pincode"),
+});
+
+export const insertContractSchema = createInsertSchema(contracts).pick({
+  customerId: true,
+  contractNumber: true,
+  contractCopyUrl: true,
+  validFrom: true,
+  validTo: true,
+  createdBy: true,
+});
+
+export const insertContractTariffSchema = createInsertSchema(contractTariffs).pick({
+  contractId: true,
+  chcRateToCustomer: true,
+  chcRateToPort: true,
+  bhcRateToCustomer: true,
+  bhcRateToPort: true,
+});
+
+export const insertContractCargoDetailSchema = createInsertSchema(contractCargoDetails).pick({
+  contractId: true,
+  cargoType: true,
+  expectedCargoPerYear: true,
+  assignedPlots: true,
+});
+
+export const insertContractStorageChargeSchema = createInsertSchema(contractStorageCharges).pick({
+  contractId: true,
+  storageFreeTime: true,
+  chargePerDay: true,
+  chargeApplicableDays: true,
+});
+
+export const insertContractSpecialConditionSchema = createInsertSchema(contractSpecialConditions).pick({
+  contractId: true,
+  condition: true,
+  responsibility: true,
+  charge: true,
+  chargeType: true,
+});
+
+export const insertCountrySchema = createInsertSchema(countries).pick({
+  name: true,
+  code: true,
+  flagIcon: true,
+  isActive: true,
+});
+
+export const insertStateSchema = createInsertSchema(states).pick({
+  name: true,
+  code: true,
+  countryId: true,
+  isActive: true,
+});
+
+export const insertCargoTypeSchema = createInsertSchema(cargoTypes).pick({
+  name: true,
+  description: true,
+  isActive: true,
+});
+
+export const insertPlotSchema = createInsertSchema(plots).pick({
+  plotNumber: true,
+  plotName: true,
+  terminalId: true,
+  area: true,
+  isActive: true,
+});
+
+// Type definitions
+export type Customer = typeof customers.$inferSelect;
+export type CustomerContact = typeof customerContacts.$inferSelect;
+export type CustomerAddress = typeof customerAddresses.$inferSelect;
+export type Contract = typeof contracts.$inferSelect;
+export type ContractTariff = typeof contractTariffs.$inferSelect;
+export type ContractCargoDetail = typeof contractCargoDetails.$inferSelect;
+export type ContractStorageCharge = typeof contractStorageCharges.$inferSelect;
+export type ContractSpecialCondition = typeof contractSpecialConditions.$inferSelect;
+export type Country = typeof countries.$inferSelect;
+export type State = typeof states.$inferSelect;
+export type CargoType = typeof cargoTypes.$inferSelect;
+export type Plot = typeof plots.$inferSelect;
+
+export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+export type InsertCustomerContact = z.infer<typeof insertCustomerContactSchema>;
+export type InsertCustomerAddress = z.infer<typeof insertCustomerAddressSchema>;
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type InsertContractTariff = z.infer<typeof insertContractTariffSchema>;
+export type InsertContractCargoDetail = z.infer<typeof insertContractCargoDetailSchema>;
+export type InsertContractStorageCharge = z.infer<typeof insertContractStorageChargeSchema>;
+export type InsertContractSpecialCondition = z.infer<typeof insertContractSpecialConditionSchema>;
+export type InsertCountry = z.infer<typeof insertCountrySchema>;
+export type InsertState = z.infer<typeof insertStateSchema>;
+export type InsertCargoType = z.infer<typeof insertCargoTypeSchema>;
+export type InsertPlot = z.infer<typeof insertPlotSchema>;

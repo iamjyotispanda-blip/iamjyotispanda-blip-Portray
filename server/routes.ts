@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, insertUserSchema, updateUserSchema, insertRoleSchema, updateRoleSchema, type InsertUser, type Menu } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, insertUserSchema, updateUserSchema, insertRoleSchema, updateRoleSchema, insertCustomerSchema, insertCustomerContactSchema, insertCustomerAddressSchema, insertContractSchema, insertContractTariffSchema, insertContractCargoDetailSchema, insertContractStorageChargeSchema, insertContractSpecialConditionSchema, type InsertUser, type Menu } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -2282,6 +2282,335 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Password setup error:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Customer Management API Routes
+  
+  // Get all customers (for Marketing Manager)
+  app.get("/api/customers", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const customers = await storage.getAllCustomers();
+      res.json(customers);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      res.status(500).json({ message: "Failed to fetch customers" });
+    }
+  });
+
+  // Get customer by ID
+  app.get("/api/customers/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const customer = await storage.getCustomerById(id);
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      res.json(customer);
+    } catch (error) {
+      console.error("Error fetching customer:", error);
+      res.status(500).json({ message: "Failed to fetch customer" });
+    }
+  });
+
+  // Create new customer with validation
+  app.post("/api/customers", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertCustomerSchema.parse(req.body);
+      const userId = req.user?.id;
+
+      // Validation checks as per requirements
+      const existingCustomerName = await storage.getCustomerById(validatedData.customerId || 0);
+      if (existingCustomerName && existingCustomerName.customerName === validatedData.customerName) {
+        return res.status(400).json({ message: "Customer name already exists" });
+      }
+
+      const existingPAN = await storage.getCustomerByPAN(validatedData.pan);
+      if (existingPAN) {
+        return res.status(400).json({ message: "PAN number already exists" });
+      }
+
+      const existingGST = await storage.getCustomerByGST(validatedData.gst);
+      if (existingGST) {
+        return res.status(400).json({ message: "GST number already exists" });
+      }
+
+      const existingCustomerEmail = await storage.getCustomerByEmail(validatedData.email);
+      const existingUserEmail = await storage.getUserByEmail(validatedData.email);
+      if (existingCustomerEmail || existingUserEmail) {
+        return res.status(400).json({ 
+          message: existingUserEmail ? "Email already exists as a registered user" : "Email already exists as a customer" 
+        });
+      }
+
+      // Generate customer code
+      const customerCode = await storage.generateCustomerCode(validatedData.terminalId);
+
+      const customer = await storage.createCustomer({
+        ...validatedData,
+        customerCode,
+        createdBy: userId,
+      });
+
+      res.status(201).json(customer);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      console.error("Error creating customer:", error);
+      res.status(500).json({ message: "Failed to create customer" });
+    }
+  });
+
+  // Update customer status (for contract creation workflow)
+  app.patch("/api/customers/:id/status", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      const customer = await storage.updateCustomerStatus(id, status);
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      
+      res.json(customer);
+    } catch (error) {
+      console.error("Error updating customer status:", error);
+      res.status(500).json({ message: "Failed to update customer status" });
+    }
+  });
+
+  // Customer Contacts API
+  app.get("/api/customers/:customerId/contacts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.customerId);
+      const contacts = await storage.getCustomerContactsByCustomerId(customerId);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching customer contacts:", error);
+      res.status(500).json({ message: "Failed to fetch customer contacts" });
+    }
+  });
+
+  app.post("/api/customers/:customerId/contacts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.customerId);
+      const validatedData = insertCustomerContactSchema.parse({
+        ...req.body,
+        customerId
+      });
+
+      const contact = await storage.createCustomerContact(validatedData);
+      res.status(201).json(contact);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      console.error("Error creating customer contact:", error);
+      res.status(500).json({ message: "Failed to create customer contact" });
+    }
+  });
+
+  // Customer Addresses API
+  app.get("/api/customers/:customerId/addresses", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.customerId);
+      const addresses = await storage.getCustomerAddressesByCustomerId(customerId);
+      res.json(addresses);
+    } catch (error) {
+      console.error("Error fetching customer addresses:", error);
+      res.status(500).json({ message: "Failed to fetch customer addresses" });
+    }
+  });
+
+  app.post("/api/customers/:customerId/addresses", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.customerId);
+      const validatedData = insertCustomerAddressSchema.parse({
+        ...req.body,
+        customerId
+      });
+
+      const address = await storage.createCustomerAddress(validatedData);
+      res.status(201).json(address);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      console.error("Error creating customer address:", error);
+      res.status(500).json({ message: "Failed to create customer address" });
+    }
+  });
+
+  // Contract Management API
+  app.get("/api/contracts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contracts = await storage.getAllContracts();
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching contracts:", error);
+      res.status(500).json({ message: "Failed to fetch contracts" });
+    }
+  });
+
+  app.get("/api/customers/:customerId/contracts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.customerId);
+      const contracts = await storage.getContractsByCustomerId(customerId);
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching customer contracts:", error);
+      res.status(500).json({ message: "Failed to fetch customer contracts" });
+    }
+  });
+
+  app.post("/api/contracts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertContractSchema.parse({
+        ...req.body,
+        createdBy: req.user?.id
+      });
+
+      const contract = await storage.createContract(validatedData);
+      
+      // Update customer status to "Customer TC" after contract creation
+      await storage.updateCustomerStatus(validatedData.customerId, "Customer TC");
+
+      res.status(201).json(contract);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      console.error("Error creating contract:", error);
+      res.status(500).json({ message: "Failed to create contract" });
+    }
+  });
+
+  // Contract details API endpoints (tariffs, cargo, storage, conditions)
+  app.post("/api/contracts/:contractId/tariffs", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.contractId);
+      const validatedData = insertContractTariffSchema.parse({
+        ...req.body,
+        contractId
+      });
+      const tariff = await storage.createContractTariff(validatedData);
+      res.status(201).json(tariff);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error creating contract tariff:", error);
+      res.status(500).json({ message: "Failed to create contract tariff" });
+    }
+  });
+
+  app.post("/api/contracts/:contractId/cargo-details", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.contractId);
+      const validatedData = insertContractCargoDetailSchema.parse({
+        ...req.body,
+        contractId
+      });
+      const cargoDetail = await storage.createContractCargoDetail(validatedData);
+      res.status(201).json(cargoDetail);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error creating contract cargo detail:", error);
+      res.status(500).json({ message: "Failed to create contract cargo detail" });
+    }
+  });
+
+  app.post("/api/contracts/:contractId/storage-charges", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.contractId);
+      const validatedData = insertContractStorageChargeSchema.parse({
+        ...req.body,
+        contractId
+      });
+      const storageCharge = await storage.createContractStorageCharge(validatedData);
+      res.status(201).json(storageCharge);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error creating contract storage charge:", error);
+      res.status(500).json({ message: "Failed to create contract storage charge" });
+    }
+  });
+
+  app.post("/api/contracts/:contractId/special-conditions", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.contractId);
+      const validatedData = insertContractSpecialConditionSchema.parse({
+        ...req.body,
+        contractId
+      });
+      const condition = await storage.createContractSpecialCondition(validatedData);
+      res.status(201).json(condition);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      console.error("Error creating contract special condition:", error);
+      res.status(500).json({ message: "Failed to create contract special condition" });
+    }
+  });
+
+  // Master Data API endpoints
+  app.get("/api/countries", async (req: Request, res: Response) => {
+    try {
+      const countries = await storage.getAllCountries();
+      res.json(countries);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      res.status(500).json({ message: "Failed to fetch countries" });
+    }
+  });
+
+  app.get("/api/countries/:countryId/states", async (req: Request, res: Response) => {
+    try {
+      const countryId = parseInt(req.params.countryId);
+      const states = await storage.getStatesByCountryId(countryId);
+      res.json(states);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+      res.status(500).json({ message: "Failed to fetch states" });
+    }
+  });
+
+  app.get("/api/cargo-types", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const cargoTypes = await storage.getAllCargoTypes();
+      res.json(cargoTypes);
+    } catch (error) {
+      console.error("Error fetching cargo types:", error);
+      res.status(500).json({ message: "Failed to fetch cargo types" });
+    }
+  });
+
+  app.get("/api/terminals/:terminalId/plots", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const terminalId = parseInt(req.params.terminalId);
+      const plots = await storage.getPlotsByTerminalId(terminalId);
+      res.json(plots);
+    } catch (error) {
+      console.error("Error fetching plots:", error);
+      res.status(500).json({ message: "Failed to fetch plots" });
     }
   });
 

@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs } from "@shared/schema";
+import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -132,6 +132,70 @@ export interface IStorage {
   updateRole(id: number, updates: UpdateRole): Promise<Role | undefined>;
   toggleRoleStatus(id: number): Promise<Role | undefined>;
   deleteRole(id: number): Promise<void>;
+
+  // Customer management operations
+  getAllCustomers(): Promise<Customer[]>;
+  getCustomerById(id: number): Promise<Customer | undefined>;
+  getCustomerByCode(customerCode: string): Promise<Customer | undefined>;
+  getCustomerByEmail(email: string): Promise<Customer | undefined>;
+  getCustomerByPAN(pan: string): Promise<Customer | undefined>;
+  getCustomerByGST(gst: string): Promise<Customer | undefined>;
+  getCustomersByTerminalId(terminalId: number): Promise<Customer[]>;
+  createCustomer(customer: InsertCustomer & { customerCode: string }): Promise<Customer>;
+  updateCustomer(id: number, updates: Partial<Customer>): Promise<Customer | undefined>;
+  updateCustomerStatus(id: number, status: string): Promise<Customer | undefined>;
+  deleteCustomer(id: number): Promise<void>;
+  generateCustomerCode(terminalId: number): Promise<string>;
+
+  // Customer contacts
+  getCustomerContactsByCustomerId(customerId: number): Promise<CustomerContact[]>;
+  createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact>;
+  updateCustomerContact(id: number, updates: Partial<CustomerContact>): Promise<CustomerContact | undefined>;
+  deleteCustomerContact(id: number): Promise<void>;
+
+  // Customer addresses
+  getCustomerAddressesByCustomerId(customerId: number): Promise<CustomerAddress[]>;
+  createCustomerAddress(address: InsertCustomerAddress): Promise<CustomerAddress>;
+  updateCustomerAddress(id: number, updates: Partial<CustomerAddress>): Promise<CustomerAddress | undefined>;
+  deleteCustomerAddress(id: number): Promise<void>;
+
+  // Contract management
+  getAllContracts(): Promise<Contract[]>;
+  getContractById(id: number): Promise<Contract | undefined>;
+  getContractsByCustomerId(customerId: number): Promise<Contract[]>;
+  createContract(contract: InsertContract): Promise<Contract>;
+  updateContract(id: number, updates: Partial<Contract>): Promise<Contract | undefined>;
+  deleteContract(id: number): Promise<void>;
+
+  // Contract tariffs
+  getContractTariffsByContractId(contractId: number): Promise<ContractTariff[]>;
+  createContractTariff(tariff: InsertContractTariff): Promise<ContractTariff>;
+  updateContractTariff(id: number, updates: Partial<ContractTariff>): Promise<ContractTariff | undefined>;
+  deleteContractTariff(id: number): Promise<void>;
+
+  // Contract cargo details
+  getContractCargoDetailsByContractId(contractId: number): Promise<ContractCargoDetail[]>;
+  createContractCargoDetail(cargoDetail: InsertContractCargoDetail): Promise<ContractCargoDetail>;
+  updateContractCargoDetail(id: number, updates: Partial<ContractCargoDetail>): Promise<ContractCargoDetail | undefined>;
+  deleteContractCargoDetail(id: number): Promise<void>;
+
+  // Contract storage charges
+  getContractStorageChargesByContractId(contractId: number): Promise<ContractStorageCharge[]>;
+  createContractStorageCharge(storageCharge: InsertContractStorageCharge): Promise<ContractStorageCharge>;
+  updateContractStorageCharge(id: number, updates: Partial<ContractStorageCharge>): Promise<ContractStorageCharge | undefined>;
+  deleteContractStorageCharge(id: number): Promise<void>;
+
+  // Contract special conditions
+  getContractSpecialConditionsByContractId(contractId: number): Promise<ContractSpecialCondition[]>;
+  createContractSpecialCondition(condition: InsertContractSpecialCondition): Promise<ContractSpecialCondition>;
+  updateContractSpecialCondition(id: number, updates: Partial<ContractSpecialCondition>): Promise<ContractSpecialCondition | undefined>;
+  deleteContractSpecialCondition(id: number): Promise<void>;
+
+  // Master data operations
+  getAllCountries(): Promise<Country[]>;
+  getStatesByCountryId(countryId: number): Promise<State[]>;
+  getAllCargoTypes(): Promise<CargoType[]>;
+  getPlotsByTerminalId(terminalId: number): Promise<Plot[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1758,6 +1822,303 @@ export class MemStorage implements IStorage {
     };
     this.menus.set(id, updatedMenu);
     return updatedMenu;
+  }
+
+  // Customer management operations
+  async getAllCustomers(): Promise<Customer[]> {
+    return await db.select().from(customers);
+  }
+
+  async getCustomerById(id: number): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer || undefined;
+  }
+
+  async getCustomerByCode(customerCode: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.customerCode, customerCode));
+    return customer || undefined;
+  }
+
+  async getCustomerByEmail(email: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.email, email));
+    return customer || undefined;
+  }
+
+  async getCustomerByPAN(pan: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.pan, pan));
+    return customer || undefined;
+  }
+
+  async getCustomerByGST(gst: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.gst, gst));
+    return customer || undefined;
+  }
+
+  async getCustomersByTerminalId(terminalId: number): Promise<Customer[]> {
+    return await db.select().from(customers).where(eq(customers.terminalId, terminalId));
+  }
+
+  async createCustomer(customerData: InsertCustomer & { customerCode: string }): Promise<Customer> {
+    const [customer] = await db.insert(customers).values({
+      ...customerData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return customer;
+  }
+
+  async updateCustomer(id: number, updates: Partial<Customer>): Promise<Customer | undefined> {
+    const [updated] = await db.update(customers)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customers.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateCustomerStatus(id: number, status: string): Promise<Customer | undefined> {
+    const [updated] = await db.update(customers)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(customers.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCustomer(id: number): Promise<void> {
+    await db.delete(customers).where(eq(customers.id, id));
+  }
+
+  async generateCustomerCode(terminalId: number): Promise<string> {
+    // Get terminal short code
+    const terminal = await this.getTerminalById(terminalId);
+    if (!terminal) throw new Error('Terminal not found');
+
+    // Get current year
+    const year = new Date().getFullYear();
+
+    // Get counter for this terminal and year
+    const existingCustomers = await db.select()
+      .from(customers)
+      .where(eq(customers.terminalId, terminalId));
+
+    // Filter by current year from customer codes
+    const yearPrefix = `${year}_${terminal.shortCode}_`;
+    const currentYearCustomers = existingCustomers.filter(c => 
+      c.customerCode.startsWith(yearPrefix)
+    );
+
+    // Generate next counter
+    const counter = currentYearCustomers.length + 1;
+    const paddedCounter = counter.toString().padStart(3, '0');
+
+    return `${year}_${terminal.shortCode}_${paddedCounter}`;
+  }
+
+  // Customer contacts
+  async getCustomerContactsByCustomerId(customerId: number): Promise<CustomerContact[]> {
+    return await db.select().from(customerContacts).where(eq(customerContacts.customerId, customerId));
+  }
+
+  async createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact> {
+    const [created] = await db.insert(customerContacts).values({
+      ...contact,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateCustomerContact(id: number, updates: Partial<CustomerContact>): Promise<CustomerContact | undefined> {
+    const [updated] = await db.update(customerContacts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customerContacts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCustomerContact(id: number): Promise<void> {
+    await db.delete(customerContacts).where(eq(customerContacts.id, id));
+  }
+
+  // Customer addresses
+  async getCustomerAddressesByCustomerId(customerId: number): Promise<CustomerAddress[]> {
+    return await db.select().from(customerAddresses).where(eq(customerAddresses.customerId, customerId));
+  }
+
+  async createCustomerAddress(address: InsertCustomerAddress): Promise<CustomerAddress> {
+    const [created] = await db.insert(customerAddresses).values({
+      ...address,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateCustomerAddress(id: number, updates: Partial<CustomerAddress>): Promise<CustomerAddress | undefined> {
+    const [updated] = await db.update(customerAddresses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customerAddresses.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCustomerAddress(id: number): Promise<void> {
+    await db.delete(customerAddresses).where(eq(customerAddresses.id, id));
+  }
+
+  // Contract management
+  async getAllContracts(): Promise<Contract[]> {
+    return await db.select().from(contracts);
+  }
+
+  async getContractById(id: number): Promise<Contract | undefined> {
+    const [contract] = await db.select().from(contracts).where(eq(contracts.id, id));
+    return contract || undefined;
+  }
+
+  async getContractsByCustomerId(customerId: number): Promise<Contract[]> {
+    return await db.select().from(contracts).where(eq(contracts.customerId, customerId));
+  }
+
+  async createContract(contract: InsertContract): Promise<Contract> {
+    const [created] = await db.insert(contracts).values({
+      ...contract,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContract(id: number, updates: Partial<Contract>): Promise<Contract | undefined> {
+    const [updated] = await db.update(contracts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contracts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContract(id: number): Promise<void> {
+    await db.delete(contracts).where(eq(contracts.id, id));
+  }
+
+  // Contract tariffs
+  async getContractTariffsByContractId(contractId: number): Promise<ContractTariff[]> {
+    return await db.select().from(contractTariffs).where(eq(contractTariffs.contractId, contractId));
+  }
+
+  async createContractTariff(tariff: InsertContractTariff): Promise<ContractTariff> {
+    const [created] = await db.insert(contractTariffs).values({
+      ...tariff,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractTariff(id: number, updates: Partial<ContractTariff>): Promise<ContractTariff | undefined> {
+    const [updated] = await db.update(contractTariffs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractTariffs.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractTariff(id: number): Promise<void> {
+    await db.delete(contractTariffs).where(eq(contractTariffs.id, id));
+  }
+
+  // Contract cargo details
+  async getContractCargoDetailsByContractId(contractId: number): Promise<ContractCargoDetail[]> {
+    return await db.select().from(contractCargoDetails).where(eq(contractCargoDetails.contractId, contractId));
+  }
+
+  async createContractCargoDetail(cargoDetail: InsertContractCargoDetail): Promise<ContractCargoDetail> {
+    const [created] = await db.insert(contractCargoDetails).values({
+      ...cargoDetail,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractCargoDetail(id: number, updates: Partial<ContractCargoDetail>): Promise<ContractCargoDetail | undefined> {
+    const [updated] = await db.update(contractCargoDetails)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractCargoDetails.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractCargoDetail(id: number): Promise<void> {
+    await db.delete(contractCargoDetails).where(eq(contractCargoDetails.id, id));
+  }
+
+  // Contract storage charges
+  async getContractStorageChargesByContractId(contractId: number): Promise<ContractStorageCharge[]> {
+    return await db.select().from(contractStorageCharges).where(eq(contractStorageCharges.contractId, contractId));
+  }
+
+  async createContractStorageCharge(storageCharge: InsertContractStorageCharge): Promise<ContractStorageCharge> {
+    const [created] = await db.insert(contractStorageCharges).values({
+      ...storageCharge,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractStorageCharge(id: number, updates: Partial<ContractStorageCharge>): Promise<ContractStorageCharge | undefined> {
+    const [updated] = await db.update(contractStorageCharges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractStorageCharges.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractStorageCharge(id: number): Promise<void> {
+    await db.delete(contractStorageCharges).where(eq(contractStorageCharges.id, id));
+  }
+
+  // Contract special conditions
+  async getContractSpecialConditionsByContractId(contractId: number): Promise<ContractSpecialCondition[]> {
+    return await db.select().from(contractSpecialConditions).where(eq(contractSpecialConditions.contractId, contractId));
+  }
+
+  async createContractSpecialCondition(condition: InsertContractSpecialCondition): Promise<ContractSpecialCondition> {
+    const [created] = await db.insert(contractSpecialConditions).values({
+      ...condition,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractSpecialCondition(id: number, updates: Partial<ContractSpecialCondition>): Promise<ContractSpecialCondition | undefined> {
+    const [updated] = await db.update(contractSpecialConditions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractSpecialConditions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractSpecialCondition(id: number): Promise<void> {
+    await db.delete(contractSpecialConditions).where(eq(contractSpecialConditions.id, id));
+  }
+
+  // Master data operations
+  async getAllCountries(): Promise<Country[]> {
+    return await db.select().from(countries).where(eq(countries.isActive, true));
+  }
+
+  async getStatesByCountryId(countryId: number): Promise<State[]> {
+    return await db.select().from(states).where(and(eq(states.countryId, countryId), eq(states.isActive, true)));
+  }
+
+  async getAllCargoTypes(): Promise<CargoType[]> {
+    return await db.select().from(cargoTypes).where(eq(cargoTypes.isActive, true));
+  }
+
+  async getPlotsByTerminalId(terminalId: number): Promise<Plot[]> {
+    return await db.select().from(plots).where(and(eq(plots.terminalId, terminalId), eq(plots.isActive, true)));
   }
 }
 
