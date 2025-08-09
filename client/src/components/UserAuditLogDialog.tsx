@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, User, Clock, CheckCircle, AlertCircle, Edit, Shield, Key, X } from "lucide-react";
+import { History, User, Clock, CheckCircle, AlertCircle, Edit, Shield, Key } from "lucide-react";
 import { format } from "date-fns";
 import type { UserAuditLog } from "@shared/schema";
 
@@ -116,21 +116,11 @@ export function UserAuditLogDialog({ open, onOpenChange, userId, userName }: Use
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[80vh]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              User Activity Log
-              {userName && <span className="text-sm text-muted-foreground">• {userName}</span>}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              data-testid="button-close-audit-logs"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <History className="h-5 w-5" />
+            Activity Log
+            {userName && <span className="text-sm font-normal text-muted-foreground">for {userName}</span>}
+          </DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
