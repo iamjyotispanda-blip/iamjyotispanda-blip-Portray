@@ -6,6 +6,7 @@ import { AuthService } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import type { Menu, Role, User } from "@shared/schema";
 import * as LucideIcons from "lucide-react";
+import { getIconComponent } from "@/lib/iconRecommendations";
 
 interface TreeNodeData {
   id: string;
@@ -92,11 +93,11 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     });
   };
 
-  // Helper function to get Lucide icon component by name
-  const getIconComponent = (iconName: string | null) => {
-    if (!iconName) return Home;
-    const IconComponent = (LucideIcons as any)[iconName];
-    return IconComponent || Home;
+  // Use enhanced icon component helper with fallback to Home
+  const getMenuIconComponent = (iconName: string | null) => {
+    const IconComp = getIconComponent(iconName);
+    // Type assertion to ensure we return a valid React component
+    return (IconComp as React.ComponentType<any>) || Home;
   };
 
   // Build tree structure from database menus
@@ -223,7 +224,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     const isExpanded = expandedNodes.has(node.id);
     const isActive = isNodeActive(node);
     const isDirectlyActive = node.id === activeSection;
-    const IconComponent = getIconComponent(node.icon);
+    const IconComponent = getMenuIconComponent(node.icon);
 
     // In collapsed mode, only show parent nodes as icons
     if (collapsed) {
@@ -336,7 +337,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
                       ? 'bg-white/20 text-white'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                   }`}>
-                    {React.createElement(getIconComponent(child.icon), { className: "w-3.5 h-3.5" })}
+                    {React.createElement(getMenuIconComponent(child.icon) as React.ComponentType<any>, { className: "w-3.5 h-3.5" })}
                   </div>
                   
                   {/* Child Label */}

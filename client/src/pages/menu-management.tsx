@@ -32,6 +32,7 @@ import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Se
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu, InsertMenu, UpdateMenu } from "@shared/schema";
+import { getIconRecommendations, getAllAvailableIcons, getIconComponent, isValidIcon, type IconRecommendation } from "@/lib/iconRecommendations";
 
 import {
   DndContext,
@@ -64,94 +65,12 @@ interface GlinkFormData {
   isSystemConfig: boolean;
 }
 
-// Icon recommendation system
-const getRecommendedIcons = (menuType: 'glink' | 'plink', name: string, label: string, parentMenu?: Menu) => {
-  const allIcons = iconOptions.map(option => option.name);
-  
-  // Base recommendations for GLink (main menu)
-  const glinkRecommendations = [
-    'Home', 'Dashboard', 'Settings', 'Users', 'Building2', 'Shield', 
-    'Database', 'BarChart', 'Briefcase', 'Globe', 'Navigation'
-  ];
-  
-  // Base recommendations for PLink (sub-menu) 
-  const plinkRecommendations = [
-    'Settings', 'Edit', 'Plus', 'Save', 'Search', 'Filter', 'List', 
-    'Grid', 'Eye', 'Download', 'Upload', 'CheckCircle'
-  ];
-  
-  // Context-based recommendations based on name/label keywords
-  const contextualRecommendations: Record<string, string[]> = {
-    // User & Access related
-    'user': ['User', 'Users', 'UserCheck', 'Shield', 'Lock', 'Key'],
-    'access': ['Shield', 'Lock', 'Unlock', 'Key', 'UserCheck'],
-    'auth': ['Shield', 'Lock', 'Key', 'LogIn', 'LogOut'],
-    'login': ['LogIn', 'User', 'Shield', 'Lock'],
-    'role': ['Shield', 'Users', 'UserCheck', 'Crown'],
-    'permission': ['Shield', 'Lock', 'Key', 'CheckCircle'],
-    
-    // Configuration & Settings
-    'config': ['Settings', 'Wrench', 'Sliders', 'Palette'],
-    'setting': ['Settings', 'Sliders', 'Wrench', 'Palette'],
-    'email': ['Mail', 'MessageCircle', 'Send'],
-    'notification': ['Bell', 'MessageCircle', 'AlertCircle'],
-    
-    // Business & Organization
-    'organization': ['Building2', 'Briefcase', 'Users'],
-    'company': ['Building2', 'Briefcase', 'Globe'],
-    'port': ['Ship', 'Anchor', 'MapPin'],
-    'terminal': ['Monitor', 'Server', 'Database'],
-    
-    // Data & Analytics
-    'dashboard': ['BarChart', 'PieChart', 'Monitor', 'Grid'],
-    'report': ['BarChart', 'PieChart', 'FileText', 'Printer'],
-    'analytics': ['BarChart', 'PieChart', 'Target', 'TrendingUp'],
-    'data': ['Database', 'Server', 'BarChart', 'Grid'],
-    
-    // Actions & Operations
-    'create': ['Plus', 'PlusCircle', 'Edit', 'Save'],
-    'add': ['Plus', 'PlusCircle', 'Upload'],
-    'edit': ['Edit', 'Pencil', 'Settings'],
-    'delete': ['Trash', 'X', 'Minus'],
-    'view': ['Eye', 'List', 'Grid', 'Monitor'],
-    'list': ['List', 'Grid', 'Eye', 'Database'],
-    'manage': ['Settings', 'Wrench', 'Edit', 'Sliders'],
-    
-    // Communication
-    'message': ['MessageCircle', 'MessageSquare', 'Mail'],
-    'chat': ['MessageCircle', 'MessageSquare', 'Mic'],
-    'call': ['Phone', 'Mic', 'Video'],
-    
-    // Files & Documents
-    'file': ['File', 'FileText', 'Folder', 'Archive'],
-    'document': ['FileText', 'File', 'Clipboard', 'Archive'],
-    'upload': ['Upload', 'CloudUpload', 'Plus'],
-    'download': ['Download', 'CloudDownload', 'Archive']
-  };
-  
-  // Get base recommendations
-  let recommendations = menuType === 'glink' ? [...glinkRecommendations] : [...plinkRecommendations];
-  
-  // Add contextual recommendations based on name and label
-  const searchText = `${name} ${label}`.toLowerCase();
-  Object.entries(contextualRecommendations).forEach(([keyword, icons]) => {
-    if (searchText.includes(keyword)) {
-      recommendations = Array.from(new Set([...icons, ...recommendations]));
-    }
-  });
-  
-  // For PLinks, also consider parent menu context
-  if (menuType === 'plink' && parentMenu) {
-    const parentText = `${parentMenu.name} ${parentMenu.label}`.toLowerCase();
-    Object.entries(contextualRecommendations).forEach(([keyword, icons]) => {
-      if (parentText.includes(keyword)) {
-        recommendations = Array.from(new Set([...icons, ...recommendations]));
-      }
-    });
-  }
-  
-  // Filter to only include available icons and limit to top 8
-  return recommendations.filter(icon => allIcons.includes(icon)).slice(0, 8);
+// Enhanced icon recommendation system
+const getRecommendedIcons = (menuType: 'glink' | 'plink', name: string, label: string, parentMenu?: Menu): string[] => {
+  const recommendations = getIconRecommendations(name, label, menuType, undefined);
+  return recommendations.map(rec => rec.icon).filter(icon => 
+    iconOptions.some(opt => opt.name === icon)
+  );
 };
 
 const iconOptions = [
@@ -852,53 +771,121 @@ export default function MenuManagementPage() {
               </div>
             </SelectItem>
             
-            {/* Recommended Icons Section */}
+            {/* Enhanced Personalized Recommendations Section */}
             {(() => {
+              if (!formData.name && !formData.label) return null;
+              
               const parentMenu = formData.parentId ? safeGlinkMenus.find(m => m.id === formData.parentId) : undefined;
-              const recommendedIcons = getRecommendedIcons(
-                formData.menuType, 
+              const detailedRecommendations = getIconRecommendations(
                 formData.name, 
                 formData.label, 
-                parentMenu
+                formData.menuType, 
+                formData.icon || undefined
               );
               
-              if (recommendedIcons.length > 0) {
+              if (detailedRecommendations.length > 0) {
+                const exactRecommendations = detailedRecommendations.filter(rec => rec.category === 'exact');
+                const contextualRecommendations = detailedRecommendations.filter(rec => rec.category === 'contextual');
+                const fallbackRecommendations = detailedRecommendations.filter(rec => rec.category === 'fallback');
+                
                 return (
                   <>
-                    <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b">
-                      🎯 Recommended for {formData.menuType === 'glink' ? 'Main Menu' : 'Sub Menu'}
-                    </div>
-                    {recommendedIcons.map((iconName) => {
-                      const iconOption = iconOptions.find(opt => opt.name === iconName);
-                      if (!iconOption) return null;
-                      const IconComponent = iconOption.component;
-                      return (
-                        <SelectItem key={`rec-${iconName}`} value={iconName}>
-                          <div className="flex items-center space-x-2">
-                            <IconComponent className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium">{iconName}</span>
-                            <span className="text-xs text-blue-600 ml-auto">✨</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                    <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b border-t">
-                      📋 All Icons
-                    </div>
+                    {/* Exact Match Recommendations */}
+                    {exactRecommendations.length > 0 && (
+                      <>
+                        <div className="px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-b">
+                          🎯 Perfect Match for "{formData.name || formData.label}" ({formData.menuType === 'glink' ? 'Main Menu' : 'Sub Menu'})
+                        </div>
+                        {exactRecommendations.map((recommendation) => {
+                          const iconOption = iconOptions.find(opt => opt.name === recommendation.icon);
+                          if (!iconOption) return null;
+                          const IconComponent = iconOption.component;
+                          
+                          return (
+                            <SelectItem key={`exact-${recommendation.icon}`} value={recommendation.icon}>
+                              <div className="flex items-center space-x-2">
+                                <IconComponent className="h-4 w-4 text-blue-600" />
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{recommendation.icon}</span>
+                                  <span className="text-xs text-gray-500">{recommendation.reason}</span>
+                                </div>
+                                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700">Exact</Badge>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </>
+                    )}
+                    
+                    {/* Contextual Recommendations */}
+                    {contextualRecommendations.length > 0 && (
+                      <>
+                        <div className="px-3 py-2 text-xs font-medium text-green-600 bg-green-50 dark:bg-green-900/20 border-b">
+                          💡 Contextual Suggestions
+                        </div>
+                        {contextualRecommendations.map((recommendation) => {
+                          const iconOption = iconOptions.find(opt => opt.name === recommendation.icon);
+                          if (!iconOption) return null;
+                          const IconComponent = iconOption.component;
+                          
+                          return (
+                            <SelectItem key={`contextual-${recommendation.icon}`} value={recommendation.icon}>
+                              <div className="flex items-center space-x-2">
+                                <IconComponent className="h-4 w-4 text-green-600" />
+                                <div className="flex flex-col">
+                                  <span>{recommendation.icon}</span>
+                                  <span className="text-xs text-gray-500">{recommendation.reason}</span>
+                                </div>
+                                <Badge variant="outline" className="text-xs bg-green-100 text-green-700">Smart</Badge>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </>
+                    )}
+                    
+                    {/* Fallback Options */}
+                    {fallbackRecommendations.length > 0 && (
+                      <>
+                        <div className="px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 dark:bg-gray-800 border-b">
+                          📋 General Options
+                        </div>
+                        {fallbackRecommendations.map((recommendation) => {
+                          const iconOption = iconOptions.find(opt => opt.name === recommendation.icon);
+                          if (!iconOption) return null;
+                          const IconComponent = iconOption.component;
+                          
+                          return (
+                            <SelectItem key={`fallback-${recommendation.icon}`} value={recommendation.icon}>
+                              <div className="flex items-center space-x-2">
+                                <IconComponent className="h-4 w-4" />
+                                <div className="flex flex-col">
+                                  <span>{recommendation.icon}</span>
+                                  <span className="text-xs text-gray-500">{recommendation.reason}</span>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </>
+                    )}
                   </>
                 );
               }
               return null;
             })()}
             
-            {/* All Icons */}
-            {iconOptions.map((icon) => {
-              const IconComponent = icon.component;
+            {/* All Available Icons Section */}
+            <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b">
+              🎨 All Available Icons
+            </div>
+            {iconOptions.map((iconOption) => {
+              const IconComponent = iconOption.component;
               return (
-                <SelectItem key={icon.name} value={icon.name}>
+                <SelectItem key={iconOption.name} value={iconOption.name}>
                   <div className="flex items-center space-x-2">
                     <IconComponent className="h-4 w-4" />
-                    <span>{icon.name}</span>
+                    <span>{iconOption.name}</span>
                   </div>
                 </SelectItem>
               );
