@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -17,62 +17,50 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { AuthService } from "@/lib/auth";
 
-// Form validation schema
-const terminalSchema = z.object({
-  portName: z.string().min(1),
-  organization: z.string().min(1),
-  state: z.string().min(1),
-  country: z.string().min(1),
+// Simple validation schema
+const schema = z.object({
   terminalName: z.string().min(1, "Terminal name is required"),
-  shortCode: z.string().min(1, "Short code is required").max(6),
-  gst: z.string().optional(),
-  pan: z.string().optional(),
-  currency: z.string().default("INR"),
-  timezone: z.string().min(1, "Timezone is required"),
-  billingAddress: z.string().min(1, "Billing address is required"),
-  billingCity: z.string().min(1, "Billing city is required"),
-  billingPinCode: z.string().min(1, "Billing pin code is required"),
-  billingPhone: z.string().min(1, "Billing phone is required"),
+  shortCode: z.string().min(1, "Short code is required"),
+  currency: z.string(),
+  timezone: z.string(),
+  billingAddress: z.string().min(1, "Address required"),
+  billingCity: z.string().min(1, "City required"),
+  billingPinCode: z.string().min(1, "Pin code required"),
+  billingPhone: z.string().min(1, "Phone required"),
   billingFax: z.string().optional(),
   shippingAddress: z.string().optional(),
   shippingCity: z.string().optional(),
   shippingPinCode: z.string().optional(),
   shippingPhone: z.string().optional(),
   shippingFax: z.string().optional(),
-  sameAsBilling: z.boolean().default(false),
+  sameAsBilling: z.boolean(),
+  gst: z.string().optional(),
+  pan: z.string().optional(),
 });
 
-type TerminalFormData = z.infer<typeof terminalSchema>;
-
-const timezones = [
-  { value: "Asia/Kolkata", label: "Asia/Kolkata (IST)" },
-  { value: "Asia/Mumbai", label: "Asia/Mumbai (IST)" },
-  { value: "Asia/Delhi", label: "Asia/Delhi (IST)" },
-];
+type FormData = z.infer<typeof schema>;
 
 const currencies = [
   { value: "INR", label: "Indian Rupee (INR)" },
   { value: "USD", label: "US Dollar (USD)" },
-  { value: "EUR", label: "Euro (EUR)" },
-  { value: "GBP", label: "British Pound (GBP)" },
+];
+
+const timezones = [
+  { value: "Asia/Kolkata", label: "Asia/Kolkata (IST)" },
+  { value: "Asia/Mumbai", label: "Asia/Mumbai (IST)" },
 ];
 
 export default function TerminalAddPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<TerminalFormData>({
-    resolver: zodResolver(terminalSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
-      portName: "",
-      organization: "",
-      state: "",
-      country: "India",
       terminalName: "",
       shortCode: "",
-      gst: "",
-      pan: "",
       currency: "INR",
       timezone: "Asia/Kolkata",
       billingAddress: "",
@@ -86,6 +74,8 @@ export default function TerminalAddPage() {
       shippingPhone: "",
       shippingFax: "",
       sameAsBilling: false,
+      gst: "",
+      pan: "",
     },
   });
 
@@ -98,8 +88,8 @@ export default function TerminalAddPage() {
     queryFn: AuthService.getCurrentUser,
   });
 
-  // Get assigned port for Port Admin
-  const { data: assignedPort, isLoading: isPortLoading } = useQuery({
+  // Get assigned port
+  const { data: assignedPort } = useQuery({
     queryKey: ["/api/terminals/my-port"],
     enabled: !!user && user.role === "PortAdmin",
   });
@@ -113,11 +103,8 @@ export default function TerminalAddPage() {
   // Auto-generate short code
   useEffect(() => {
     if (terminalName) {
-      const shortCode = terminalName
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .substring(0, 6);
-      form.setValue("shortCode", shortCode);
+      const code = terminalName.toUpperCase().replace(/[^A-Z0-9]/g, "").substring(0, 6);
+      form.setValue("shortCode", code);
     }
   }, [terminalName, form]);
 
@@ -133,17 +120,6 @@ export default function TerminalAddPage() {
     }
   }, [sameAsBilling, form]);
 
-  // Auto-fill port data
-  useEffect(() => {
-    if (assignedPort) {
-      const portData = assignedPort as any;
-      form.setValue("portName", portData?.portName || "");
-      form.setValue("organization", portData?.organizationName || "");
-      form.setValue("state", portData?.state || "");
-      form.setValue("country", portData?.country || "India");
-    }
-  }, [assignedPort, form]);
-
   // Auto-fill contact data
   useEffect(() => {
     if (userContact) {
@@ -155,34 +131,34 @@ export default function TerminalAddPage() {
     }
   }, [userContact, form]);
 
-  // Create terminal mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: TerminalFormData) => {
+  const onSubmit = async (data: FormData) => {
+    try {
+      setIsLoading(true);
+      
       const submissionData = {
         ...data,
         status: "Processing for activation"
       };
-      return apiRequest("POST", `/api/ports/${(assignedPort as any)?.id}/terminals`, submissionData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ports", (assignedPort as any)?.id, "terminals"] });
+      
+      await apiRequest("POST", `/api/ports/${(assignedPort as any)?.id}/terminals`, submissionData);
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/ports"] });
+      
       toast({
         title: "Success",
         description: "Terminal created successfully",
       });
+      
       setLocation("/terminals");
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to create terminal",
         variant: "destructive",
       });
-    },
-  });
-
-  const onSubmit = (data: TerminalFormData) => {
-    createMutation.mutate(data);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Access control
@@ -192,9 +168,9 @@ export default function TerminalAddPage() {
         <div className="flex-1 flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardContent className="p-6 text-center">
-              <p className="text-red-600 mb-4">Access denied. Port Admin role required.</p>
+              <p className="text-red-600 mb-4">Access denied</p>
               <Button onClick={() => setLocation("/login")} className="h-8">
-                Back to Login
+                Login
               </Button>
             </CardContent>
           </Card>
@@ -203,30 +179,15 @@ export default function TerminalAddPage() {
     );
   }
 
-  // Loading state
-  if (isPortLoading) {
-    return (
-      <AppLayout title="Loading..." activeSection="terminals">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading...</p>
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
-
   // No port assigned
   if (!assignedPort) {
     return (
-      <AppLayout title="No Port Assigned" activeSection="terminals">
+      <AppLayout title="No Port" activeSection="terminals">
         <div className="flex-1 flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardContent className="p-6 text-center">
               <Ship className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">No port has been assigned to your account.</p>
-              <p className="text-sm text-gray-500">Please contact the system administrator.</p>
+              <p className="text-gray-600">No port assigned</p>
             </CardContent>
           </Card>
         </div>
@@ -237,8 +198,8 @@ export default function TerminalAddPage() {
   return (
     <AppLayout title="Add Terminal" activeSection="terminals">
       <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
-        {/* Breadcrumb Bar */}
-        <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 flex items-center space-x-2">
+        {/* Header */}
+        <div className="border-b bg-white dark:bg-gray-800 px-4 py-2 flex items-center space-x-2">
           <Button
             variant="ghost"
             size="sm"
@@ -248,14 +209,14 @@ export default function TerminalAddPage() {
             <ArrowLeft className="h-3 w-3 mr-1" />
             Back
           </Button>
-          <span className="text-sm text-gray-600 dark:text-gray-400">Add Terminal</span>
+          <span className="text-sm">Add Terminal</span>
         </div>
 
-        {/* Main Content */}
+        {/* Content */}
         <main className="flex-1 overflow-y-auto p-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Port Information */}
+              {/* Port Info */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -263,63 +224,40 @@ export default function TerminalAddPage() {
                     <span>Port Information</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="portName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Port Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled className="bg-gray-100" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="organization"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Organization</FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled className="bg-gray-100" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled className="bg-gray-100" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="country"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Country</FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled className="bg-gray-100" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div>
+                      <label className="text-sm font-medium">Port Name</label>
+                      <Input 
+                        value={(assignedPort as any)?.portName || ""} 
+                        disabled 
+                        className="bg-gray-100 mt-1" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Organization</label>
+                      <Input 
+                        value={(assignedPort as any)?.organizationName || ""} 
+                        disabled 
+                        className="bg-gray-100 mt-1" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">State</label>
+                      <Input 
+                        value={(assignedPort as any)?.state || ""} 
+                        disabled 
+                        className="bg-gray-100 mt-1" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Country</label>
+                      <Input 
+                        value={(assignedPort as any)?.country || "India"} 
+                        disabled 
+                        className="bg-gray-100 mt-1" 
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -367,11 +305,10 @@ export default function TerminalAddPage() {
                       name="gst"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>GST Number (Optional)</FormLabel>
+                          <FormLabel>GST (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter GST number" {...field} />
+                            <Input placeholder="GST number" {...field} />
                           </FormControl>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -381,11 +318,10 @@ export default function TerminalAddPage() {
                       name="pan"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>PAN Number (Optional)</FormLabel>
+                          <FormLabel>PAN (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter PAN number" {...field} />
+                            <Input placeholder="PAN number" {...field} />
                           </FormControl>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -399,18 +335,17 @@ export default function TerminalAddPage() {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select currency" />
+                                <SelectValue />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {currencies.map((currency) => (
-                                <SelectItem key={currency.value} value={currency.value}>
-                                  {currency.label}
+                              {currencies.map((c) => (
+                                <SelectItem key={c.value} value={c.value}>
+                                  {c.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -424,18 +359,17 @@ export default function TerminalAddPage() {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select timezone" />
+                                <SelectValue />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {timezones.map((timezone) => (
-                                <SelectItem key={timezone.value} value={timezone.value}>
-                                  {timezone.label}
+                              {timezones.map((t) => (
+                                <SelectItem key={t.value} value={t.value}>
+                                  {t.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -474,7 +408,7 @@ export default function TerminalAddPage() {
                         <FormItem>
                           <FormLabel>City</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter city" {...field} />
+                            <Input placeholder="City" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -488,7 +422,7 @@ export default function TerminalAddPage() {
                         <FormItem>
                           <FormLabel>Pin Code</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter pin code" {...field} />
+                            <Input placeholder="Pin code" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -502,7 +436,7 @@ export default function TerminalAddPage() {
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter phone number" {...field} />
+                            <Input placeholder="Phone number" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -516,9 +450,8 @@ export default function TerminalAddPage() {
                         <FormItem>
                           <FormLabel>Fax (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter fax number" {...field} />
+                            <Input placeholder="Fax number" {...field} />
                           </FormControl>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -540,9 +473,7 @@ export default function TerminalAddPage() {
                     name="sameAsBilling"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between">
-                        <div className="space-y-0.5">
-                          <FormLabel>Same as billing address</FormLabel>
-                        </div>
+                        <FormLabel>Same as billing address</FormLabel>
                         <FormControl>
                           <Switch
                             checked={field.value}
@@ -562,9 +493,8 @@ export default function TerminalAddPage() {
                           <FormItem>
                             <FormLabel>Address</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="Enter shipping address" {...field} />
+                              <Textarea placeholder="Shipping address" {...field} />
                             </FormControl>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -577,9 +507,8 @@ export default function TerminalAddPage() {
                             <FormItem>
                               <FormLabel>City</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter city" {...field} />
+                                <Input placeholder="City" {...field} />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
@@ -591,9 +520,8 @@ export default function TerminalAddPage() {
                             <FormItem>
                               <FormLabel>Pin Code</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter pin code" {...field} />
+                                <Input placeholder="Pin code" {...field} />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
@@ -605,9 +533,8 @@ export default function TerminalAddPage() {
                             <FormItem>
                               <FormLabel>Phone</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter phone number" {...field} />
+                                <Input placeholder="Phone number" {...field} />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
@@ -619,9 +546,8 @@ export default function TerminalAddPage() {
                             <FormItem>
                               <FormLabel>Fax (Optional)</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter fax number" {...field} />
+                                <Input placeholder="Fax number" {...field} />
                               </FormControl>
-                              <FormMessage />
                             </FormItem>
                           )}
                         />
@@ -631,7 +557,7 @@ export default function TerminalAddPage() {
                 </CardContent>
               </Card>
 
-              {/* Form Actions */}
+              {/* Actions */}
               <div className="flex justify-end space-x-2 pb-4">
                 <Button
                   type="button"
@@ -643,10 +569,10 @@ export default function TerminalAddPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createMutation.isPending}
+                  disabled={isLoading}
                   className="h-8"
                 >
-                  {createMutation.isPending ? "Creating..." : "Create Terminal"}
+                  {isLoading ? "Creating..." : "Create Terminal"}
                 </Button>
               </div>
             </form>
