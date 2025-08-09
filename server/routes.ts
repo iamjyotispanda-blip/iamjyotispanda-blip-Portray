@@ -2189,8 +2189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      if (user.isVerified) {
-        return res.status(400).json({ message: "User is already verified" });
+      if (user.isActive) {
+        return res.status(400).json({ message: "User is already active" });
       }
       
       // Generate new verification token
