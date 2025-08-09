@@ -35,11 +35,14 @@ import { usePermissions } from "@/hooks/usePermissions";
 import type { User as UserType, Role } from "@shared/schema";
 
 interface UserFormData {
+  userType: string;
   email: string;
   firstName: string;
   lastName: string;
   role: string;
   roleId: number;
+  portId?: number;
+  terminalIds?: string[];
   isActive: boolean;
 }
 
@@ -51,12 +54,15 @@ export function UsersContent() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [formData, setFormData] = useState<UserFormData>({
+    userType: "PortUser",
     email: "",
     firstName: "",
     lastName: "",
     role: "",
     roleId: 0,
-    isActive: true,
+    portId: undefined,
+    terminalIds: [],
+    isActive: false, // Default to inactive for email verification
   });
   
   const queryClient = useQueryClient();
@@ -71,6 +77,16 @@ export function UsersContent() {
   // Get all roles
   const { data: roles = [] } = useQuery({
     queryKey: ["/api/roles"],
+  });
+
+  // Get all ports
+  const { data: ports = [] } = useQuery({
+    queryKey: ["/api/ports"],
+  });
+
+  // Get all terminals
+  const { data: terminals = [] } = useQuery({
+    queryKey: ["/api/terminals"],
   });
 
   // Filter users based on search term, role, and status
@@ -172,23 +188,29 @@ export function UsersContent() {
 
   const resetForm = () => {
     setFormData({
+      userType: "PortUser",
       email: "",
       firstName: "",
       lastName: "",
       role: "",
       roleId: 0,
-      isActive: true,
+      portId: undefined,
+      terminalIds: [],
+      isActive: false, // Default to inactive for email verification
     });
   };
 
   const handleEdit = (user: UserType) => {
     setEditingUser(user);
     setFormData({
+      userType: user.userType || "PortUser",
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
       roleId: user.roleId || 0,
+      portId: user.portId || undefined,
+      terminalIds: user.terminalIds || [],
       isActive: user.isActive,
     });
     setShowEditForm(true);
@@ -208,6 +230,25 @@ export function UsersContent() {
       toast({
         title: "Error",
         description: "Please select a role",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate user type specific fields
+    if (formData.userType === "PortUser" && !formData.portId) {
+      toast({
+        title: "Error",
+        description: "Please select a port for Port User",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.userType === "TerminalUser" && (!formData.terminalIds || formData.terminalIds.length === 0)) {
+      toast({
+        title: "Error",
+        description: "Please select at least one terminal for Terminal User",
         variant: "destructive",
       });
       return;
@@ -378,6 +419,38 @@ export function UsersContent() {
                       
                       <div className="space-y-4 mt-6 pb-6">
                         <div className="space-y-2">
+                          <Label htmlFor="userType">User Type *</Label>
+                          <Select
+                            value={formData.userType}
+                            onValueChange={(value) => setFormData({ ...formData, userType: value, portId: undefined, terminalIds: [] })}
+                          >
+                            <SelectTrigger data-testid="select-user-type">
+                              <SelectValue placeholder="Select user type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="SuperAdmin">
+                                <div className="flex items-center">
+                                  <Shield className="h-4 w-4 mr-2" />
+                                  Super Admin
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="PortUser">
+                                <div className="flex items-center">
+                                  <User className="h-4 w-4 mr-2" />
+                                  Port User
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="TerminalUser">
+                                <div className="flex items-center">
+                                  <Users className="h-4 w-4 mr-2" />
+                                  Terminal User
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
                           <Label htmlFor="email">Email *</Label>
                           <Input
                             id="email"
@@ -436,6 +509,76 @@ export function UsersContent() {
                             </SelectContent>
                           </Select>
                         </div>
+
+                        {/* Port selection for Port Users */}
+                        {formData.userType === "PortUser" && (
+                          <div className="space-y-2">
+                            <Label htmlFor="port">Port *</Label>
+                            <Select
+                              value={formData.portId?.toString() || ""}
+                              onValueChange={(value) => setFormData({ ...formData, portId: parseInt(value) })}
+                            >
+                              <SelectTrigger data-testid="select-user-port">
+                                <SelectValue placeholder="Select a port" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(ports as any[]).map((port: any) => (
+                                  <SelectItem key={port.id} value={port.id.toString()}>
+                                    {port.portName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {/* Terminal selection for Terminal Users */}
+                        {formData.userType === "TerminalUser" && (
+                          <div className="space-y-2">
+                            <Label htmlFor="terminals">Terminals *</Label>
+                            <div className="space-y-2">
+                              <div className="text-sm text-gray-600">Select one or more terminals:</div>
+                              <div className="max-h-40 overflow-y-auto border rounded p-2 space-y-2">
+                                {(terminals as any[]).map((terminal: any) => (
+                                  <div key={terminal.id} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`terminal-${terminal.id}`}
+                                      checked={formData.terminalIds?.includes(terminal.id.toString()) || false}
+                                      onChange={(e) => {
+                                        const terminalIds = formData.terminalIds || [];
+                                        if (e.target.checked) {
+                                          setFormData({ 
+                                            ...formData, 
+                                            terminalIds: [...terminalIds, terminal.id.toString()]
+                                          });
+                                        } else {
+                                          setFormData({ 
+                                            ...formData, 
+                                            terminalIds: terminalIds.filter(id => id !== terminal.id.toString())
+                                          });
+                                        }
+                                      }}
+                                      className="rounded border-gray-300"
+                                      data-testid={`checkbox-terminal-${terminal.id}`}
+                                    />
+                                    <label 
+                                      htmlFor={`terminal-${terminal.id}`}
+                                      className="text-sm cursor-pointer flex-1"
+                                    >
+                                      {terminal.terminalName} ({terminal.shortCode})
+                                    </label>
+                                  </div>
+                                ))}
+                                {(terminals as any[]).length === 0 && (
+                                  <div className="text-sm text-gray-500 text-center py-4">
+                                    No terminals available
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="flex items-center space-x-2">
                           <Switch

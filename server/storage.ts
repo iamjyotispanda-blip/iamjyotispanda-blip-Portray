@@ -66,6 +66,7 @@ export interface IStorage {
   deleteEmailConfiguration(id: number): Promise<void>;
 
   // Terminal operations
+  getAllTerminals(): Promise<Terminal[]>;
   getTerminalsByPortId(portId: number): Promise<Terminal[]>;
   getTerminalById(id: number): Promise<Terminal | undefined>;
   getTerminalByName(terminalName: string): Promise<Terminal | undefined>;
@@ -453,6 +454,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Terminal operations
+  async getAllTerminals(): Promise<Terminal[]> {
+    return db.select().from(terminals);
+  }
+
   async getTerminalsByPortId(portId: number): Promise<Terminal[]> {
     return db.select().from(terminals).where(eq(terminals.portId, portId));
   }
@@ -1429,6 +1434,10 @@ export class MemStorage implements IStorage {
   }
 
   // Terminal operations for MemStorage
+  async getAllTerminals(): Promise<Terminal[]> {
+    return Array.from(this.terminals.values());
+  }
+
   async getTerminalsByPortId(portId: number): Promise<Terminal[]> {
     return Array.from(this.terminals.values()).filter(
       (terminal) => terminal.portId === portId

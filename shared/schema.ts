@@ -5,12 +5,15 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userType: text("user_type").notNull().default("PortUser"), // "SuperAdmin", "PortUser", "TerminalUser"
   email: text("email").notNull().unique(),
   password: text("password"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("PortAdmin"), // Will reference roles.name
   roleId: integer("role_id").references(() => roles.id),
+  portId: integer("port_id").references(() => ports.id), // Required for PortUser
+  terminalIds: text("terminal_ids").array(), // Array of terminal IDs for TerminalUser
   isActive: boolean("is_active").notNull().default(false),
   isVerified: boolean("is_verified").notNull().default(false),
   verificationToken: text("verification_token").unique(),
@@ -190,11 +193,15 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
+  userType: true,
   email: true,
   firstName: true,
   lastName: true,
   role: true,
   roleId: true,
+  portId: true,
+  terminalIds: true,
+  isActive: true,
 });
 
 export const updateUserSchema = createInsertSchema(users).pick({

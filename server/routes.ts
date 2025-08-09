@@ -1543,6 +1543,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Terminal routes
+  app.get("/api/terminals", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const terminals = await storage.getAllTerminals();
+      res.json(terminals);
+    } catch (error) {
+      console.error("Get all terminals error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/terminals/my-port", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Get port admin's assigned port
