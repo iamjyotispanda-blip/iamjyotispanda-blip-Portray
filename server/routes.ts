@@ -1506,7 +1506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prevent deletion of system admin
-      if (user.role === "SystemAdmin") {
+      if (user.id === "admin-001") {
         return res.status(400).json({ message: "Cannot delete system administrator" });
       }
       
@@ -1840,32 +1840,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!isActivated && updates.status === "Processing for activation") {
         console.log("Creating notification for terminal activation request");
         try {
-          // Find all system admin users
-          const systemAdminUsers = await storage.getUsersByRole("SystemAdmin");
-          if (systemAdminUsers.length > 0) {
-            // Create notifications for all SystemAdmin users
-            const notificationPromises = systemAdminUsers.map((systemAdmin: any) => 
-              storage.createNotification({
-                userId: systemAdmin.id,
-                type: "terminal_activation_request",
-                title: "Terminal Activation Request",
-                message: `Terminal "${terminal.terminalName}" (${terminal.shortCode}) status has been updated to processing for activation review.`,
-                data: JSON.stringify({
-                  terminalId: terminal.id,
-                  terminalName: terminal.terminalName,
-                  shortCode: terminal.shortCode,
-                  portId: terminal.portId,
-                  updatedBy: req.user.id,
-                  action: "updated"
-                })
-              })
-            );
-            
-            await Promise.all(notificationPromises);
-            console.log(`Notifications created successfully for ${systemAdminUsers.length} SystemAdmin users`);
-          } else {
-            console.log("No SystemAdmin users found for notification");
-          }
+          await storage.createNotification({
+            userId: "admin-001", // System admin user ID
+            type: "terminal_activation_request",
+            title: "Terminal Activation Request",
+            message: `Terminal "${terminal.terminalName}" (${terminal.shortCode}) status has been updated to processing for activation review.`,
+            data: JSON.stringify({
+              terminalId: terminal.id,
+              terminalName: terminal.terminalName,
+              shortCode: terminal.shortCode,
+              portId: terminal.portId,
+              updatedBy: req.user.id,
+              action: "updated"
+            })
+          });
+          console.log("Notification created successfully");
         } catch (notificationError) {
           console.error("Failed to create notification:", notificationError);
           // Don't fail the terminal update if notification fails

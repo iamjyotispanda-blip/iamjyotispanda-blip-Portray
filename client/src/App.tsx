@@ -22,7 +22,6 @@ import VerifyPage from "@/pages/verify";
 import SetupPasswordPage from "@/pages/setup-password";
 import TerminalsPage from "@/pages/terminals";
 import TerminalFormPage from "@/pages/terminal-form";
-import TerminalAddPage from "@/pages/terminal-add";
 import TerminalProfilePage from "@/pages/terminal-profile";
 import TerminalActivationPage from "@/pages/terminal-activation";
 import NotificationsPage from "@/pages/notifications";
@@ -123,7 +122,7 @@ function Router() {
         {() => <ProtectedRoute component={MenuManagementPage} />}
       </Route>
       <Route path="/terminals/new">
-        {() => <ProtectedRoute component={TerminalAddPage} />}
+        {() => <ProtectedRoute component={TerminalFormPage} />}
       </Route>
       <Route path="/terminals/edit/:id">
         {() => <ProtectedRoute component={TerminalFormPage} />}

@@ -79,11 +79,10 @@ export default function TerminalProfile() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <main className="p-6">
-            <div className="max-w-6xl mx-auto space-y-6 pb-8">
-              {/* Organization Details with Logo */}
-              {organization && (
+        <main className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto space-y-6">
+            {/* Organization Details with Logo */}
+            {organization && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -293,9 +292,9 @@ export default function TerminalProfile() {
               </Card>
             )}
 
-            </div>
-          </main>
-        </div>
+
+          </div>
+        </main>
       </div>
     </AppLayout>
   );
