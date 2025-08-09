@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { EmailConfiguration } from '@shared/schema';
+import { storage } from './storage';
 
 export interface EmailTestConfig {
   smtpHost: string;
@@ -152,51 +153,218 @@ This verification link will expire in 24 hours.
       return false;
     }
   }
+
+  // Get email configuration for a specific port
+  async getPortEmailConfiguration(portId: number): Promise<EmailConfiguration | null> {
+    try {
+      const emailConfigs = await storage.getAllEmailConfigurations();
+      // Find email configuration for this port
+      const portConfig = emailConfigs.find(config => config.portId === portId);
+      return portConfig || null;
+    } catch (error) {
+      console.error('Error getting port email configuration:', error);
+      return null;
+    }
+  }
+
+  // Send verification email using port-specific configuration
+  async sendPortVerificationEmail(portId: number, userEmail: string, userName: string, verificationToken: string): Promise<boolean> {
+    try {
+      const emailConfig = await this.getPortEmailConfiguration(portId);
+      
+      if (!emailConfig) {
+        console.error(`No email configuration found for port ${portId}`);
+        return false;
+      }
+
+      const transporter = this.createTransporter({
+        smtpHost: emailConfig.smtpHost,
+        smtpPort: emailConfig.smtpPort,
+        smtpUser: emailConfig.smtpUser,
+        smtpPassword: emailConfig.smtpPassword,
+        fromEmail: emailConfig.fromEmail,
+        fromName: emailConfig.fromName,
+        enableTLS: emailConfig.enableTLS
+      });
+
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+        `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+        (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
+          `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
+          'http://localhost:5000');
+          
+      const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+
+      const mailOptions = {
+        from: `"${emailConfig.fromName}" <${emailConfig.fromEmail}>`,
+        to: userEmail,
+        subject: 'PortRay - Verify Your Email Address',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Welcome to PortRay!</h2>
+            <p>Hello ${userName},</p>
+            <p>Thank you for joining PortRay. Please verify your email address to activate your account.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" 
+                 style="background-color: #2563eb; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; display: inline-block;">
+                Verify Email Address
+              </a>
+            </div>
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #6b7280;">${verificationUrl}</p>
+            <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+              This verification link will expire in 24 hours. If you didn't create this account, please ignore this email.
+            </p>
+          </div>
+        `,
+        text: `
+Welcome to PortRay!
+
+Hello ${userName},
+
+Thank you for joining PortRay. Please verify your email address to activate your account.
+
+Click here to verify: ${verificationUrl}
+
+This verification link will expire in 24 hours. If you didn't create this account, please ignore this email.
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      return false;
+    }
+  }
+
+  // Send password setup email using port-specific configuration
+  async sendPortPasswordSetupEmail(portId: number, userEmail: string, userName: string, passwordToken: string): Promise<boolean> {
+    try {
+      const emailConfig = await this.getPortEmailConfiguration(portId);
+      
+      if (!emailConfig) {
+        console.error(`No email configuration found for port ${portId}`);
+        return false;
+      }
+
+      const transporter = this.createTransporter({
+        smtpHost: emailConfig.smtpHost,
+        smtpPort: emailConfig.smtpPort,
+        smtpUser: emailConfig.smtpUser,
+        smtpPassword: emailConfig.smtpPassword,
+        fromEmail: emailConfig.fromEmail,
+        fromName: emailConfig.fromName,
+        enableTLS: emailConfig.enableTLS
+      });
+
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+        `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+        (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
+          `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
+          'http://localhost:5000');
+          
+      const setupUrl = `${baseUrl}/setup-password?token=${passwordToken}`;
+
+      const mailOptions = {
+        from: `"${emailConfig.fromName}" <${emailConfig.fromEmail}>`,
+        to: userEmail,
+        subject: 'PortRay - Set Up Your Password',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Set Up Your PortRay Account Password</h2>
+            <p>Hello ${userName},</p>
+            <p>Your email has been verified successfully! Now please set up your account password to complete the registration process.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${setupUrl}" 
+                 style="background-color: #16a34a; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; display: inline-block;">
+                Set Up Password
+              </a>
+            </div>
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #6b7280;">${setupUrl}</p>
+            <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+              This setup link will expire in 24 hours.
+            </p>
+          </div>
+        `,
+        text: `
+Set Up Your PortRay Account Password
+
+Hello ${userName},
+
+Your email has been verified successfully! Now please set up your account password to complete the registration process.
+
+Click here to set up password: ${setupUrl}
+
+This setup link will expire in 24 hours.
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error('Error sending password setup email:', error);
+      return false;
+    }
+  }
 }
 
 export const emailService = new EmailService();
 
-// User verification and password setup email functions
-export async function sendUserVerificationEmail(userEmail: string, userName: string, verificationToken: string): Promise<boolean> {
+// User verification and password setup email functions with port-based routing
+export async function sendUserVerificationEmail(userEmail: string, userName: string, verificationToken: string, portId?: number): Promise<boolean> {
   try {
-    // Get default email configuration (you may want to make this configurable)
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
-      `https://${process.env.REPLIT_DEV_DOMAIN}` : 
-      (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
-        `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
-        'http://localhost:5000');
-    
-    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
-    
-    // For now, we'll use a simple console log - you can implement actual email sending later
-    console.log(`Verification email would be sent to ${userEmail}:`);
-    console.log(`Subject: Welcome to PortRay - Verify Your Account`);
-    console.log(`Verification URL: ${verificationUrl}`);
-    console.log(`User: ${userName}`);
-    
-    return true;
+    if (portId) {
+      // Use port-specific email configuration
+      return await emailService.sendPortVerificationEmail(portId, userEmail, userName, verificationToken);
+    } else {
+      // Fallback to console log for users without port assignment
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+        `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+        (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
+          `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
+          'http://localhost:5000');
+      
+      const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+      
+      console.log(`Verification email would be sent to ${userEmail}:`);
+      console.log(`Subject: Welcome to PortRay - Verify Your Account`);
+      console.log(`Verification URL: ${verificationUrl}`);
+      console.log(`User: ${userName}`);
+      
+      return true;
+    }
   } catch (error) {
     console.error('Failed to send user verification email:', error);
     return false;
   }
 }
 
-export async function sendPasswordSetupEmail(userEmail: string, userName: string, passwordSetupToken: string): Promise<boolean> {
+export async function sendPasswordSetupEmail(userEmail: string, userName: string, passwordSetupToken: string, portId?: number): Promise<boolean> {
   try {
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
-      `https://${process.env.REPLIT_DEV_DOMAIN}` : 
-      (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
-        `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
-        'http://localhost:5000');
-    
-    const passwordSetupUrl = `${baseUrl}/setup-password?token=${passwordSetupToken}`;
-    
-    console.log(`Password setup email would be sent to ${userEmail}:`);
-    console.log(`Subject: PortRay - Complete Your Account Setup`);
-    console.log(`Password Setup URL: ${passwordSetupUrl}`);
-    console.log(`User: ${userName}`);
-    
-    return true;
+    if (portId) {
+      // Use port-specific email configuration
+      return await emailService.sendPortPasswordSetupEmail(portId, userEmail, userName, passwordSetupToken);
+    } else {
+      // Fallback to console log for users without port assignment
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+        `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+        (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
+          `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
+          'http://localhost:5000');
+      
+      const passwordSetupUrl = `${baseUrl}/setup-password?token=${passwordSetupToken}`;
+      
+      console.log(`Password setup email would be sent to ${userEmail}:`);
+      console.log(`Subject: PortRay - Complete Your Account Setup`);
+      console.log(`Password Setup URL: ${passwordSetupUrl}`);
+      console.log(`User: ${userName}`);
+      
+      return true;
+    }
   } catch (error) {
     console.error('Failed to send password setup email:', error);
     return false;

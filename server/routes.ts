@@ -1417,10 +1417,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         verificationTokenExpires
       } as any);
       
-      // Send verification email
+      // Send verification email using port-specific configuration
       try {
         const { sendUserVerificationEmail } = await import("./emailService.js");
-        await sendUserVerificationEmail(user.email, user.firstName, verificationToken);
+        await sendUserVerificationEmail(user.email, user.firstName, verificationToken, userData.portId || undefined);
       } catch (emailError) {
         console.error("Failed to send verification email:", emailError);
         // Continue without failing - admin can resend manually
@@ -2041,10 +2041,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         passwordSetupTokenExpires
       } as any);
 
-      // Send password setup email
+      // Send password setup email using port-specific configuration
       try {
         const { sendPasswordSetupEmail } = await import("./emailService.js");
-        await sendPasswordSetupEmail(user.email, user.firstName, passwordSetupToken);
+        await sendPasswordSetupEmail(user.email, user.firstName, passwordSetupToken, user.portId || undefined);
       } catch (emailError) {
         console.error("Failed to send password setup email:", emailError);
       }

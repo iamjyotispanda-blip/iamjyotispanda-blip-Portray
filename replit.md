@@ -11,7 +11,7 @@ Button Heights: Login page buttons use h-10 height, all other buttons use h-8 he
 Search Functionality: Organization and port pages require search functionality with real-time filtering.
 Layout Spacing: Minimal gaps between buttons and cards throughout application (space-y-2).
 Consistent Layout: All form pages and view pages should have identical header, left panel, and styling structure. Port form pages should match port view page styling exactly, with breadcrumb bar and main content container. Remove "Back to Port" option from new port page.
-Email Configuration: Email Configuration link should be always available as a top-level navigation item (not nested under Configuration section). Email configuration page should send actual test emails using real SMTP configuration.
+Email Configuration: Email Configuration link should be always available as a top-level navigation item (not nested under Configuration section). Email configuration page should send actual test emails using real SMTP configuration. Port-based email routing system implemented - each port uses its own configured SMTP settings for sending verification and password setup emails.
 Role-Based Access: Port Admins redirect to `/port-admin-dashboard` with only "Terminals" navigation link. System Admins have full navigation access to all features. Role-based navigation filtering implemented in AppLayout component. Port Admin dashboard uses AppLayout for consistent navigation structure.
 Interactive Notifications: Notifications are clickable and automatically navigate to relevant pages. Terminal activation notifications navigate to Terminal Activation page and auto-open the Activate Terminal popup for the specific terminal. Notifications include hover effects and auto-mark as read when clicked. Notification dropdown shows maximum 5 notifications with "View All Notifications" link for full notifications page at `/notifications` route.
 Mobile Responsiveness: All sliding/sheet components are fully mobile-friendly with responsive widths (w-[95vw] on mobile, proper breakpoints on larger screens). Base UI components (Sheet, Dialog, Drawer) enhanced with mobile-first responsive design. Form grids use responsive layouts (grid-cols-1 sm:grid-cols-2) for optimal mobile experience. All pages using sliding components are optimized for mobile devices.
@@ -64,6 +64,7 @@ Mobile Responsiveness: All sliding/sheet components are fully mobile-friendly wi
 - **Unique User Management**: Users remain unique by email, contact reverification updates existing user details instead of creating duplicates
 - **Authentication**: Users, sessions, organizations, ports, contacts, and email configurations all persist in database
 - **Schema Migration**: Successfully completed - all entities stored in PostgreSQL database with full persistence
+- **Port-Based Email Routing**: Implemented email system where each port uses its own SMTP configuration for user verification and password setup emails
 
 # External Dependencies
 
