@@ -14,8 +14,15 @@ export default function VerifyEmailPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.split('?')[1]);
+    console.log("Current location:", location);
+    
+    // More robust URL parsing
+    const queryString = location.includes('?') ? location.split('?')[1] : '';
+    console.log("Query string:", queryString);
+    
+    const urlParams = new URLSearchParams(queryString);
     const token = urlParams.get('token');
+    console.log("Extracted token:", token);
 
     if (!token) {
       setStatus("error");
@@ -60,7 +67,8 @@ export default function VerifyEmailPage() {
   };
 
   const handleRetry = () => {
-    const urlParams = new URLSearchParams(location.split('?')[1]);
+    const queryString = location.includes('?') ? location.split('?')[1] : '';
+    const urlParams = new URLSearchParams(queryString);
     const token = urlParams.get('token');
     if (token) {
       verifyEmail(token);
