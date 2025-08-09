@@ -450,64 +450,6 @@ export function UsersContent() {
                           </Select>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email *</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="user@example.com"
-                            data-testid="input-user-email"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="firstName">First Name *</Label>
-                            <Input
-                              id="firstName"
-                              value={formData.firstName}
-                              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                              placeholder="John"
-                              data-testid="input-user-first-name"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="lastName">Last Name *</Label>
-                            <Input
-                              id="lastName"
-                              value={formData.lastName}
-                              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                              placeholder="Doe"
-                              data-testid="input-user-last-name"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="role">Role *</Label>
-                          <Select
-                            value={formData.roleId.toString()}
-                            onValueChange={handleRoleChange}
-                          >
-                            <SelectTrigger data-testid="select-user-role">
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(roles as Role[]).filter(role => role.isActive).map((role) => (
-                                <SelectItem key={role.id} value={role.id.toString()}>
-                                  <div className="flex items-center">
-                                    <Shield className="h-4 w-4 mr-2" />
-                                    {role.displayName}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
                         {/* Port selection for Port Users */}
                         {formData.userType === "PortUser" && (
                           <div className="space-y-2">
@@ -577,6 +519,64 @@ export function UsersContent() {
                             </div>
                           </div>
                         )}
+
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="user@example.com"
+                            data-testid="input-user-email"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name *</Label>
+                            <Input
+                              id="firstName"
+                              value={formData.firstName}
+                              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                              placeholder="John"
+                              data-testid="input-user-first-name"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name *</Label>
+                            <Input
+                              id="lastName"
+                              value={formData.lastName}
+                              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                              placeholder="Doe"
+                              data-testid="input-user-last-name"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="role">Role *</Label>
+                          <Select
+                            value={formData.roleId.toString()}
+                            onValueChange={handleRoleChange}
+                          >
+                            <SelectTrigger data-testid="select-user-role">
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(roles as Role[]).filter(role => role.isActive).map((role) => (
+                                <SelectItem key={role.id} value={role.id.toString()}>
+                                  <div className="flex items-center">
+                                    <Shield className="h-4 w-4 mr-2" />
+                                    {role.displayName}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                         <div className="flex items-center space-x-2">
                           <Switch
