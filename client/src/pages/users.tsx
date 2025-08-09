@@ -711,9 +711,14 @@ export function UsersContent() {
                                     <p className="text-sm text-gray-500 dark:text-gray-400" data-testid={`text-user-email-${user.id}`}>
                                       {user.email}
                                     </p>
-                                    {!user.isVerified && (
+                                    {!user.isActive && !user.isVerified && (
                                       <Badge variant="destructive" className="text-xs px-1 py-0">
                                         Unverified
+                                      </Badge>
+                                    )}
+                                    {user.isActive && user.isVerified && (
+                                      <Badge variant="default" className="text-xs px-1 py-0 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                        Verified
                                       </Badge>
                                     )}
                                   </div>
@@ -757,7 +762,7 @@ export function UsersContent() {
                                       View Activity Log
                                     </DropdownMenuItem>
                                   )}
-                                  {canManage("users", "user-access") && !user.isVerified && (
+                                  {canManage("users", "user-access") && !user.isActive && !user.isVerified && (
                                     <DropdownMenuItem 
                                       onClick={() => handleResendVerification(user.id)}
                                       disabled={resendVerificationMutation.isPending}

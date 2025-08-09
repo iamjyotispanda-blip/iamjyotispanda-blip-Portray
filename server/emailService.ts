@@ -405,6 +405,7 @@ This setup link will expire in 24 hours.
       // Log the email
       try {
         await storage.createEmailLog({
+          configurationId: emailConfig.id,
           emailConfigurationId: emailConfig.id,
           portId: portId,
           toEmail: userEmail,
@@ -428,6 +429,7 @@ This setup link will expire in 24 hours.
         const emailConfig = await this.getPortEmailConfiguration(portId);
         if (emailConfig) {
           await storage.createEmailLog({
+            configurationId: emailConfig.id,
             emailConfigurationId: emailConfig.id,
             portId: portId,
             toEmail: userEmail,
