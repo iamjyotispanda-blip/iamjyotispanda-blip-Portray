@@ -647,7 +647,7 @@ export default function GlinkPage() {
                   <span>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-[90vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
+              <SheetContent className="w-[95vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
                 <SheetHeader>
                   <SheetTitle>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</SheetTitle>
                   <SheetDescription>

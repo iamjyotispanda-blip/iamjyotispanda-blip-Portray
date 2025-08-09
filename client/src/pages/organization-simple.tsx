@@ -568,7 +568,7 @@ export default function OrganizationPage() {
           setCountryOpen(false);
         }
       }}>
-        <SheetContent className="w-[600px] sm:max-w-[600px] overflow-y-auto">
+        <SheetContent className="w-[95vw] sm:w-[600px] sm:max-w-[600px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{isEditMode ? "Edit Organization" : "Add New Organization"}</SheetTitle>
             <SheetDescription>

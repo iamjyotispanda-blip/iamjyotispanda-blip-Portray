@@ -14,6 +14,7 @@ Consistent Layout: All form pages and view pages should have identical header, l
 Email Configuration: Email Configuration link should be always available as a top-level navigation item (not nested under Configuration section). Email configuration page should send actual test emails using real SMTP configuration.
 Role-Based Access: Port Admins redirect to `/port-admin-dashboard` with only "Terminals" navigation link. System Admins have full navigation access to all features. Role-based navigation filtering implemented in AppLayout component. Port Admin dashboard uses AppLayout for consistent navigation structure.
 Interactive Notifications: Notifications are clickable and automatically navigate to relevant pages. Terminal activation notifications navigate to Terminal Activation page and auto-open the Activate Terminal popup for the specific terminal. Notifications include hover effects and auto-mark as read when clicked. Notification dropdown shows maximum 5 notifications with "View All Notifications" link for full notifications page at `/notifications` route.
+Mobile Responsiveness: All sliding/sheet components are fully mobile-friendly with responsive widths (w-[95vw] on mobile, proper breakpoints on larger screens). Base UI components (Sheet, Dialog, Drawer) enhanced with mobile-first responsive design. Form grids use responsive layouts (grid-cols-1 sm:grid-cols-2) for optimal mobile experience. All pages using sliding components are optimized for mobile devices.
 
 # System Architecture
 

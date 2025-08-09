@@ -385,7 +385,7 @@ export function UsersContent() {
                         Add User
                       </Button>
                     </SheetTrigger>
-                    <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+                    <SheetContent className="w-[95vw] sm:w-[500px] lg:w-[600px] overflow-y-auto">
                       <SheetHeader>
                         <SheetTitle>Add User</SheetTitle>
                         <SheetDescription>
@@ -406,7 +406,7 @@ export function UsersContent() {
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="firstName">First Name *</Label>
                             <Input
@@ -661,7 +661,7 @@ export function UsersContent() {
           resetForm();
         }
       }}>
-        <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+        <SheetContent className="w-[95vw] sm:w-[500px] lg:w-[600px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Edit User</SheetTitle>
             <SheetDescription>
@@ -682,7 +682,7 @@ export function UsersContent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="editFirstName">First Name *</Label>
                 <Input

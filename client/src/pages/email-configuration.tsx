@@ -243,7 +243,7 @@ export default function EmailConfigurationPage() {
                       New mail configuration
                     </Button>
                   </SheetTrigger>
-                  <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+                  <SheetContent className="w-[95vw] sm:w-[500px] lg:w-[600px] overflow-y-auto">
                     <SheetHeader>
                       <SheetTitle>Add Email Configuration</SheetTitle>
                       <SheetDescription>
