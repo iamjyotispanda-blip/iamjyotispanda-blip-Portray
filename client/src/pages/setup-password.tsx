@@ -21,18 +21,12 @@ export default function SetupPasswordPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const queryString = location.includes('?') ? location.split('?')[1] : '';
-    console.log("SetupPasswordPage: Query string:", queryString);
+    // Get the full URL including query parameters
+    const fullUrl = window.location.href;
+    const url = new URL(fullUrl);
+    const tokenParam = url.searchParams.get('token');
     
-    if (!queryString) {
-      setStatus("error");
-      setMessage("Invalid password setup link - no token provided");
-      return;
-    }
-    
-    const urlParams = new URLSearchParams(queryString);
-    const tokenParam = urlParams.get('token');
-    
+    console.log("SetupPasswordPage: Full URL:", fullUrl);
     console.log("SetupPasswordPage: Token from URL:", tokenParam);
 
     if (!tokenParam) {
