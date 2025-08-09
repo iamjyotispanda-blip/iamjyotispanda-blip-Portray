@@ -56,8 +56,11 @@ export default function VerifyEmailPage() {
         });
         
         // Redirect to setup-password page with token (same as port admin flow)
+        console.log("VerifyEmailPage: Redirecting to setup-password with token:", response.passwordSetupToken);
         setTimeout(() => {
-          window.location.href = `/setup-password?token=${response.passwordSetupToken}`;
+          const redirectUrl = `/setup-password?token=${response.passwordSetupToken}`;
+          console.log("VerifyEmailPage: Full redirect URL:", redirectUrl);
+          window.location.href = redirectUrl;
         }, 2000);
       } else if (response.message?.includes("already verified")) {
         setStatus("success");

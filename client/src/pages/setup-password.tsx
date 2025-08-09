@@ -149,6 +149,12 @@ export default function SetupPasswordPage() {
             </div>
             <CardTitle className="text-2xl">Setup Link Invalid</CardTitle>
             <CardDescription>{message}</CardDescription>
+            <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm text-left">
+              <strong>Debug Info:</strong><br/>
+              Current URL: {window.location.href}<br/>
+              Token: {token || 'null'}<br/>
+              Location: {location}
+            </div>
           </CardHeader>
           <CardContent>
             <Button 
