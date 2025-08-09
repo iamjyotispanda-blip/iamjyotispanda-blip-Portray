@@ -267,7 +267,8 @@ export default function LoginPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="rememberMe"
-                      {...form.register("rememberMe")}
+                      checked={form.watch("rememberMe") || false}
+                      onCheckedChange={(checked) => form.setValue("rememberMe", checked === true)}
                     />
                     <Label 
                       htmlFor="rememberMe"
