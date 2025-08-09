@@ -19,6 +19,7 @@ import EmailConfigurationPage from "@/pages/email-configuration";
 import MenuManagementPage from "@/pages/menu-management";
 import OrganizationsPage from "@/pages/organizations";
 import VerifyPage from "@/pages/verify";
+import VerifyEmailPage from "@/pages/verify-email";
 import SetupPasswordPage from "@/pages/setup-password";
 import TerminalsPage from "@/pages/terminals";
 import TerminalFormPage from "@/pages/terminal-form";
@@ -91,6 +92,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={LoginPage} />
       <Route path="/verify" component={VerifyPage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/setup-password" component={SetupPasswordPage} />
       <Route path="/port-admin-verification" component={PortAdminVerificationPage} />
       <Route path="/port-admin-dashboard" component={PortAdminDashboard} />

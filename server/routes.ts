@@ -20,6 +20,16 @@ declare global {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Validation schemas for new endpoints
+  const verifyEmailSchema = z.object({
+    token: z.string().min(1, "Token is required")
+  });
+
+  const setupPasswordSchema = z.object({
+    token: z.string().min(1, "Token is required"),
+    password: z.string().min(8, "Password must be at least 8 characters")
+  });
+  
   // Authentication middleware
   const authenticateToken = async (req: Request, res: Response, next: any) => {
     const authHeader = req.headers.authorization;
@@ -1393,17 +1403,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email already exists" });
       }
       
-      // Hash password
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      // Generate verification token
+      const verificationToken = randomUUID();
+      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
       
       const user = await storage.createUser({
         ...userData,
         id: randomUUID(),
-        password: hashedPassword
-      });
+        password: null,
+        isActive: false,
+        isVerified: false,
+        verificationToken,
+        verificationTokenExpires
+      } as any);
       
-      // Remove password from response
-      const { password, ...safeUser } = user;
+      // Send verification email
+      try {
+        const { sendUserVerificationEmail } = await import("./emailService.js");
+        await sendUserVerificationEmail(user.email, user.firstName, verificationToken);
+      } catch (emailError) {
+        console.error("Failed to send verification email:", emailError);
+        // Continue without failing - admin can resend manually
+      }
+      
+      // Remove sensitive fields from response
+      const { password, verificationToken: token, ...safeUser } = user;
       res.status(201).json(safeUser);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1974,6 +1998,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(terminal);
     } catch (error) {
       console.error("Update terminal status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Email verification endpoint
+  app.post("/api/auth/verify-email", async (req: Request, res: Response) => {
+    try {
+      const { token } = verifyEmailSchema.parse(req.body);
+      
+      // Find user by verification token
+      const user = await storage.getUserByVerificationToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+
+      // Check if token is expired
+      if (user.verificationTokenExpires && new Date() > user.verificationTokenExpires) {
+        return res.status(400).json({ message: "Verification token has expired" });
+      }
+
+      // Generate password setup token
+      const passwordSetupToken = randomUUID();
+      const passwordSetupTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Update user - mark as verified and add password setup token
+      await storage.updateUser(user.id, {
+        isVerified: true,
+        verificationToken: null,
+        verificationTokenExpires: null,
+        passwordSetupToken,
+        passwordSetupTokenExpires
+      } as any);
+
+      // Send password setup email
+      try {
+        const { sendPasswordSetupEmail } = await import("./emailService.js");
+        await sendPasswordSetupEmail(user.email, user.firstName, passwordSetupToken);
+      } catch (emailError) {
+        console.error("Failed to send password setup email:", emailError);
+      }
+
+      res.json({ message: "Email verified successfully. Please check your email for password setup instructions." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Password setup endpoint
+  app.post("/api/auth/setup-password", async (req: Request, res: Response) => {
+    try {
+      const { token, password } = setupPasswordSchema.parse(req.body);
+      
+      // Find user by password setup token
+      const user = await storage.getUserByPasswordSetupToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired password setup token" });
+      }
+
+      // Check if token is expired
+      if (user.passwordSetupTokenExpires && new Date() > user.passwordSetupTokenExpires) {
+        return res.status(400).json({ message: "Password setup token has expired" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Update user - set password, activate account, clear setup token
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        isActive: true,
+        passwordSetupToken: null,
+        passwordSetupTokenExpires: null
+      } as any);
+
+      res.json({ message: "Password set successfully. You can now log in to your account." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Password setup error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

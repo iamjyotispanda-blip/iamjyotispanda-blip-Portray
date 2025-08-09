@@ -1,189 +1,295 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CheckCircle, XCircle, Lock, Eye, EyeOff } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function SetupPasswordPage() {
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [location] = useLocation();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<"form" | "success" | "error" | "expired">("form");
+  const [message, setMessage] = useState("");
+  const [token, setToken] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Get user details from URL parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('userId');
-  const email = urlParams.get('email');
-  const contactName = urlParams.get('contactName');
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.split('?')[1]);
+    const tokenParam = urlParams.get('token');
 
-  if (!userId || !email) {
-    setLocation('/login');
-    return null;
-  }
+    if (!tokenParam) {
+      setStatus("error");
+      setMessage("Invalid password setup link - no token provided");
+      return;
+    }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setToken(tokenParam);
+  }, [location]);
+
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = [];
+    
+    if (password.length < 8) {
+      errors.push("Password must be at least 8 characters long");
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Password must contain at least one uppercase letter");
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push("Password must contain at least one lowercase letter");
+    }
+    
+    if (!/\d/.test(password)) {
+      errors.push("Password must contain at least one number");
+    }
+    
+    return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
+    if (!token) {
       toast({
         title: "Error",
+        description: "Invalid setup link",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate password
+    const passwordErrors = validatePassword(password);
+    if (passwordErrors.length > 0) {
+      toast({
+        title: "Password Requirements",
+        description: passwordErrors[0],
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check password confirmation
+    if (password !== confirmPassword) {
+      toast({
+        title: "Password Mismatch",
         description: "Passwords do not match",
         variant: "destructive",
       });
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
+    setIsSubmitting(true);
+    
     try {
-      const response = await fetch('/api/setup-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          password: formData.password,
-        }),
+      const response = await apiRequest("POST", "/api/auth/setup-password", { 
+        token, 
+        password 
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store the auth token
-        localStorage.setItem('auth-token', data.token);
+      
+      if (response) {
+        setStatus("success");
+        setMessage("Password set successfully! You can now log in to your account.");
         
         toast({
-          title: "Success",
-          description: "Password setup completed successfully!",
+          title: "Password Set Successfully",
+          description: "You can now log in to your account",
         });
-
-        // Redirect based on user role
-        const redirectPath = data.redirectPath || '/dashboard';
-        setLocation(redirectPath);
+      }
+    } catch (error: any) {
+      console.error("Password setup error:", error);
+      
+      if (error.message?.includes("expired")) {
+        setStatus("expired");
+        setMessage("Password setup link has expired. Please contact your administrator for assistance.");
       } else {
         toast({
-          title: "Error",
-          description: data.message || "Password setup failed",
+          title: "Setup Failed",
+          description: error.message || "Failed to set password. Please try again.",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error('Setup password error:', error);
-      toast({
-        title: "Error",
-        description: "An error occurred during password setup",
-        variant: "destructive",
-      });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  if (status === "error") {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <XCircle className="h-16 w-16 text-red-500" />
+            </div>
+            <CardTitle className="text-2xl">Setup Link Invalid</CardTitle>
+            <CardDescription>{message}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => window.location.href = "/login"}
+              className="w-full"
+              data-testid="button-back-to-login"
+            >
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === "success") {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <CheckCircle className="h-16 w-16 text-green-500" />
+            </div>
+            <CardTitle className="text-2xl">Password Set Successfully!</CardTitle>
+            <CardDescription>{message}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => window.location.href = "/login"}
+              className="w-full"
+              data-testid="button-go-to-login"
+            >
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === "expired") {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <XCircle className="h-16 w-16 text-orange-500" />
+            </div>
+            <CardTitle className="text-2xl">Setup Link Expired</CardTitle>
+            <CardDescription>{message}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => window.location.href = "/login"}
+              className="w-full"
+              data-testid="button-back-to-login"
+            >
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Setup Your Password</CardTitle>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Welcome {contactName}! Please set up your password to complete your account setup.
-          </p>
+        <CardHeader className="text-center space-y-4">
+          <div className="flex justify-center">
+            <Lock className="h-16 w-16 text-blue-500" />
+          </div>
+          <div className="space-y-2">
+            <CardTitle className="text-2xl">Set Your Password</CardTitle>
+            <CardDescription>
+              Create a secure password to complete your account setup
+            </CardDescription>
+          </div>
         </CardHeader>
+        
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                disabled
-                className="bg-gray-100 dark:bg-gray-800"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">New Password *</Label>
               <div className="relative">
                 <Input
                   id="password"
-                  name="password"
                   type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  required
+                  data-testid="input-new-password"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700"
+                  data-testid="button-toggle-password"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </div>
-
+            
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">Confirm Password *</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
-                  name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
+                  required
+                  data-testid="input-confirm-password"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700"
+                  data-testid="button-toggle-confirm-password"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </div>
-
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Password Requirements:</h4>
+              <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+                <li>• At least 8 characters long</li>
+                <li>• At least one uppercase letter (A-Z)</li>
+                <li>• At least one lowercase letter (a-z)</li>
+                <li>• At least one number (0-9)</li>
+              </ul>
+            </div>
+            
             <Button 
-              type="submit" 
-              className="w-full h-8"
-              disabled={isLoading}
+              type="submit"
+              disabled={isSubmitting || !password || !confirmPassword}
+              className="w-full"
+              data-testid="button-setup-password"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Setting up...
-                </>
-              ) : (
-                "Complete Setup"
-              )}
+              {isSubmitting ? "Setting Password..." : "Set Password"}
             </Button>
           </form>
         </CardContent>

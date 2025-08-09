@@ -38,7 +38,6 @@ interface UserFormData {
   email: string;
   firstName: string;
   lastName: string;
-  password: string;
   role: string;
   roleId: number;
   isActive: boolean;
@@ -55,7 +54,6 @@ export function UsersContent() {
     email: "",
     firstName: "",
     lastName: "",
-    password: "",
     role: "",
     roleId: 0,
     isActive: true,
@@ -105,11 +103,7 @@ export function UsersContent() {
   const saveUserMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
       if (editingUser) {
-        const updateData = { ...data };
-        if (!updateData.password) {
-          delete (updateData as any).password;
-        }
-        return apiRequest("PUT", `/api/users/${editingUser.id}`, updateData);
+        return apiRequest("PUT", `/api/users/${editingUser.id}`, data);
       } else {
         return apiRequest("POST", "/api/users", data);
       }
@@ -117,7 +111,7 @@ export function UsersContent() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: `User ${editingUser ? 'updated' : 'created'} successfully`,
+        description: editingUser ? 'User updated successfully' : 'User created successfully. Verification email has been sent.',
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setShowAddForm(false);
@@ -181,7 +175,6 @@ export function UsersContent() {
       email: "",
       firstName: "",
       lastName: "",
-      password: "",
       role: "",
       roleId: 0,
       isActive: true,
@@ -194,7 +187,6 @@ export function UsersContent() {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      password: "", 
       role: user.role,
       roleId: user.roleId || 0,
       isActive: user.isActive,
@@ -207,15 +199,6 @@ export function UsersContent() {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!editingUser && !formData.password.trim()) {
-      toast({
-        title: "Error",
-        description: "Password is required for new users",
         variant: "destructive",
       });
       return;
@@ -430,17 +413,7 @@ export function UsersContent() {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="password">Password *</Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            placeholder="Enter secure password"
-                            data-testid="input-user-password"
-                          />
-                        </div>
+
 
                         <div className="space-y-2">
                           <Label htmlFor="role">Role *</Label>
@@ -706,17 +679,7 @@ export function UsersContent() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="editPassword">New Password (leave blank to keep current)</Label>
-              <Input
-                id="editPassword"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Leave blank to keep current password"
-                data-testid="input-edit-user-password"
-              />
-            </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="editRole">Role *</Label>

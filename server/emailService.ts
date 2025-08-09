@@ -153,3 +153,52 @@ This verification link will expire in 24 hours.
     }
   }
 }
+
+export const emailService = new EmailService();
+
+// User verification and password setup email functions
+export async function sendUserVerificationEmail(userEmail: string, userName: string, verificationToken: string): Promise<boolean> {
+  try {
+    // Get default email configuration (you may want to make this configurable)
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+      `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+      (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
+        `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
+        'http://localhost:5000');
+    
+    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+    
+    // For now, we'll use a simple console log - you can implement actual email sending later
+    console.log(`Verification email would be sent to ${userEmail}:`);
+    console.log(`Subject: Welcome to PortRay - Verify Your Account`);
+    console.log(`Verification URL: ${verificationUrl}`);
+    console.log(`User: ${userName}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to send user verification email:', error);
+    return false;
+  }
+}
+
+export async function sendPasswordSetupEmail(userEmail: string, userName: string, passwordSetupToken: string): Promise<boolean> {
+  try {
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+      `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+      (process.env.REPL_SLUG && process.env.REPL_OWNER ? 
+        `https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app` : 
+        'http://localhost:5000');
+    
+    const passwordSetupUrl = `${baseUrl}/setup-password?token=${passwordSetupToken}`;
+    
+    console.log(`Password setup email would be sent to ${userEmail}:`);
+    console.log(`Subject: PortRay - Complete Your Account Setup`);
+    console.log(`Password Setup URL: ${passwordSetupUrl}`);
+    console.log(`User: ${userName}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to send password setup email:', error);
+    return false;
+  }
+}

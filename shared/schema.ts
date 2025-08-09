@@ -6,12 +6,17 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("PortAdmin"), // Will reference roles.name
   roleId: integer("role_id").references(() => roles.id),
-  isActive: boolean("is_active").notNull().default(true),
+  isActive: boolean("is_active").notNull().default(false),
+  isVerified: boolean("is_verified").notNull().default(false),
+  verificationToken: text("verification_token").unique(),
+  verificationTokenExpires: timestamp("verification_token_expires"),
+  passwordSetupToken: text("password_setup_token").unique(),
+  passwordSetupTokenExpires: timestamp("password_setup_token_expires"),
   isSystemAdmin: boolean("is_system_admin").notNull().default(false),
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
@@ -186,7 +191,6 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
-  password: true,
   firstName: true,
   lastName: true,
   role: true,
@@ -200,6 +204,7 @@ export const updateUserSchema = createInsertSchema(users).pick({
   role: true,
   roleId: true,
   isActive: true,
+  isVerified: true,
   isSystemAdmin: true,
 }).partial();
 
@@ -226,6 +231,19 @@ export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters long"),
   rememberMe: z.boolean().optional(),
+});
+
+export const setupPasswordSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+  confirmPassword: z.string().min(8, "Please confirm your password"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, "Token is required"),
 });
 
 export const insertOrganizationSchema = createInsertSchema(organizations).pick({
