@@ -210,13 +210,13 @@ export default function PermissionAssignmentPage() {
 
   return (
     <AppLayout title="Permission Assignment" activeSection="permission-assignment">
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="w-full bg-gray-50 dark:bg-gray-900">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Permission Assignment</span>
         </div>
         
-        <main className="px-4 sm:px-6 lg:px-2 py-2">
-          <div className="space-y-4 pb-6">
+        <div className="px-4 sm:px-6 lg:px-2 py-2">
+          <div className="space-y-4 pb-8">
             {/* Role Selection */}
             <Card>
               <CardContent className="p-6">
@@ -380,7 +380,7 @@ export default function PermissionAssignmentPage() {
               </Card>
             )}
           </div>
-        </main>
+        </div>
       </div>
     </AppLayout>
   );
