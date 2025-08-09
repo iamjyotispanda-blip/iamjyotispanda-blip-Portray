@@ -7,6 +7,7 @@ import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 // Object storage imports removed - using fallback system
 import { EmailService } from "./emailService";
+import { AuditService } from "./auditService";
 
 // Extend Express Request to include user session
 declare global {
@@ -971,6 +972,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Audit Log endpoints
+  app.get("/api/user-audit-logs", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { userId, performedBy } = req.query;
+      
+      let logs;
+      if (userId) {
+        logs = await storage.getUserAuditLogsByUserId(userId as string);
+      } else if (performedBy) {
+        logs = await storage.getUserAuditLogsByPerformedBy(performedBy as string);
+      } else {
+        // Only system admins can view all audit logs
+        if (req.user?.role !== "SystemAdmin") {
+          return res.status(403).json({ message: "Access denied. Only System Administrators can view all audit logs." });
+        }
+        logs = await storage.getAllUserAuditLogs();
+      }
+      
+      res.json(logs);
+    } catch (error) {
+      console.error("Get user audit logs error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Menu Management endpoints
   app.get("/api/menus", authenticateToken, async (req: Request, res: Response) => {
     try {
@@ -1447,6 +1473,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Continue without failing - admin can resend manually
       }
       
+      // Log user creation for audit trail
+      await AuditService.logUserCreation(
+        user.id,
+        req.user?.id || "system",
+        userData,
+        req.ip,
+        req.get('User-Agent')
+      );
+      
       // Remove sensitive fields from response
       const { password, verificationToken: token, ...safeUser } = user;
       res.status(201).json(safeUser);
@@ -1480,11 +1515,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Get current user data for audit logging
+      const currentUser = await storage.getUser(id);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const user = await storage.updateUser(id, updates);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+      
+      // Log user update for audit trail
+      await AuditService.logUserUpdate(
+        user.id,
+        req.user?.id || "system",
+        {
+          email: currentUser.email,
+          firstName: currentUser.firstName,
+          lastName: currentUser.lastName,
+          userType: currentUser.userType,
+          role: currentUser.role,
+          portId: currentUser.portId,
+          terminalIds: currentUser.terminalIds
+        },
+        {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          userType: user.userType,
+          role: user.role,
+          portId: user.portId,
+          terminalIds: user.terminalIds
+        },
+        req.ip,
+        req.get('User-Agent')
+      );
       
       // Remove password from response
       const { password, ...safeUser } = user;
@@ -1515,11 +1582,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Cannot toggle your own status" });
       }
       
+      // Get current user data for audit logging
+      const currentUser = await storage.getUser(id);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const user = await storage.toggleUserStatus(id);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+      
+      // Log status change for audit trail
+      await AuditService.logUserStatusChange(
+        user.id,
+        req.user?.id || "system",
+        currentUser.isActive,
+        user.isActive,
+        req.ip,
+        req.get('User-Agent')
+      );
       
       // Remove password from response
       const { password, ...safeUser } = user;
@@ -2062,6 +2145,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         passwordSetupTokenExpires
       } as any);
 
+      // Log email verification for audit trail
+      await AuditService.logUserVerification(
+        user.id,
+        user.id, // User verifies themselves
+        req.ip,
+        req.get('User-Agent')
+      );
+
       // Send password setup email using port-specific configuration
       try {
         const { sendPasswordSetupEmail } = await import("./emailService.js");
@@ -2109,6 +2200,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         passwordSetupToken: null,
         passwordSetupTokenExpires: null
       } as any);
+
+      // Log password setup for audit trail
+      await AuditService.logPasswordSetup(
+        user.id,
+        user.id, // User sets up their own password
+        req.ip,
+        req.get('User-Agent')
+      );
 
       res.json({ message: "Password set successfully. You can now log in to your account." });
     } catch (error) {

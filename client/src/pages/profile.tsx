@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Shield, Monitor, Smartphone, Globe, Clock, User, Mail, Eye, EyeOff, Edit, Check, X } from "lucide-react";
+import { Calendar, MapPin, Shield, Monitor, Smartphone, Globe, Clock, User, Mail, Eye, EyeOff, Edit, Check, X, History } from "lucide-react";
+import { UserAuditLogDialog } from "@/components/UserAuditLogDialog";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,9 @@ export default function ProfilePage() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+  });
+  const [auditLogDialog, setAuditLogDialog] = useState({
+    open: false,
   });
 
   // Get current user
@@ -154,6 +158,12 @@ export default function ProfilePage() {
         confirmPassword: "",
       });
     }
+  };
+
+  const handleViewAuditLog = () => {
+    setAuditLogDialog({
+      open: true,
+    });
   };
 
   const getDeviceIcon = (deviceType: string) => {
@@ -347,6 +357,14 @@ export default function ProfilePage() {
                         </Button>
                         <Button variant="outline" onClick={handleEditToggle} className="h-8">
                           Cancel
+                        </Button>
+                      </div>
+                    )}
+                    {!editMode && (
+                      <div className="flex space-x-3 pt-6 mt-6 border-t">
+                        <Button variant="outline" onClick={handleViewAuditLog} className="h-8" data-testid="button-view-activity-log">
+                          <History className="w-4 h-4 mr-2" />
+                          View Activity Log
                         </Button>
                       </div>
                     )}
@@ -620,6 +638,16 @@ export default function ProfilePage() {
           </div>
         </main>
       </div>
+
+      {/* User Audit Log Dialog */}
+      {user && (
+        <UserAuditLogDialog
+          open={auditLogDialog.open}
+          onOpenChange={(open) => setAuditLogDialog({ open })}
+          userId={user.id}
+          userName={`${user.firstName} ${user.lastName}`}
+        />
+      )}
     </AppLayout>
   );
 }

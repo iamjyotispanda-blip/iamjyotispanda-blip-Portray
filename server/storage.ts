@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs } from "@shared/schema";
+import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -70,6 +70,12 @@ export interface IStorage {
   getEmailLogsByConfigurationId(configurationId: number): Promise<EmailLog[]>;
   getEmailLogsByPortId(portId: number): Promise<EmailLog[]>;
   createEmailLog(log: InsertEmailLog): Promise<EmailLog>;
+
+  // User Audit Log operations
+  getAllUserAuditLogs(): Promise<UserAuditLog[]>;
+  getUserAuditLogsByUserId(userId: string): Promise<UserAuditLog[]>;
+  getUserAuditLogsByPerformedBy(performedBy: string): Promise<UserAuditLog[]>;
+  createUserAuditLog(log: InsertUserAuditLog): Promise<UserAuditLog>;
 
   // Terminal operations
   getAllTerminals(): Promise<Terminal[]>;
@@ -432,6 +438,31 @@ export class DatabaseStorage implements IStorage {
   async createEmailLog(logData: InsertEmailLog): Promise<EmailLog> {
     const [log] = await db
       .insert(emailLogs)
+      .values(logData)
+      .returning();
+    return log;
+  }
+
+  // User Audit Log operations
+  async getAllUserAuditLogs(): Promise<UserAuditLog[]> {
+    return db.select().from(userAuditLogs).orderBy(userAuditLogs.createdAt);
+  }
+
+  async getUserAuditLogsByUserId(userId: string): Promise<UserAuditLog[]> {
+    return db.select().from(userAuditLogs)
+      .where(eq(userAuditLogs.targetUserId, userId))
+      .orderBy(userAuditLogs.createdAt);
+  }
+
+  async getUserAuditLogsByPerformedBy(performedBy: string): Promise<UserAuditLog[]> {
+    return db.select().from(userAuditLogs)
+      .where(eq(userAuditLogs.performedBy, performedBy))
+      .orderBy(userAuditLogs.createdAt);
+  }
+
+  async createUserAuditLog(logData: InsertUserAuditLog): Promise<UserAuditLog> {
+    const [log] = await db
+      .insert(userAuditLogs)
       .values(logData)
       .returning();
     return log;

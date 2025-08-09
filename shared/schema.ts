@@ -562,3 +562,44 @@ export const insertActivationLogSchema = createInsertSchema(activationLogs).pick
 
 export type ActivationLog = typeof activationLogs.$inferSelect;
 export type InsertActivationLog = z.infer<typeof insertActivationLogSchema>;
+
+// User Audit Logs Table
+export const userAuditLogs = pgTable("user_audit_logs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  targetUserId: varchar("target_user_id").notNull().references(() => users.id), // User being modified
+  performedBy: varchar("performed_by").notNull().references(() => users.id), // User performing the action
+  action: text("action").notNull(), // "created", "updated", "status_changed", "role_changed", "password_reset", "verified", "deleted"
+  description: text("description").notNull(),
+  oldValues: text("old_values"), // JSON string of previous values
+  newValues: text("new_values"), // JSON string of new values
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+export const userAuditLogsRelations = relations(userAuditLogs, ({ one }) => ({
+  targetUser: one(users, {
+    fields: [userAuditLogs.targetUserId],
+    references: [users.id],
+    relationName: "AuditTargetUser",
+  }),
+  performedByUser: one(users, {
+    fields: [userAuditLogs.performedBy],
+    references: [users.id],
+    relationName: "AuditPerformedBy",
+  }),
+}));
+
+export const insertUserAuditLogSchema = createInsertSchema(userAuditLogs).pick({
+  targetUserId: true,
+  performedBy: true,
+  action: true,
+  description: true,
+  oldValues: true,
+  newValues: true,
+  ipAddress: true,
+  userAgent: true,
+});
+
+export type UserAuditLog = typeof userAuditLogs.$inferSelect;
+export type InsertUserAuditLog = z.infer<typeof insertUserAuditLogSchema>;

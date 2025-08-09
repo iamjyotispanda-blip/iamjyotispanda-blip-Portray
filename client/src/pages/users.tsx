@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, User, Edit, ToggleLeft, ToggleRight, Trash2, Search, Calendar, Shield, Mail, Users, TrendingUp, Clock, UserCheck, MoreHorizontal } from "lucide-react";
+import { Plus, User, Edit, ToggleLeft, ToggleRight, Trash2, Search, Calendar, Shield, Mail, Users, TrendingUp, Clock, UserCheck, MoreHorizontal, History } from "lucide-react";
+import { UserAuditLogDialog } from "@/components/UserAuditLogDialog";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +54,15 @@ export function UsersContent() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
+  const [auditLogDialog, setAuditLogDialog] = useState<{
+    open: boolean;
+    userId: string | null;
+    userName: string | null;
+  }>({
+    open: false,
+    userId: null,
+    userName: null,
+  });
   const [formData, setFormData] = useState<UserFormData>({
     userType: "PortUser",
     email: "",
@@ -263,6 +273,14 @@ export function UsersContent() {
 
   const handleDeleteUser = (userId: string) => {
     deleteUserMutation.mutate(userId);
+  };
+
+  const handleViewAuditLog = (user: UserType) => {
+    setAuditLogDialog({
+      open: true,
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+    });
   };
 
   const handleRoleChange = (roleId: string) => {
@@ -701,6 +719,12 @@ export function UsersContent() {
                                       Edit
                                     </DropdownMenuItem>
                                   )}
+                                  {canRead("users", "user-access") && (
+                                    <DropdownMenuItem onClick={() => handleViewAuditLog(user)} data-testid={`button-audit-log-user-${user.id}`}>
+                                      <History className="w-4 h-4 mr-2" />
+                                      View Activity Log
+                                    </DropdownMenuItem>
+                                  )}
                                   {canManage("users", "user-access") && (
                                     <DropdownMenuItem 
                                       onClick={() => handleToggleUserStatus(user.id)}
@@ -879,6 +903,14 @@ export function UsersContent() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* User Audit Log Dialog */}
+      <UserAuditLogDialog
+        open={auditLogDialog.open}
+        onOpenChange={(open) => setAuditLogDialog(prev => ({ ...prev, open }))}
+        userId={auditLogDialog.userId || ""}
+        userName={auditLogDialog.userName || ""}
+      />
     </div>
   );
 }
