@@ -215,65 +215,65 @@ export default function TerminalAddPage() {
         <div className="flex-1 flex">
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto">
-            <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-4xl mx-auto px-6 py-6">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Port Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Port Information */}
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center space-x-2 text-lg">
                     <Ship className="h-5 w-5" />
                     <span>Port Information</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Port Name</label>
-                      <Input 
-                        value={(assignedPort as any)?.portName || ""} 
-                        disabled 
-                        className="bg-gray-100 mt-1" 
-                      />
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Port Name</label>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {(assignedPort as any)?.portName || ""}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium">Organization</label>
-                      <Input 
-                        value={(assignedPort as any)?.organizationName || ""} 
-                        disabled 
-                        className="bg-gray-100 mt-1" 
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Organization</label>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {(assignedPort as any)?.organizationName || ""}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium">State</label>
-                      <Input 
-                        value={(assignedPort as any)?.state || ""} 
-                        disabled 
-                        className="bg-gray-100 mt-1" 
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">State</label>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {(assignedPort as any)?.state || ""}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium">Country</label>
-                      <Input 
-                        value={(assignedPort as any)?.country || "India"} 
-                        disabled 
-                        className="bg-gray-100 mt-1" 
-                      />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {(assignedPort as any)?.country || "India"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Terminal Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center space-x-2 text-lg">
                     <Building2 className="h-5 w-5" />
                     <span>Terminal Details</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
                       name="terminalName"
@@ -380,14 +380,14 @@ export default function TerminalAddPage() {
               </Card>
 
               {/* Billing Address */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center space-x-2 text-lg">
                     <CreditCard className="h-5 w-5" />
                     <span>Billing Address</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="pt-0 space-y-4">
                   <FormField
                     control={form.control}
                     name="billingAddress"
@@ -402,7 +402,7 @@ export default function TerminalAddPage() {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
                       name="billingCity"
@@ -501,7 +501,7 @@ export default function TerminalAddPage() {
                         )}
                       />
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
                           name="shippingCity"
@@ -560,7 +560,7 @@ export default function TerminalAddPage() {
               </Card>
 
               {/* Actions */}
-              <div className="flex justify-end space-x-2 pb-4">
+              <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   type="button"
                   variant="outline"
