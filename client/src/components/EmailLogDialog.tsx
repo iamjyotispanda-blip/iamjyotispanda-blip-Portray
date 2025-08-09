@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mail, Clock, AlertCircle, CheckCircle, X } from "lucide-react";
+import { Mail, Clock, AlertCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import type { EmailLog } from "@shared/schema";
 
@@ -18,10 +19,19 @@ interface EmailLogDialogProps {
 
 export function EmailLogDialog({ open, onOpenChange, configurationId, portName }: EmailLogDialogProps) {
   // Get email logs for this configuration
-  const { data: emailLogs = [], isLoading } = useQuery<EmailLog[]>({
+  const { data: emailLogs = [], isLoading, error } = useQuery<EmailLog[]>({
     queryKey: ["/api/email-logs", configurationId],
-    queryFn: () => fetch(`/api/email-logs?configId=${configurationId}`).then(res => res.json()),
-    enabled: open,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/email-logs?configId=${configurationId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch email logs: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: open && !!configurationId,
   });
 
   const getStatusIcon = (status: string) => {
@@ -69,21 +79,11 @@ export function EmailLogDialog({ open, onOpenChange, configurationId, portName }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Email Logs
-              {portName && <span className="text-sm text-muted-foreground">• {portName}</span>}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              data-testid="button-close-email-logs"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Mail className="h-5 w-5" />
+            Email Logs
+            {portName && <span className="text-sm font-normal text-muted-foreground">for {portName}</span>}
+          </DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
@@ -92,6 +92,16 @@ export function EmailLogDialog({ open, onOpenChange, configurationId, portName }
               <div className="text-center space-y-2">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="text-sm text-muted-foreground">Loading email logs...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center space-y-2">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+                <h3 className="text-lg font-medium">Failed to load email logs</h3>
+                <p className="text-sm text-muted-foreground">
+                  {error instanceof Error ? error.message : "An unexpected error occurred"}
+                </p>
               </div>
             </div>
           ) : emailLogs.length === 0 ? (
