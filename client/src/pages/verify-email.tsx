@@ -14,22 +14,26 @@ export default function VerifyEmailPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log("Current location:", location);
+    console.log("VerifyEmailPage: Current location:", location);
+    console.log("VerifyEmailPage: Full window location:", window.location.href);
     
-    // More robust URL parsing
-    const queryString = location.includes('?') ? location.split('?')[1] : '';
-    console.log("Query string:", queryString);
+    // Parse URL more thoroughly
+    const fullUrl = window.location.href;
+    const urlObj = new URL(fullUrl);
+    const token = urlObj.searchParams.get('token');
     
-    const urlParams = new URLSearchParams(queryString);
-    const token = urlParams.get('token');
-    console.log("Extracted token:", token);
+    console.log("VerifyEmailPage: URL object:", urlObj);
+    console.log("VerifyEmailPage: Search params:", urlObj.search);
+    console.log("VerifyEmailPage: Extracted token:", token);
 
     if (!token) {
+      console.log("VerifyEmailPage: No token found, setting error status");
       setStatus("error");
       setMessage("Invalid verification link - no token provided");
       return;
     }
 
+    console.log("VerifyEmailPage: Token found, calling verifyEmail");
     verifyEmail(token);
   }, [location]);
 

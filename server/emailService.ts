@@ -291,6 +291,7 @@ This verification link will expire in 24 hours. If you didn't create this accoun
       // Log the email
       try {
         await storage.createEmailLog({
+          configurationId: emailConfig.id,
           emailConfigurationId: emailConfig.id,
           portId: portId,
           toEmail: userEmail,
@@ -314,6 +315,7 @@ This verification link will expire in 24 hours. If you didn't create this accoun
         const emailConfig = await this.getPortEmailConfiguration(portId);
         if (emailConfig) {
           await storage.createEmailLog({
+            configurationId: emailConfig.id,
             emailConfigurationId: emailConfig.id,
             portId: portId,
             toEmail: userEmail,
