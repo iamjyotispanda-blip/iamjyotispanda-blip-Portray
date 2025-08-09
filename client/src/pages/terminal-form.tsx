@@ -164,12 +164,18 @@ export default function TerminalFormPage() {
   // Copy billing address to shipping when sameAsBilling is checked
   useEffect(() => {
     if (sameAsBilling) {
-      const billingData = form.getValues();
-      form.setValue("shippingAddress", billingData.billingAddress);
-      form.setValue("shippingCity", billingData.billingCity);
-      form.setValue("shippingPinCode", billingData.billingPinCode);
-      form.setValue("shippingPhone", billingData.billingPhone);
-      form.setValue("shippingFax", billingData.billingFax || "");
+      try {
+        const billingData = form.getValues();
+        if (billingData) {
+          form.setValue("shippingAddress", billingData.billingAddress || "");
+          form.setValue("shippingCity", billingData.billingCity || "");
+          form.setValue("shippingPinCode", billingData.billingPinCode || "");
+          form.setValue("shippingPhone", billingData.billingPhone || "");
+          form.setValue("shippingFax", billingData.billingFax || "");
+        }
+      } catch (error) {
+        console.error("Error copying billing data to shipping:", error);
+      }
     }
   }, [sameAsBilling, form]);
 
