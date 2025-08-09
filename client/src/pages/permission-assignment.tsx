@@ -210,13 +210,13 @@ export default function PermissionAssignmentPage() {
 
   return (
     <AppLayout title="Permission Assignment" activeSection="permission-assignment">
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Permission Assignment</span>
         </div>
         
-        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1 overflow-auto">
-          <div className="space-y-4">
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1 overflow-y-auto">
+          <div className="space-y-4 pb-6">
             {/* Role Selection */}
             <Card>
               <CardContent className="p-6">
@@ -270,7 +270,7 @@ export default function PermissionAssignmentPage() {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                       {treeData.map((gLink) => (
                         <div key={gLink.id} className="space-y-2">
                           {/* GLink Row */}
