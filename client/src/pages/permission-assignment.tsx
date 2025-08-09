@@ -210,8 +210,8 @@ export default function PermissionAssignmentPage() {
 
   return (
     <AppLayout title="Permission Assignment" activeSection="permission-assignment">
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Permission Assignment</span>
         </div>
         
@@ -270,7 +270,7 @@ export default function PermissionAssignmentPage() {
                       </div>
                     </div>
                     
-                    <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-2">
                       {treeData.map((gLink) => (
                         <div key={gLink.id} className="space-y-2">
                           {/* GLink Row */}
