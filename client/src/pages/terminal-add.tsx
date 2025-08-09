@@ -215,7 +215,7 @@ export default function TerminalAddPage() {
         <div className="flex-1 flex">
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto">
-            <div className="p-4 space-y-4">
+            <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* Port Info */}
