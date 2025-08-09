@@ -159,7 +159,7 @@ export function UserAuditLogDialog({ open, onOpenChange, userId, userName }: Use
                   <TableHead>Description</TableHead>
                   <TableHead>Changes</TableHead>
                   <TableHead>Performed By</TableHead>
-                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Activity Date & Timer</TableHead>
                   <TableHead>IP Address</TableHead>
                 </TableRow>
               </TableHeader>
@@ -190,10 +190,15 @@ export function UserAuditLogDialog({ open, onOpenChange, userId, userName }: Use
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      <div>
-                        <div>{format(new Date(log.createdAt), "MMM d, yyyy")}</div>
-                        <div className="text-xs">{format(new Date(log.createdAt), "h:mm:ss a")}</div>
+                    <TableCell className="text-sm">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <span className="font-medium">{format(new Date(log.createdAt), "MMM dd, yyyy")}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
+                          {format(new Date(log.createdAt), "hh:mm:ss a")} ({format(new Date(log.createdAt), "zzz")})
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground font-mono">
