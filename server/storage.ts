@@ -172,7 +172,7 @@ export class DatabaseStorage implements IStorage {
 
   async validateUserCredentials(email: string, password: string): Promise<User | null> {
     const user = await this.getUserByEmail(email);
-    if (!user) return null;
+    if (!user || !user.password) return null;
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     return isValidPassword ? user : null;

@@ -54,12 +54,10 @@ export default function VerifyEmailPage() {
           description: "Redirecting to password setup",
         });
         
-        // Redirect to password setup page with token
-        setTimeout(() => {
-          const redirectUrl = `/setup-password?token=${(response as any).passwordSetupToken}`;
-          console.log("VerifyEmailPage: Redirecting to:", redirectUrl);
-          setLocation(redirectUrl);
-        }, 2000);
+        // Redirect to password setup page with token immediately
+        const redirectUrl = `/setup-password?token=${(response as any).passwordSetupToken}`;
+        console.log("VerifyEmailPage: Redirecting to:", redirectUrl);
+        window.location.href = redirectUrl;
       } else {
         console.log("VerifyEmailPage: No password setup token in response");
         setStatus("success");
