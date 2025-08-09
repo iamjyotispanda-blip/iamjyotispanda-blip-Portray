@@ -2233,8 +2233,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid or expired password setup token" });
       }
 
-      // Check if token is expired
-      if (user.passwordSetupTokenExpires && new Date() > user.passwordSetupTokenExpires) {
+      // Check if token is expired (with some grace period)
+      if (user.passwordSetupTokenExpires && new Date() > new Date(user.passwordSetupTokenExpires.getTime() + 5 * 60 * 1000)) {
         return res.status(400).json({ message: "Password setup token has expired" });
       }
 

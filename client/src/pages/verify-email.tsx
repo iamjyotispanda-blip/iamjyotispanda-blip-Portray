@@ -195,10 +195,13 @@ export default function VerifyEmailPage() {
       const response = await apiRequest("POST", "/api/auth/verify-email", { token });
       
       console.log("VerifyEmailPage: API response:", response);
+      console.log("VerifyEmailPage: Response type:", typeof response);
+      console.log("VerifyEmailPage: Response keys:", Object.keys(response || {}));
       
       if (response && (response as any).passwordSetupToken) {
-        console.log("VerifyEmailPage: Password setup token found:", (response as any).passwordSetupToken);
-        setPasswordSetupToken((response as any).passwordSetupToken);
+        const token = (response as any).passwordSetupToken;
+        console.log("VerifyEmailPage: Password setup token found:", token);
+        setPasswordSetupToken(token);
         setStatus("success");
         setMessage("Email verified successfully! Please set up your password.");
         
@@ -308,10 +311,19 @@ export default function VerifyEmailPage() {
                   </p>
                 </div>
                 
-                <PasswordSetupForm token={passwordSetupToken || ""} />
-                {!passwordSetupToken && (
-                  <div className="text-center mt-4">
-                    <p className="text-sm text-red-600">Error: No password setup token received. Please try resending the verification email.</p>
+                {passwordSetupToken ? (
+                  <PasswordSetupForm token={passwordSetupToken} />
+                ) : (
+                  <div className="text-center mt-4 space-y-2">
+                    <p className="text-sm text-red-600">Error: No password setup token received.</p>
+                    <p className="text-xs text-gray-500">Debug: Token value: {passwordSetupToken || "null"}</p>
+                    <Button 
+                      onClick={() => window.location.reload()}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Refresh Page
+                    </Button>
                   </div>
                 )}
               </div>
