@@ -208,8 +208,9 @@ export default function VerifyEmailPage() {
         });
       } else {
         console.log("VerifyEmailPage: No password setup token in response");
+        console.log("VerifyEmailPage: Full response:", JSON.stringify(response));
         setStatus("success");
-        setMessage("Email verified successfully!");
+        setMessage("Email verified successfully! Please contact your administrator to complete setup.");
         
         toast({
           title: "Email Verified",
@@ -307,7 +308,12 @@ export default function VerifyEmailPage() {
                   </p>
                 </div>
                 
-                {passwordSetupToken && <PasswordSetupForm token={passwordSetupToken} />}
+                <PasswordSetupForm token={passwordSetupToken || ""} />
+                {!passwordSetupToken && (
+                  <div className="text-center mt-4">
+                    <p className="text-sm text-red-600">Error: No password setup token received. Please try resending the verification email.</p>
+                  </div>
+                )}
               </div>
             )}
             
