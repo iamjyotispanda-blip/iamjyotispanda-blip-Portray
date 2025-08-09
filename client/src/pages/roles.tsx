@@ -813,7 +813,7 @@ export function RolesContent() {
                         id="read"
                         checked={permissionLevels.read}
                         onCheckedChange={(checked) =>
-                          setPermissionLevels({ ...permissionLevels, read: !!checked })
+                          setPermissionLevels({ ...permissionLevels, read: checked === true })
                         }
                         data-testid="checkbox-permission-read"
                       />
@@ -826,7 +826,7 @@ export function RolesContent() {
                         id="write"
                         checked={permissionLevels.write}
                         onCheckedChange={(checked) =>
-                          setPermissionLevels({ ...permissionLevels, write: !!checked })
+                          setPermissionLevels({ ...permissionLevels, write: checked === true })
                         }
                         data-testid="checkbox-permission-write"
                       />
@@ -839,7 +839,7 @@ export function RolesContent() {
                         id="manage"
                         checked={permissionLevels.manage}
                         onCheckedChange={(checked) =>
-                          setPermissionLevels({ ...permissionLevels, manage: !!checked })
+                          setPermissionLevels({ ...permissionLevels, manage: checked === true })
                         }
                         data-testid="checkbox-permission-manage"
                       />
