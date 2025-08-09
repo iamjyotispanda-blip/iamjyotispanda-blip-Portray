@@ -809,6 +809,108 @@ export function UsersContent() {
           
           <div className="space-y-4 mt-6 pb-6">
             <div className="space-y-2">
+              <Label htmlFor="editUserType">User Type *</Label>
+              <Select
+                value={formData.userType}
+                onValueChange={(value) => setFormData({ ...formData, userType: value, portId: undefined, terminalIds: [] })}
+              >
+                <SelectTrigger data-testid="select-edit-user-type">
+                  <SelectValue placeholder="Select user type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SuperAdmin">
+                    <div className="flex items-center">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Super Admin
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="PortUser">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      Port User
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="TerminalUser">
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 mr-2" />
+                      Terminal User
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Port selection for Port Users */}
+            {formData.userType === "PortUser" && (
+              <div className="space-y-2">
+                <Label htmlFor="editPort">Port *</Label>
+                <Select
+                  value={formData.portId?.toString() || ""}
+                  onValueChange={(value) => setFormData({ ...formData, portId: parseInt(value) })}
+                >
+                  <SelectTrigger data-testid="select-edit-user-port">
+                    <SelectValue placeholder="Select a port" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(ports as any[]).map((port: any) => (
+                      <SelectItem key={port.id} value={port.id.toString()}>
+                        {port.portName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Terminal selection for Terminal Users */}
+            {formData.userType === "TerminalUser" && (
+              <div className="space-y-2">
+                <Label htmlFor="editTerminals">Terminals *</Label>
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600">Select one or more terminals:</div>
+                  <div className="max-h-40 overflow-y-auto border rounded p-2 space-y-2">
+                    {(terminals as any[]).map((terminal: any) => (
+                      <div key={terminal.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`edit-terminal-${terminal.id}`}
+                          checked={formData.terminalIds?.includes(terminal.id.toString()) || false}
+                          onChange={(e) => {
+                            const terminalIds = formData.terminalIds || [];
+                            if (e.target.checked) {
+                              setFormData({ 
+                                ...formData, 
+                                terminalIds: [...terminalIds, terminal.id.toString()]
+                              });
+                            } else {
+                              setFormData({ 
+                                ...formData, 
+                                terminalIds: terminalIds.filter(id => id !== terminal.id.toString())
+                              });
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                          data-testid={`checkbox-edit-terminal-${terminal.id}`}
+                        />
+                        <label 
+                          htmlFor={`edit-terminal-${terminal.id}`}
+                          className="text-sm cursor-pointer flex-1"
+                        >
+                          {terminal.terminalName} ({terminal.shortCode})
+                        </label>
+                      </div>
+                    ))}
+                    {(terminals as any[]).length === 0 && (
+                      <div className="text-sm text-gray-500 text-center py-4">
+                        No terminals available
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
               <Label htmlFor="editEmail">Email *</Label>
               <Input
                 id="editEmail"
