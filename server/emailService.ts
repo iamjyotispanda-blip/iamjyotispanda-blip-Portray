@@ -309,20 +309,23 @@ This verification link will expire in 24 hours. If you didn't create this accoun
     } catch (error) {
       console.error('Error sending verification email:', error);
       
-      // Log the failed email
+      // Log the failed email (get emailConfig again since it might be out of scope)
       try {
-        await storage.createEmailLog({
-          emailConfigurationId: emailConfig.id,
-          portId: portId,
-          toEmail: userEmail,
-          fromEmail: emailConfig.fromEmail,
-          fromName: emailConfig.fromName,
-          subject: 'PortRay - Verify Your Email Address',
-          emailType: 'verification',
-          status: 'failed',
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          userId: undefined,
-        });
+        const emailConfig = await this.getPortEmailConfiguration(portId);
+        if (emailConfig) {
+          await storage.createEmailLog({
+            emailConfigurationId: emailConfig.id,
+            portId: portId,
+            toEmail: userEmail,
+            fromEmail: emailConfig.fromEmail,
+            fromName: emailConfig.fromName,
+            subject: 'PortRay - Verify Your Email Address',
+            emailType: 'verification',
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            userId: undefined,
+          });
+        }
       } catch (logError) {
         console.error('Failed to log failed verification email:', logError);
       }
@@ -418,20 +421,23 @@ This setup link will expire in 24 hours.
     } catch (error) {
       console.error('Error sending password setup email:', error);
       
-      // Log the failed email
+      // Log the failed email (get emailConfig again since it might be out of scope)
       try {
-        await storage.createEmailLog({
-          emailConfigurationId: emailConfig.id,
-          portId: portId,
-          toEmail: userEmail,
-          fromEmail: emailConfig.fromEmail,
-          fromName: emailConfig.fromName,
-          subject: 'PortRay - Set Up Your Password',
-          emailType: 'password_setup',
-          status: 'failed',
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          userId: undefined,
-        });
+        const emailConfig = await this.getPortEmailConfiguration(portId);
+        if (emailConfig) {
+          await storage.createEmailLog({
+            emailConfigurationId: emailConfig.id,
+            portId: portId,
+            toEmail: userEmail,
+            fromEmail: emailConfig.fromEmail,
+            fromName: emailConfig.fromName,
+            subject: 'PortRay - Set Up Your Password',
+            emailType: 'password_setup',
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            userId: undefined,
+          });
+        }
       } catch (logError) {
         console.error('Failed to log failed password setup email:', logError);
       }
