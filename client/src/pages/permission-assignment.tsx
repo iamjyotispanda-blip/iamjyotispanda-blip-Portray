@@ -297,21 +297,21 @@ export default function PermissionAssignmentPage() {
                               <Checkbox
                                 checked={gLink.permissions.read}
                                 onCheckedChange={(checked) => 
-                                  togglePermission(gLink.name, null, 'read', checked as boolean)
+                                  togglePermission(gLink.name, null, 'read', checked === true)
                                 }
                                 data-testid={`checkbox-${gLink.name}-read`}
                               />
                               <Checkbox
                                 checked={gLink.permissions.write}
                                 onCheckedChange={(checked) => 
-                                  togglePermission(gLink.name, null, 'write', checked as boolean)
+                                  togglePermission(gLink.name, null, 'write', checked === true)
                                 }
                                 data-testid={`checkbox-${gLink.name}-write`}
                               />
                               <Checkbox
                                 checked={gLink.permissions.manage}
                                 onCheckedChange={(checked) => 
-                                  togglePermission(gLink.name, null, 'manage', checked as boolean)
+                                  togglePermission(gLink.name, null, 'manage', checked === true)
                                 }
                                 data-testid={`checkbox-${gLink.name}-manage`}
                               />
@@ -331,21 +331,21 @@ export default function PermissionAssignmentPage() {
                                 <Checkbox
                                   checked={pLink.permissions.read}
                                   onCheckedChange={(checked) => 
-                                    togglePermission(gLink.name, pLink.name, 'read', checked as boolean)
+                                    togglePermission(gLink.name, pLink.name, 'read', checked === true)
                                   }
                                   data-testid={`checkbox-${gLink.name}-${pLink.name}-read`}
                                 />
                                 <Checkbox
                                   checked={pLink.permissions.write}
                                   onCheckedChange={(checked) => 
-                                    togglePermission(gLink.name, pLink.name, 'write', checked as boolean)
+                                    togglePermission(gLink.name, pLink.name, 'write', checked === true)
                                   }
                                   data-testid={`checkbox-${gLink.name}-${pLink.name}-write`}
                                 />
                                 <Checkbox
                                   checked={pLink.permissions.manage}
                                   onCheckedChange={(checked) => 
-                                    togglePermission(gLink.name, pLink.name, 'manage', checked as boolean)
+                                    togglePermission(gLink.name, pLink.name, 'manage', checked === true)
                                   }
                                   data-testid={`checkbox-${gLink.name}-${pLink.name}-manage`}
                                 />
