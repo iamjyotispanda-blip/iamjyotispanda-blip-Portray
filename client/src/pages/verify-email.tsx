@@ -42,7 +42,10 @@ export default function VerifyEmailPage() {
       setStatus("loading");
       const response = await apiRequest("POST", "/api/auth/verify-email", { token });
       
+      console.log("VerifyEmailPage: API response:", response);
+      
       if (response && (response as any).passwordSetupToken) {
+        console.log("VerifyEmailPage: Password setup token found:", (response as any).passwordSetupToken);
         setStatus("success");
         setMessage("Email verified successfully! Redirecting to password setup...");
         
@@ -53,8 +56,19 @@ export default function VerifyEmailPage() {
         
         // Redirect to password setup page with token
         setTimeout(() => {
-          setLocation(`/setup-password?token=${(response as any).passwordSetupToken}`);
+          const redirectUrl = `/setup-password?token=${(response as any).passwordSetupToken}`;
+          console.log("VerifyEmailPage: Redirecting to:", redirectUrl);
+          setLocation(redirectUrl);
         }, 2000);
+      } else {
+        console.log("VerifyEmailPage: No password setup token in response");
+        setStatus("success");
+        setMessage("Email verified successfully!");
+        
+        toast({
+          title: "Email Verified",
+          description: "Email verification completed",
+        });
       }
     } catch (error: any) {
       console.error("Email verification error:", error);
