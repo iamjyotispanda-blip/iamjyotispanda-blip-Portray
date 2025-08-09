@@ -372,12 +372,12 @@ export default function ProfilePage() {
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {userRole?.description || 'Role permissions and access level'}
                         </p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center flex-wrap gap-2 mt-2">
+                          <Badge variant="outline" className="text-xs whitespace-nowrap">
                             Created: {format(new Date(user.createdAt), "MMM dd, yyyy")}
                           </Badge>
                           {userRole?.isActive && (
-                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 whitespace-nowrap">
                               Active Role
                             </Badge>
                           )}
