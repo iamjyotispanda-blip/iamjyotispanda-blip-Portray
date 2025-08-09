@@ -104,6 +104,11 @@ export default function SetupPasswordPage() {
           title: "Password Set Successfully",
           description: "You can now log in to your account",
         });
+        
+        // Redirect to login page after 2 seconds
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
       }
     } catch (error: any) {
       console.error("Password setup error:", error);

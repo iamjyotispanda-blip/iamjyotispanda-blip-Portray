@@ -157,18 +157,22 @@ export default function VerifyEmailPage() {
               <div className="text-center space-y-4">
                 <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                   <p className="text-sm text-green-800 dark:text-green-300">
-                    A password setup email has been sent to your email address. Please check your inbox and follow the instructions to complete your account setup.
+                    {message.includes("Redirecting") 
+                      ? "Redirecting you to password setup page..." 
+                      : "Email verified successfully! You can now proceed to set up your password."}
                   </p>
                 </div>
                 
-                <Button 
-                  onClick={() => window.location.href = "/login"}
-                  variant="outline"
-                  className="w-full"
-                  data-testid="button-go-to-login"
-                >
-                  Go to Login
-                </Button>
+                {!message.includes("Redirecting") && (
+                  <Button 
+                    onClick={() => window.location.href = "/login"}
+                    variant="outline"
+                    className="w-full"
+                    data-testid="button-go-to-login"
+                  >
+                    Go to Login
+                  </Button>
+                )}
               </div>
             )}
             
