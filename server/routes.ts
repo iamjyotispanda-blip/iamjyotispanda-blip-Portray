@@ -2174,6 +2174,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Resend user verification email endpoint
+  app.post("/api/users/:id/resend-verification", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only system admins can resend user verification emails
+      if (req.user?.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. Only System Administrators can resend verification emails." });
+      }
+
+      const userId = req.params.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (user.isVerified) {
+        return res.status(400).json({ message: "User is already verified" });
+      }
+      
+      // Generate new verification token
+      const verificationToken = randomUUID();
+      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      await storage.updateUser(user.id, {
+        verificationToken,
+        verificationTokenExpires
+      } as any);
+      
+      // Log resend verification for audit trail
+      await AuditService.logUserUpdate(
+        user.id,
+        req.user!.id, // Admin who resent the verification
+        'Verification email resent',
+        req.ip,
+        req.get('User-Agent')
+      );
+      
+      // Send verification email using port-specific configuration
+      try {
+        const { sendUserVerificationEmail } = await import("./emailService.js");
+        await sendUserVerificationEmail(user.email, user.firstName, verificationToken, user.portId || undefined);
+      } catch (emailError) {
+        console.error("Failed to send verification email:", emailError);
+      }
+      
+      res.json({ message: "Verification email sent successfully" });
+    } catch (error) {
+      console.error("Resend user verification error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Password setup endpoint
   app.post("/api/auth/setup-password", async (req: Request, res: Response) => {
     try {

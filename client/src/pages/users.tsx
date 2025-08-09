@@ -175,6 +175,27 @@ export function UsersContent() {
     }
   });
 
+  // Resend verification email mutation
+  const resendVerificationMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("POST", `/api/users/${userId}/resend-verification`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "Verification email sent successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send verification email",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -273,6 +294,10 @@ export function UsersContent() {
 
   const handleDeleteUser = (userId: string) => {
     deleteUserMutation.mutate(userId);
+  };
+
+  const handleResendVerification = (userId: string) => {
+    resendVerificationMutation.mutate(userId);
   };
 
   const handleViewAuditLog = (user: UserType) => {
@@ -682,9 +707,16 @@ export function UsersContent() {
                                   <p className="font-medium text-gray-900 dark:text-white" data-testid={`text-user-name-${user.id}`}>
                                     {user.firstName} {user.lastName}
                                   </p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400" data-testid={`text-user-email-${user.id}`}>
-                                    {user.email}
-                                  </p>
+                                  <div className="flex items-center space-x-2">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400" data-testid={`text-user-email-${user.id}`}>
+                                      {user.email}
+                                    </p>
+                                    {!user.isVerified && (
+                                      <Badge variant="destructive" className="text-xs px-1 py-0">
+                                        Unverified
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </TableCell>
@@ -723,6 +755,16 @@ export function UsersContent() {
                                     <DropdownMenuItem onClick={() => handleViewAuditLog(user)} data-testid={`button-audit-log-user-${user.id}`}>
                                       <History className="w-4 h-4 mr-2" />
                                       View Activity Log
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canManage("users", "user-access") && !user.isVerified && (
+                                    <DropdownMenuItem 
+                                      onClick={() => handleResendVerification(user.id)}
+                                      disabled={resendVerificationMutation.isPending}
+                                      data-testid={`button-resend-verification-${user.id}`}
+                                    >
+                                      <Mail className="w-4 h-4 mr-2" />
+                                      Resend Verification
                                     </DropdownMenuItem>
                                   )}
                                   {canManage("users", "user-access") && (
