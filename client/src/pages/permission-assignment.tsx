@@ -215,17 +215,17 @@ export default function PermissionAssignmentPage() {
           <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Permission Assignment</span>
         </div>
         
-        <div className="px-4 sm:px-6 lg:px-2 py-2">
+        <div className="px-2 sm:px-4 lg:px-2 py-2">
           <div className="space-y-4 pb-8">
             {/* Role Selection */}
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-2 flex-1">
                       <Label htmlFor="role-select">Select Role</Label>
                       <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
-                        <SelectTrigger className="w-80" data-testid="select-role">
+                        <SelectTrigger className="w-full sm:w-80" data-testid="select-role">
                           <SelectValue placeholder="Choose a role to manage permissions" />
                         </SelectTrigger>
                         <SelectContent>
@@ -244,7 +244,7 @@ export default function PermissionAssignmentPage() {
                       <Button 
                         onClick={handleSavePermissions}
                         disabled={savePermissionsMutation.isPending}
-                        className="h-8"
+                        className="h-8 w-full sm:w-auto"
                         data-testid="button-save-permissions"
                       >
                         <Save className="h-4 w-4 mr-2" />
@@ -259,11 +259,11 @@ export default function PermissionAssignmentPage() {
             {/* Permission Tree */}
             {selectedRoleId && (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-3 sm:p-6">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <h3 className="text-lg font-medium">Menu Permissions</h3>
-                      <div className="flex items-center space-x-6 text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center space-x-4 sm:space-x-6 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                         <span>Read</span>
                         <span>Write</span>
                         <span>Manage</span>
@@ -274,13 +274,13 @@ export default function PermissionAssignmentPage() {
                       {treeData.map((gLink) => (
                         <div key={gLink.id} className="space-y-2">
                           {/* GLink Row */}
-                          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <div className="flex items-center space-x-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div className="flex items-center space-x-2 min-w-0 flex-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleExpanded(gLink.name)}
-                                className="h-6 w-6 p-0"
+                                className="h-6 w-6 p-0 flex-shrink-0"
                                 data-testid={`button-expand-${gLink.name}`}
                               >
                                 {gLink.expanded ? (
@@ -289,11 +289,11 @@ export default function PermissionAssignmentPage() {
                                   <ChevronRight className="h-4 w-4" />
                                 )}
                               </Button>
-                              <Menu className="h-4 w-4 text-blue-600" />
-                              <span className="font-medium">{gLink.label}</span>
-                              <span className="text-sm text-gray-500">({gLink.name})</span>
+                              <Menu className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                              <span className="font-medium truncate">{gLink.label}</span>
+                              <span className="text-sm text-gray-500 hidden sm:inline">({gLink.name})</span>
                             </div>
-                            <div className="flex items-center space-x-6">
+                            <div className="flex items-center justify-end space-x-4 sm:space-x-6 flex-shrink-0">
                               <Checkbox
                                 checked={gLink.permissions.read}
                                 onCheckedChange={(checked) => 
@@ -320,14 +320,14 @@ export default function PermissionAssignmentPage() {
 
                           {/* PLinks (Children) */}
                           {gLink.expanded && gLink.children && gLink.children.map((pLink) => (
-                            <div key={pLink.id} className="flex items-center justify-between p-3 ml-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-6"></div> {/* Spacer for alignment */}
-                                <Menu className="h-4 w-4 text-green-600" />
-                                <span className="font-medium">{pLink.label}</span>
-                                <span className="text-sm text-gray-500">({pLink.name})</span>
+                            <div key={pLink.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 ml-4 sm:ml-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                              <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                <div className="w-6 flex-shrink-0"></div> {/* Spacer for alignment */}
+                                <Menu className="h-4 w-4 text-green-600 flex-shrink-0" />
+                                <span className="font-medium truncate">{pLink.label}</span>
+                                <span className="text-sm text-gray-500 hidden sm:inline">({pLink.name})</span>
                               </div>
-                              <div className="flex items-center space-x-6">
+                              <div className="flex items-center justify-end space-x-4 sm:space-x-6 flex-shrink-0">
                                 <Checkbox
                                   checked={pLink.permissions.read}
                                   onCheckedChange={(checked) => 
