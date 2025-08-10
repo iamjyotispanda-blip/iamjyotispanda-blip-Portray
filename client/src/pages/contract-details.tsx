@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, User, Package, DollarSign, Warehouse, Plus, Download, ExternalLink } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, User, Package, DollarSign, Warehouse, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -264,39 +264,16 @@ export default function ContractDetails() {
                                     </div>
                                   </div>
                                   {contractItem.contractCopyUrl && (
-                                    <div className="flex items-center space-x-2">
-                                      {contractItem.documentType === "upload" ? (
-                                        <>
-                                          <Download className="h-3 w-3 text-primary" />
-                                          <a 
-                                            href={contractItem.contractCopyUrl} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-primary hover:underline text-sm"
-                                            data-testid={`contract-document-${contractItem.id}`}
-                                          >
-                                            {contractItem.documentName || "Download Contract Document"}
-                                          </a>
-                                          {contractItem.documentSize && (
-                                            <span className="text-xs text-muted-foreground">
-                                              ({(contractItem.documentSize / 1024 / 1024).toFixed(2)} MB)
-                                            </span>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <>
-                                          <ExternalLink className="h-3 w-3 text-primary" />
-                                          <a 
-                                            href={contractItem.contractCopyUrl} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-primary hover:underline text-sm"
-                                            data-testid={`contract-document-${contractItem.id}`}
-                                          >
-                                            View Contract Document
-                                          </a>
-                                        </>
-                                      )}
+                                    <div>
+                                      <a 
+                                        href={contractItem.contractCopyUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:underline text-sm"
+                                        data-testid={`contract-document-${contractItem.id}`}
+                                      >
+                                        View Contract Document
+                                      </a>
                                     </div>
                                   )}
                                 </div>
