@@ -31,7 +31,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface PageInfo {
   id: string;
@@ -47,6 +47,7 @@ interface PageInfo {
   accessCount?: number;
   menuId?: number; // Reference to menu item if exists
   hasMenu?: boolean; // Whether page has corresponding menu
+  menuName?: string; // Name of the corresponding menu
 }
 
 // Complete list of all pages in the system
@@ -133,6 +134,7 @@ export default function PageManagementPage() {
         ...page,
         menuId: correspondingMenu?.id,
         hasMenu: !!correspondingMenu,
+        menuName: correspondingMenu?.label || correspondingMenu?.name,
         // Update status based on menu if exists
         isActive: correspondingMenu ? correspondingMenu.isActive : page.isActive,
         // Update icon based on menu if exists
@@ -179,9 +181,11 @@ export default function PageManagementPage() {
       // Update the page to reflect menu creation
       setPages(prev => prev.map(page => 
         page.id === pageData.id 
-          ? { ...page, hasMenu: true, menuId: data.id }
+          ? { ...page, hasMenu: true, menuId: data.id, menuName: pageData.title }
           : page
       ));
+      // Refresh menu data to get latest info
+      queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
     },
     onError: (error: any) => {
       toast({
@@ -274,6 +278,11 @@ export default function PageManagementPage() {
       });
       return;
     }
+    
+    if (createMenuMutation.isPending) {
+      return; // Prevent multiple simultaneous requests
+    }
+    
     createMenuMutation.mutate(page);
   };
 
@@ -412,9 +421,9 @@ export default function PageManagementPage() {
                         <Badge variant="outline">{page.category}</Badge>
                       </TableCell>
                       <TableCell>
-                        {page.hasMenu ? (
+                        {page.hasMenu && page.menuName ? (
                           <div className="flex items-center space-x-2">
-                            <Badge variant="default" className="bg-green-600">Has Menu</Badge>
+                            <Badge variant="default" className="bg-green-600">{page.menuName}</Badge>
                             {page.menuId && (
                               <span className="text-xs text-gray-500">ID: {page.menuId}</span>
                             )}
