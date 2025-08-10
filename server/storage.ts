@@ -986,6 +986,290 @@ export class DatabaseStorage implements IStorage {
   async deleteRole(id: number): Promise<void> {
     await db.delete(roles).where(eq(roles.id, id));
   }
+
+  // Customer management operations
+  async getAllCustomers(): Promise<Customer[]> {
+    return await db.select().from(customers);
+  }
+
+  async getCustomerById(id: number): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer || undefined;
+  }
+
+  async getCustomerByCode(customerCode: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.customerCode, customerCode));
+    return customer || undefined;
+  }
+
+  async getCustomerByEmail(email: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.email, email));
+    return customer || undefined;
+  }
+
+  async getCustomerByPAN(pan: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.pan, pan));
+    return customer || undefined;
+  }
+
+  async getCustomerByGST(gst: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.gst, gst));
+    return customer || undefined;
+  }
+
+  async getCustomersByTerminalId(terminalId: number): Promise<Customer[]> {
+    return await db.select().from(customers).where(eq(customers.terminalId, terminalId));
+  }
+
+  async createCustomer(customerData: InsertCustomer & { customerCode: string }): Promise<Customer> {
+    const [customer] = await db.insert(customers).values({
+      ...customerData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return customer;
+  }
+
+  async updateCustomer(id: number, updates: Partial<Customer>): Promise<Customer | undefined> {
+    const [updated] = await db.update(customers)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customers.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateCustomerStatus(id: number, status: string): Promise<Customer | undefined> {
+    const [updated] = await db.update(customers)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(customers.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCustomer(id: number): Promise<void> {
+    await db.delete(customers).where(eq(customers.id, id));
+  }
+
+  async generateCustomerCode(terminalId: number): Promise<string> {
+    // Get terminal short code
+    const terminal = await this.getTerminalById(terminalId);
+    if (!terminal) throw new Error('Terminal not found');
+
+    // Get current year
+    const year = new Date().getFullYear();
+
+    // Get counter for this terminal and year
+    const existingCustomers = await db.select()
+      .from(customers)
+      .where(eq(customers.terminalId, terminalId));
+
+    // Filter by current year from customer codes
+    const yearPrefix = `${year}_${terminal.shortCode}_`;
+    const currentYearCustomers = existingCustomers.filter(c => 
+      c.customerCode.startsWith(yearPrefix)
+    );
+
+    // Generate next counter
+    const counter = currentYearCustomers.length + 1;
+    const paddedCounter = counter.toString().padStart(3, '0');
+
+    return `${year}_${terminal.shortCode}_${paddedCounter}`;
+  }
+
+  // Customer contacts
+  async getCustomerContactsByCustomerId(customerId: number): Promise<CustomerContact[]> {
+    return await db.select().from(customerContacts).where(eq(customerContacts.customerId, customerId));
+  }
+
+  async createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact> {
+    const [created] = await db.insert(customerContacts).values({
+      ...contact,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateCustomerContact(id: number, updates: Partial<CustomerContact>): Promise<CustomerContact | undefined> {
+    const [updated] = await db.update(customerContacts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customerContacts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCustomerContact(id: number): Promise<void> {
+    await db.delete(customerContacts).where(eq(customerContacts.id, id));
+  }
+
+  // Customer addresses
+  async getCustomerAddressesByCustomerId(customerId: number): Promise<CustomerAddress[]> {
+    return await db.select().from(customerAddresses).where(eq(customerAddresses.customerId, customerId));
+  }
+
+  async createCustomerAddress(address: InsertCustomerAddress): Promise<CustomerAddress> {
+    const [created] = await db.insert(customerAddresses).values({
+      ...address,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateCustomerAddress(id: number, updates: Partial<CustomerAddress>): Promise<CustomerAddress | undefined> {
+    const [updated] = await db.update(customerAddresses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customerAddresses.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCustomerAddress(id: number): Promise<void> {
+    await db.delete(customerAddresses).where(eq(customerAddresses.id, id));
+  }
+
+  // Contract management operations
+  async getAllContracts(): Promise<Contract[]> {
+    return await db.select().from(contracts);
+  }
+
+  async getContractsByCustomerId(customerId: number): Promise<Contract[]> {
+    return await db.select().from(contracts).where(eq(contracts.customerId, customerId));
+  }
+
+  async createContract(contractData: InsertContract): Promise<Contract> {
+    const [contract] = await db.insert(contracts).values({
+      ...contractData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return contract;
+  }
+
+  // Contract tariffs
+  async getContractTariffsByContractId(contractId: number): Promise<ContractTariff[]> {
+    return await db.select().from(contractTariffs).where(eq(contractTariffs.contractId, contractId));
+  }
+
+  async createContractTariff(tariff: InsertContractTariff): Promise<ContractTariff> {
+    const [created] = await db.insert(contractTariffs).values({
+      ...tariff,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractTariff(id: number, updates: Partial<ContractTariff>): Promise<ContractTariff | undefined> {
+    const [updated] = await db.update(contractTariffs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractTariffs.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractTariff(id: number): Promise<void> {
+    await db.delete(contractTariffs).where(eq(contractTariffs.id, id));
+  }
+
+  // Contract cargo details
+  async getContractCargoDetailsByContractId(contractId: number): Promise<ContractCargoDetail[]> {
+    return await db.select().from(contractCargoDetails).where(eq(contractCargoDetails.contractId, contractId));
+  }
+
+  async createContractCargoDetail(cargoDetail: InsertContractCargoDetail): Promise<ContractCargoDetail> {
+    const [created] = await db.insert(contractCargoDetails).values({
+      ...cargoDetail,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractCargoDetail(id: number, updates: Partial<ContractCargoDetail>): Promise<ContractCargoDetail | undefined> {
+    const [updated] = await db.update(contractCargoDetails)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractCargoDetails.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractCargoDetail(id: number): Promise<void> {
+    await db.delete(contractCargoDetails).where(eq(contractCargoDetails.id, id));
+  }
+
+  // Contract storage charges
+  async getContractStorageChargesByContractId(contractId: number): Promise<ContractStorageCharge[]> {
+    return await db.select().from(contractStorageCharges).where(eq(contractStorageCharges.contractId, contractId));
+  }
+
+  async createContractStorageCharge(storageCharge: InsertContractStorageCharge): Promise<ContractStorageCharge> {
+    const [created] = await db.insert(contractStorageCharges).values({
+      ...storageCharge,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractStorageCharge(id: number, updates: Partial<ContractStorageCharge>): Promise<ContractStorageCharge | undefined> {
+    const [updated] = await db.update(contractStorageCharges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractStorageCharges.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractStorageCharge(id: number): Promise<void> {
+    await db.delete(contractStorageCharges).where(eq(contractStorageCharges.id, id));
+  }
+
+  // Contract special conditions
+  async getContractSpecialConditionsByContractId(contractId: number): Promise<ContractSpecialCondition[]> {
+    return await db.select().from(contractSpecialConditions).where(eq(contractSpecialConditions.contractId, contractId));
+  }
+
+  async createContractSpecialCondition(condition: InsertContractSpecialCondition): Promise<ContractSpecialCondition> {
+    const [created] = await db.insert(contractSpecialConditions).values({
+      ...condition,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractSpecialCondition(id: number, updates: Partial<ContractSpecialCondition>): Promise<ContractSpecialCondition | undefined> {
+    const [updated] = await db.update(contractSpecialConditions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractSpecialConditions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractSpecialCondition(id: number): Promise<void> {
+    await db.delete(contractSpecialConditions).where(eq(contractSpecialConditions.id, id));
+  }
+
+  // Master data operations
+  async getAllCountries(): Promise<Country[]> {
+    return await db.select().from(countries).where(eq(countries.isActive, true));
+  }
+
+  async getAllStates(): Promise<State[]> {
+    return await db.select().from(states).where(eq(states.isActive, true));
+  }
+
+  async getStatesByCountryId(countryId: number): Promise<State[]> {
+    return await db.select().from(states).where(and(eq(states.countryId, countryId), eq(states.isActive, true)));
+  }
+
+  async getAllCargoTypes(): Promise<CargoType[]> {
+    return await db.select().from(cargoTypes).where(eq(cargoTypes.isActive, true));
+  }
+
+  async getPlotsByTerminalId(terminalId: number): Promise<Plot[]> {
+    return await db.select().from(plots).where(eq(plots.terminalId, terminalId));
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -1825,305 +2109,189 @@ export class MemStorage implements IStorage {
     return updatedMenu;
   }
 
-  // Customer management operations
+  // Customer management operations - stubs for MemStorage
   async getAllCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers);
+    return [];
   }
 
   async getCustomerById(id: number): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
-    return customer || undefined;
+    return undefined;
   }
 
   async getCustomerByCode(customerCode: string): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.customerCode, customerCode));
-    return customer || undefined;
+    return undefined;
   }
 
   async getCustomerByEmail(email: string): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.email, email));
-    return customer || undefined;
+    return undefined;
   }
 
   async getCustomerByPAN(pan: string): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.pan, pan));
-    return customer || undefined;
+    return undefined;
   }
 
   async getCustomerByGST(gst: string): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.gst, gst));
-    return customer || undefined;
+    return undefined;
   }
 
   async getCustomersByTerminalId(terminalId: number): Promise<Customer[]> {
-    return await db.select().from(customers).where(eq(customers.terminalId, terminalId));
+    return [];
   }
 
   async createCustomer(customerData: InsertCustomer & { customerCode: string }): Promise<Customer> {
-    const [customer] = await db.insert(customers).values({
-      ...customerData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return customer;
+    throw new Error("Customer management not supported in memory storage");
   }
 
   async updateCustomer(id: number, updates: Partial<Customer>): Promise<Customer | undefined> {
-    const [updated] = await db.update(customers)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(customers.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async updateCustomerStatus(id: number, status: string): Promise<Customer | undefined> {
-    const [updated] = await db.update(customers)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(customers.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async deleteCustomer(id: number): Promise<void> {
-    await db.delete(customers).where(eq(customers.id, id));
+    // No-op
   }
 
   async generateCustomerCode(terminalId: number): Promise<string> {
-    // Get terminal short code
-    const terminal = await this.getTerminalById(terminalId);
-    if (!terminal) throw new Error('Terminal not found');
-
-    // Get current year
-    const year = new Date().getFullYear();
-
-    // Get counter for this terminal and year
-    const existingCustomers = await db.select()
-      .from(customers)
-      .where(eq(customers.terminalId, terminalId));
-
-    // Filter by current year from customer codes
-    const yearPrefix = `${year}_${terminal.shortCode}_`;
-    const currentYearCustomers = existingCustomers.filter(c => 
-      c.customerCode.startsWith(yearPrefix)
-    );
-
-    // Generate next counter
-    const counter = currentYearCustomers.length + 1;
-    const paddedCounter = counter.toString().padStart(3, '0');
-
-    return `${year}_${terminal.shortCode}_${paddedCounter}`;
+    return "MEM-001";
   }
 
-  // Customer contacts
+  // Customer contacts - stubs
   async getCustomerContactsByCustomerId(customerId: number): Promise<CustomerContact[]> {
-    return await db.select().from(customerContacts).where(eq(customerContacts.customerId, customerId));
+    return [];
   }
 
   async createCustomerContact(contact: InsertCustomerContact): Promise<CustomerContact> {
-    const [created] = await db.insert(customerContacts).values({
-      ...contact,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
+    throw new Error("Customer contacts not supported in memory storage");
   }
 
   async updateCustomerContact(id: number, updates: Partial<CustomerContact>): Promise<CustomerContact | undefined> {
-    const [updated] = await db.update(customerContacts)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(customerContacts.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async deleteCustomerContact(id: number): Promise<void> {
-    await db.delete(customerContacts).where(eq(customerContacts.id, id));
+    // No-op
   }
 
-  // Customer addresses
+  // Customer addresses - stubs
   async getCustomerAddressesByCustomerId(customerId: number): Promise<CustomerAddress[]> {
-    return await db.select().from(customerAddresses).where(eq(customerAddresses.customerId, customerId));
+    return [];
   }
 
   async createCustomerAddress(address: InsertCustomerAddress): Promise<CustomerAddress> {
-    const [created] = await db.insert(customerAddresses).values({
-      ...address,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
+    throw new Error("Customer addresses not supported in memory storage");
   }
 
   async updateCustomerAddress(id: number, updates: Partial<CustomerAddress>): Promise<CustomerAddress | undefined> {
-    const [updated] = await db.update(customerAddresses)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(customerAddresses.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async deleteCustomerAddress(id: number): Promise<void> {
-    await db.delete(customerAddresses).where(eq(customerAddresses.id, id));
+    // No-op
   }
 
-  // Contract management
+  // Contract management operations - stubs
   async getAllContracts(): Promise<Contract[]> {
-    return await db.select().from(contracts);
-  }
-
-  async getContractById(id: number): Promise<Contract | undefined> {
-    const [contract] = await db.select().from(contracts).where(eq(contracts.id, id));
-    return contract || undefined;
+    return [];
   }
 
   async getContractsByCustomerId(customerId: number): Promise<Contract[]> {
-    return await db.select().from(contracts).where(eq(contracts.customerId, customerId));
+    return [];
   }
 
-  async createContract(contract: InsertContract): Promise<Contract> {
-    const [created] = await db.insert(contracts).values({
-      ...contract,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
+  async createContract(contractData: InsertContract): Promise<Contract> {
+    throw new Error("Contract management not supported in memory storage");
   }
 
-  async updateContract(id: number, updates: Partial<Contract>): Promise<Contract | undefined> {
-    const [updated] = await db.update(contracts)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(contracts.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async deleteContract(id: number): Promise<void> {
-    await db.delete(contracts).where(eq(contracts.id, id));
-  }
-
-  // Contract tariffs
+  // Contract tariffs - stubs
   async getContractTariffsByContractId(contractId: number): Promise<ContractTariff[]> {
-    return await db.select().from(contractTariffs).where(eq(contractTariffs.contractId, contractId));
+    return [];
   }
 
   async createContractTariff(tariff: InsertContractTariff): Promise<ContractTariff> {
-    const [created] = await db.insert(contractTariffs).values({
-      ...tariff,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
+    throw new Error("Contract tariffs not supported in memory storage");
   }
 
   async updateContractTariff(id: number, updates: Partial<ContractTariff>): Promise<ContractTariff | undefined> {
-    const [updated] = await db.update(contractTariffs)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(contractTariffs.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async deleteContractTariff(id: number): Promise<void> {
-    await db.delete(contractTariffs).where(eq(contractTariffs.id, id));
+    // No-op
   }
 
-  // Contract cargo details
+  // Contract cargo details - stubs
   async getContractCargoDetailsByContractId(contractId: number): Promise<ContractCargoDetail[]> {
-    return await db.select().from(contractCargoDetails).where(eq(contractCargoDetails.contractId, contractId));
+    return [];
   }
 
   async createContractCargoDetail(cargoDetail: InsertContractCargoDetail): Promise<ContractCargoDetail> {
-    const [created] = await db.insert(contractCargoDetails).values({
-      ...cargoDetail,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
+    throw new Error("Contract cargo details not supported in memory storage");
   }
 
   async updateContractCargoDetail(id: number, updates: Partial<ContractCargoDetail>): Promise<ContractCargoDetail | undefined> {
-    const [updated] = await db.update(contractCargoDetails)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(contractCargoDetails.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async deleteContractCargoDetail(id: number): Promise<void> {
-    await db.delete(contractCargoDetails).where(eq(contractCargoDetails.id, id));
+    // No-op
   }
 
-  // Contract storage charges
+  // Contract storage charges - stubs
   async getContractStorageChargesByContractId(contractId: number): Promise<ContractStorageCharge[]> {
-    return await db.select().from(contractStorageCharges).where(eq(contractStorageCharges.contractId, contractId));
+    return [];
   }
 
   async createContractStorageCharge(storageCharge: InsertContractStorageCharge): Promise<ContractStorageCharge> {
-    const [created] = await db.insert(contractStorageCharges).values({
-      ...storageCharge,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
+    throw new Error("Contract storage charges not supported in memory storage");
   }
 
   async updateContractStorageCharge(id: number, updates: Partial<ContractStorageCharge>): Promise<ContractStorageCharge | undefined> {
-    const [updated] = await db.update(contractStorageCharges)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(contractStorageCharges.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async deleteContractStorageCharge(id: number): Promise<void> {
-    await db.delete(contractStorageCharges).where(eq(contractStorageCharges.id, id));
+    // No-op
   }
 
-  // Contract special conditions
+  // Contract special conditions - stubs
   async getContractSpecialConditionsByContractId(contractId: number): Promise<ContractSpecialCondition[]> {
-    return await db.select().from(contractSpecialConditions).where(eq(contractSpecialConditions.contractId, contractId));
+    return [];
   }
 
   async createContractSpecialCondition(condition: InsertContractSpecialCondition): Promise<ContractSpecialCondition> {
-    const [created] = await db.insert(contractSpecialConditions).values({
-      ...condition,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
+    throw new Error("Contract special conditions not supported in memory storage");
   }
 
   async updateContractSpecialCondition(id: number, updates: Partial<ContractSpecialCondition>): Promise<ContractSpecialCondition | undefined> {
-    const [updated] = await db.update(contractSpecialConditions)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(contractSpecialConditions.id, id))
-      .returning();
-    return updated || undefined;
+    return undefined;
   }
 
   async deleteContractSpecialCondition(id: number): Promise<void> {
-    await db.delete(contractSpecialConditions).where(eq(contractSpecialConditions.id, id));
+    // No-op
   }
 
-  // Master data operations
+  // Master data operations - stubs
   async getAllCountries(): Promise<Country[]> {
-    return await db.select().from(countries).where(eq(countries.isActive, true));
+    return [];
   }
 
   async getAllStates(): Promise<State[]> {
-    return await db.select().from(states).where(eq(states.isActive, true));
+    return [];
   }
 
   async getStatesByCountryId(countryId: number): Promise<State[]> {
-    return await db.select().from(states).where(and(eq(states.countryId, countryId), eq(states.isActive, true)));
+    return [];
   }
 
   async getAllCargoTypes(): Promise<CargoType[]> {
-    return await db.select().from(cargoTypes).where(eq(cargoTypes.isActive, true));
+    return [];
   }
 
   async getPlotsByTerminalId(terminalId: number): Promise<Plot[]> {
-    return await db.select().from(plots).where(and(eq(plots.terminalId, terminalId), eq(plots.isActive, true)));
+    return [];
   }
 }
 
