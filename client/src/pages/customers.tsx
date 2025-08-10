@@ -18,7 +18,7 @@ import { insertCustomerSchema, type Customer, type Terminal } from "@shared/sche
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Search, FileText, Users, Building2, Mail, Phone, Check, ChevronsUpDown, MoreHorizontal, Eye, Edit, MapPin, Truck } from "lucide-react";
+import { Plus, Search, FileText, Users, Building2, Mail, Phone, Check, ChevronsUpDown, MoreHorizontal, Eye, Edit, MapPin, Truck, Grid3X3, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppLayout } from "@/components/layout/AppLayout";
 
@@ -85,6 +85,7 @@ function CustomersContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "card">("list");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -203,6 +204,30 @@ function CustomersContent() {
           </div>
           <div className="text-sm text-muted-foreground">
             {filteredCustomers.length} customer{filteredCustomers.length !== 1 ? 's' : ''} found
+          </div>
+        </div>
+        
+        {/* View Toggle */}
+        <div className="flex items-center space-x-2">
+          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md">
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="h-8 px-3 rounded-r-none"
+              data-testid="button-list-view"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "card" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("card")}
+              className="h-8 px-3 rounded-l-none border-l"
+              data-testid="button-card-view"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -429,8 +454,10 @@ function CustomersContent() {
       {/* Professional Customer List Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          {/* List View - Table Layout */}
+          {viewMode === "list" && (
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow className="border-b">
                   <TableHead className="w-12 pl-6"></TableHead>
@@ -576,6 +603,99 @@ function CustomersContent() {
               </TableBody>
             </Table>
           </div>
+          )}
+
+          {/* Card View */}
+          {viewMode === "card" && (
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCustomers.map((customer: Customer) => (
+                  <Card key={customer.id} className="hover:shadow-md transition-shadow" data-testid={`card-customer-${customer.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-sm" data-testid={`card-customer-name-${customer.id}`}>
+                              {customer.customerName}
+                            </h3>
+                            <p className="text-xs text-muted-foreground" data-testid={`card-display-name-${customer.id}`}>
+                              {customer.displayName}
+                            </p>
+                          </div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem data-testid={`card-menu-view-${customer.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem data-testid={`card-menu-edit-${customer.id}`}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Customer
+                            </DropdownMenuItem>
+                            {customer.status === "Activation in Progress" && (
+                              <DropdownMenuItem data-testid={`card-menu-contract-${customer.id}`}>
+                                <FileText className="mr-2 h-4 w-4" />
+                                Create Contract
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center">
+                          <Mail className="w-3 h-3 mr-2 text-muted-foreground" />
+                          <span data-testid={`card-email-${customer.id}`}>{customer.email}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Truck className="w-3 h-3 mr-2 text-muted-foreground" />
+                          <span data-testid={`card-terminal-${customer.id}`}>{getTerminalName(customer.terminalId)}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <MapPin className="w-3 h-3 mr-2 text-muted-foreground" />
+                          <span data-testid={`card-location-${customer.id}`}>{customer.state}, {customer.country}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs space-y-1">
+                            <div>
+                              <span className="text-muted-foreground">ID: </span>
+                              <span className="font-mono" data-testid={`card-customer-code-${customer.id}`}>
+                                {customer.customerCode}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">PAN: </span>
+                              <span className="font-mono" data-testid={`card-pan-${customer.id}`}>
+                                {customer.pan}
+                              </span>
+                            </div>
+                          </div>
+                          <Badge 
+                            className={getStatusColor(customer.status)} 
+                            data-testid={`card-status-${customer.id}`}
+                          >
+                            {customer.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Empty State */}
           {filteredCustomers.length === 0 && (
