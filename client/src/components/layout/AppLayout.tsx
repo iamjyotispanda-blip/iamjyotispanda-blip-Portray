@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings, User, Mail, ChevronDown
+  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings, User, Mail, ChevronDown, Menu, Shield, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -276,6 +276,27 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   >
                     <Mail className="w-4 h-4 mr-2" />
                     Email Configuration
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/configuration/menu')}
+                    className="cursor-pointer"
+                  >
+                    <Menu className="w-4 h-4 mr-2" />
+                    Menu Management
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/roles')}
+                    className="cursor-pointer"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Role Management
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/users')}
+                    className="cursor-pointer"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    User Management
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
