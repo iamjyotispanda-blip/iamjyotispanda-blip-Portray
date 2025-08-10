@@ -728,6 +728,12 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
           data-testid="input-name"
+          className="touch-manipulation"
+          autoComplete="off"
+          onFocus={(e) => {
+            // Prevent mobile viewport changes
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
         />
         <p className="text-xs text-gray-500">Used as the unique identifier (lowercase, no spaces)</p>
       </div>
@@ -740,6 +746,12 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, label: e.target.value })}
           placeholder="Dashboard"
           data-testid="input-label"
+          className="touch-manipulation"
+          autoComplete="off"
+          onFocus={(e) => {
+            // Prevent mobile viewport changes
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
         />
         <p className="text-xs text-gray-500">Display name shown in navigation</p>
       </div>
@@ -903,6 +915,12 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, route: e.target.value })}
           placeholder="/dashboard"
           data-testid="input-route"
+          className="touch-manipulation"
+          autoComplete="off"
+          onFocus={(e) => {
+            // Prevent mobile viewport changes
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
         />
         <p className="text-xs text-gray-500">URL path for this menu item</p>
       </div>
@@ -916,6 +934,12 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
           placeholder="0"
           data-testid="input-sort-order"
+          className="touch-manipulation"
+          autoComplete="off"
+          onFocus={(e) => {
+            // Prevent mobile viewport changes
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
         />
         <p className="text-xs text-gray-500">Display order in navigation (lower numbers appear first)</p>
       </div>
@@ -1017,14 +1041,14 @@ export default function MenuManagementPage() {
                   <span>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-[95vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
-                <SheetHeader>
+              <SheetContent className="w-[95vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500 fixed inset-y-0 right-0">
+                <SheetHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 pb-4">
                   <SheetTitle>Add Menu</SheetTitle>
                   <SheetDescription>
                     Create a new menu item for navigation
                   </SheetDescription>
                 </SheetHeader>
-                <div className="flex-1 overflow-y-auto px-1 py-4">
+                <div className="flex-1 overflow-y-auto px-1 py-4 pb-20">
                   <MenuForm />
                 </div>
               </SheetContent>
@@ -1332,14 +1356,14 @@ export default function MenuManagementPage() {
                 resetForm();
               }
             }}>
-              <SheetContent className="w-[95vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
-                <SheetHeader>
+              <SheetContent className="w-[95vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500 fixed inset-y-0 right-0">
+                <SheetHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 pb-4">
                   <SheetTitle>Edit Menu</SheetTitle>
                   <SheetDescription>
                     Update the menu item details
                   </SheetDescription>
                 </SheetHeader>
-                <div className="flex-1 overflow-y-auto px-1 py-4">
+                <div className="flex-1 overflow-y-auto px-1 py-4 pb-20">
                   <MenuForm isEdit={true} />
                 </div>
               </SheetContent>
