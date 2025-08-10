@@ -75,6 +75,12 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       return true;
     }
 
+    // For now, allow all authenticated users to see the main menu items
+    // TODO: Implement proper role-based permissions when the role system is fully set up
+    if (user && ['dashboard', 'organizations', 'ports', 'customers'].includes(menuName)) {
+      return true;
+    }
+
     if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
       return false;
     }
