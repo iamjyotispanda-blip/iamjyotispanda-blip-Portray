@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
@@ -45,6 +45,8 @@ interface PageInfo {
   isSystem: boolean;
   lastAccessed?: string;
   accessCount?: number;
+  menuId?: number; // Reference to menu item if exists
+  hasMenu?: boolean; // Whether page has corresponding menu
 }
 
 // Complete list of all pages in the system
@@ -108,8 +110,38 @@ export default function PageManagementPage() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [pages, setPages] = useState<PageInfo[]>(SYSTEM_PAGES);
+  const [pages, setPages] = useState<PageInfo[]>([]);
   const { toast } = useToast();
+
+  // Fetch menus from database
+  const { data: menuData = [], isLoading: menusLoading } = useQuery({
+    queryKey: ["/api/menus"],
+  });
+
+  // Initialize pages with database menu integration
+  useEffect(() => {
+    const updatedPages = SYSTEM_PAGES.map(page => {
+      // Find corresponding menu item by matching page name with menu name
+      const correspondingMenu = Array.isArray(menuData) ? 
+        menuData.find((menu: any) => 
+          menu.name.toLowerCase() === page.name.toLowerCase() ||
+          menu.label.toLowerCase() === page.title.toLowerCase() ||
+          menu.route === page.route
+        ) : null;
+
+      return {
+        ...page,
+        menuId: correspondingMenu?.id,
+        hasMenu: !!correspondingMenu,
+        // Update status based on menu if exists
+        isActive: correspondingMenu ? correspondingMenu.isActive : page.isActive,
+        // Update icon based on menu if exists
+        icon: correspondingMenu?.icon || page.icon,
+      };
+    });
+
+    setPages(updatedPages);
+  }, [menuData]);
 
   // Get unique categories
   const categories = ["All", ...Array.from(new Set(SYSTEM_PAGES.map(page => page.category)))];
@@ -123,19 +155,81 @@ export default function PageManagementPage() {
     return matchesSearch && matchesCategory;
   });
 
+  // Create menu mutation
+  const createMenuMutation = useMutation({
+    mutationFn: async (pageData: PageInfo) => {
+      const menuData = {
+        name: pageData.name,
+        label: pageData.title,
+        icon: pageData.icon,
+        route: pageData.route,
+        sortOrder: 99, // Default sort order for new menus
+        menuType: 'glink', // Default to main menu
+        parentId: null,
+        isSystemConfig: pageData.category === 'System Configuration',
+      };
+      return apiRequest("POST", "/api/menus", menuData);
+    },
+    onSuccess: async (response, pageData) => {
+      const data = await response.json();
+      toast({
+        title: "Menu Created",
+        description: `Menu created for ${pageData.title}`,
+      });
+      // Update the page to reflect menu creation
+      setPages(prev => prev.map(page => 
+        page.id === pageData.id 
+          ? { ...page, hasMenu: true, menuId: data.id }
+          : page
+      ));
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create menu",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Toggle page active status
   const togglePageStatus = (pageId: string) => {
-    setPages(prev => prev.map(page => 
-      page.id === pageId 
-        ? { ...page, isActive: !page.isActive }
-        : page
-    ));
-    
     const page = pages.find(p => p.id === pageId);
-    toast({
-      title: "Page Status Updated",
-      description: `${page?.title} has been ${page?.isActive ? 'deactivated' : 'activated'}`,
-    });
+    if (!page) return;
+
+    if (page.hasMenu && page.menuId) {
+      // Update menu status via API
+      apiRequest("PATCH", `/api/menus/${page.menuId}/toggle-status`)
+        .then(() => {
+          setPages(prev => prev.map(p => 
+            p.id === pageId 
+              ? { ...p, isActive: !p.isActive }
+              : p
+          ));
+          toast({
+            title: "Page Status Updated",
+            description: `${page.title} has been ${page.isActive ? 'deactivated' : 'activated'}`,
+          });
+        })
+        .catch(() => {
+          toast({
+            title: "Error",
+            description: "Failed to update menu status",
+            variant: "destructive",
+          });
+        });
+    } else {
+      // Update local state only
+      setPages(prev => prev.map(p => 
+        p.id === pageId 
+          ? { ...p, isActive: !p.isActive }
+          : p
+      ));
+      toast({
+        title: "Page Status Updated",
+        description: `${page.title} has been ${page.isActive ? 'deactivated' : 'activated'}`,
+      });
+    }
   };
 
   // Delete page (only for non-system pages)
@@ -170,6 +264,19 @@ export default function PageManagementPage() {
     setLocation(route);
   };
 
+  // Create menu for page
+  const createMenuForPage = (page: PageInfo) => {
+    if (page.hasMenu) {
+      toast({
+        title: "Menu Already Exists",
+        description: `${page.title} already has a menu`,
+        variant: "destructive",
+      });
+      return;
+    }
+    createMenuMutation.mutate(page);
+  };
+
   // Get status badge
   const getStatusBadge = (page: PageInfo) => {
     if (!page.isActive) {
@@ -177,6 +284,9 @@ export default function PageManagementPage() {
     }
     if (page.isSystem) {
       return <Badge variant="secondary">System</Badge>;
+    }
+    if (page.hasMenu) {
+      return <Badge variant="default" className="bg-green-600">Active + Menu</Badge>;
     }
     return <Badge variant="default">Active</Badge>;
   };
@@ -226,11 +336,11 @@ export default function PageManagementPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">System Pages</CardTitle>
+              <CardTitle className="text-sm font-medium">Pages with Menus</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {pages.filter(p => p.isSystem).length}
+                {pages.filter(p => p.hasMenu).length}
               </div>
             </CardContent>
           </Card>
@@ -269,6 +379,7 @@ export default function PageManagementPage() {
                   <TableHead>Page</TableHead>
                   <TableHead>Route</TableHead>
                   <TableHead>Category</TableHead>
+                  <TableHead>Menu Status</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -301,6 +412,18 @@ export default function PageManagementPage() {
                         <Badge variant="outline">{page.category}</Badge>
                       </TableCell>
                       <TableCell>
+                        {page.hasMenu ? (
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="default" className="bg-green-600">Has Menu</Badge>
+                            {page.menuId && (
+                              <span className="text-xs text-gray-500">ID: {page.menuId}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-gray-500">No Menu</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {getStatusBadge(page)}
                       </TableCell>
                       <TableCell className="max-w-xs">
@@ -310,6 +433,20 @@ export default function PageManagementPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
+                          {/* Create Menu Button */}
+                          {!page.hasMenu && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => createMenuForPage(page)}
+                              disabled={createMenuMutation.isPending}
+                              title="Create menu for this page"
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
                           {/* Navigate to Page */}
                           <Button
                             variant="ghost"
