@@ -881,7 +881,7 @@ function CustomersContent() {
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Customer
                           </DropdownMenuItem>
-                          {customer.status === "Activation in Progress" && (
+                          {customer.status === "Draft" && (
                             <DropdownMenuItem data-testid={`menu-contract-${customer.id}`}>
                               <FileText className="mr-2 h-4 w-4" />
                               Create Contract
@@ -936,7 +936,7 @@ function CustomersContent() {
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Customer
                             </DropdownMenuItem>
-                            {customer.status === "Activation in Progress" && (
+                            {customer.status === "Draft" && (
                               <DropdownMenuItem data-testid={`card-menu-contract-${customer.id}`}>
                                 <FileText className="mr-2 h-4 w-4" />
                                 Create Contract

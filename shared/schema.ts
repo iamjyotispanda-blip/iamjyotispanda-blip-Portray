@@ -617,7 +617,7 @@ export const customers = pgTable("customers", {
   email: text("email").notNull().unique(), // Must be unique in both customers and users tables
   terminalId: integer("terminal_id").notNull().references(() => terminals.id),
   portId: integer("port_id").notNull().references(() => ports.id),
-  status: text("status").notNull().default("Activation in Progress"), // "Activation in Progress", "Customer TC"
+  status: text("status").notNull().default("Draft"), // "Draft", "Activation in Progress", "Customer TC"
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedBy: varchar("updated_by").references(() => users.id),
