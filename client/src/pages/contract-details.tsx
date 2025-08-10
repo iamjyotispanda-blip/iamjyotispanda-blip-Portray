@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, User, Package, DollarSign, Warehouse } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, User, Package, DollarSign, Warehouse, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ContractForm } from "@/components/contract-form";
 import type { Customer, Contract, CustomerContact, ContractTariff, ContractCargoDetail, ContractStorageCharge } from "@shared/schema";
 
 const CONTRACT_TABS = [
@@ -22,6 +23,8 @@ export default function ContractDetails() {
   const [, params] = useRoute("/customers/:customerId/contracts/:contractId?");
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("contract");
+  const [isContractFormOpen, setIsContractFormOpen] = useState(false);
+  const [renewContractId, setRenewContractId] = useState<number | undefined>();
   
   const customerId = params?.customerId ? parseInt(params.customerId) : null;
   const contractId = params?.contractId ? parseInt(params.contractId) : null;
@@ -32,11 +35,18 @@ export default function ContractDetails() {
     enabled: !!customerId,
   });
 
-  // Fetch contract data if contractId exists
-  const { data: contract, isLoading: contractLoading } = useQuery<Contract>({
-    queryKey: ['/api/contracts', contractId],
-    enabled: !!contractId,
+  // Fetch all contracts for the customer
+  const { data: contracts = [], isLoading: contractsLoading } = useQuery<Contract[]>({
+    queryKey: ['/api/customers', customerId, 'contracts'],
+    enabled: !!customerId,
   });
+
+  // Get the specific contract if contractId is provided, otherwise use the latest one
+  const contract = contractId 
+    ? contracts.find(c => c.id === contractId)
+    : contracts.length > 0 
+      ? contracts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+      : null;
 
   // Temporary placeholder data - will be replaced with actual API calls
   const contacts: CustomerContact[] = [];
@@ -44,7 +54,7 @@ export default function ContractDetails() {
   const cargoDetails: ContractCargoDetail[] = [];
   const storageCharges: ContractStorageCharge[] = [];
 
-  if (customerLoading) {
+  if (customerLoading || contractsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -173,62 +183,161 @@ export default function ContractDetails() {
           <TabsContent value="contract" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Package className="mr-2 h-5 w-5" />
-                  Contract Details
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Package className="mr-2 h-5 w-5" />
+                    Contract Management
+                  </div>
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      setRenewContractId(undefined);
+                      setIsContractFormOpen(true);
+                    }}
+                    data-testid="button-add-new-contract"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add New Contract
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {contract ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Contract ID</label>
-                        <p className="font-mono" data-testid="contract-id">{contract.id}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Contract Number</label>
-                        <p data-testid="contract-number">{contract.contractNumber}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Valid From</label>
-                        <p data-testid="contract-valid-from">
-                          {new Date(contract.validFrom).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Valid To</label>
-                        <p data-testid="contract-valid-to">
-                          {new Date(contract.validTo).toLocaleDateString()}
-                        </p>
+                {contracts.length > 0 ? (
+                  <div className="space-y-6">
+                    {/* Contract List */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">All Contracts ({contracts.length})</h3>
+                      <div className="grid gap-4">
+                        {contracts.map((contractItem) => {
+                          const isExpired = new Date(contractItem.validTo) < new Date();
+                          const isActive = new Date(contractItem.validFrom) <= new Date() && new Date(contractItem.validTo) >= new Date();
+                          const isUpcoming = new Date(contractItem.validFrom) > new Date();
+                          
+                          return (
+                            <div 
+                              key={contractItem.id} 
+                              className={`border rounded-lg p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                                contractItem.id === contract?.id ? 'border-primary bg-primary/5' : ''
+                              }`}
+                              data-testid={`contract-card-${contractItem.id}`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-2">
+                                  <div className="flex items-center space-x-3">
+                                    <h4 className="font-semibold" data-testid={`contract-number-${contractItem.id}`}>
+                                      {contractItem.contractNumber}
+                                    </h4>
+                                    <Badge 
+                                      variant={isActive ? "default" : isExpired ? "destructive" : "secondary"}
+                                      data-testid={`contract-status-${contractItem.id}`}
+                                    >
+                                      {isActive ? "Active" : isExpired ? "Expired" : "Upcoming"}
+                                    </Badge>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <span className="text-muted-foreground">Valid From: </span>
+                                      <span data-testid={`contract-from-${contractItem.id}`}>
+                                        {new Date(contractItem.validFrom).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Valid To: </span>
+                                      <span data-testid={`contract-to-${contractItem.id}`}>
+                                        {new Date(contractItem.validTo).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {contractItem.contractCopyUrl && (
+                                    <div>
+                                      <a 
+                                        href={contractItem.contractCopyUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:underline text-sm"
+                                        data-testid={`contract-document-${contractItem.id}`}
+                                      >
+                                        View Contract Document
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setLocation(`/customers/${customerId}/contracts/${contractItem.id}`)}
+                                    data-testid={`button-view-contract-${contractItem.id}`}
+                                  >
+                                    {contractItem.id === contract?.id ? "Current" : "View"}
+                                  </Button>
+                                  {isExpired && (
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => {
+                                        setRenewContractId(contractItem.id);
+                                        setIsContractFormOpen(true);
+                                      }}
+                                      data-testid={`button-renew-contract-${contractItem.id}`}
+                                    >
+                                      Renew
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                    {contract.contractCopyUrl && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Contract Document</label>
-                        <p className="mt-1">
-                          <a 
-                            href={contract.contractCopyUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                            data-testid="contract-document-link"
-                          >
-                            View Contract Document
-                          </a>
-                        </p>
+
+                    {/* Current Contract Details */}
+                    {contract && (
+                      <div className="border-t pt-6">
+                        <h3 className="text-lg font-semibold mb-4">
+                          Current Contract Details - {contract.contractNumber}
+                        </h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground">Contract ID</label>
+                            <p className="font-mono" data-testid="current-contract-id">{contract.id}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground">Contract Number</label>
+                            <p data-testid="current-contract-number">{contract.contractNumber}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground">Valid From</label>
+                            <p data-testid="current-contract-valid-from">
+                              {new Date(contract.validFrom).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground">Valid To</label>
+                            <p data-testid="current-contract-valid-to">
+                              {new Date(contract.validTo).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="text-center py-12">
                     <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Contract Yet</h3>
+                    <h3 className="text-lg font-semibold mb-2">No Contracts Yet</h3>
                     <p className="text-muted-foreground mb-4">
-                      This customer doesn't have a contract yet. Create one to get started.
+                      This customer doesn't have any contracts yet. Create the first one to get started.
                     </p>
-                    <Button data-testid="button-create-contract">
-                      Create Contract
+                    <Button 
+                      onClick={() => {
+                        setRenewContractId(undefined);
+                        setIsContractFormOpen(true);
+                      }}
+                      data-testid="button-create-first-contract"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create First Contract
                     </Button>
                   </div>
                 )}
@@ -447,6 +556,19 @@ export default function ContractDetails() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Contract Form Dialog */}
+      {customerId && (
+        <ContractForm
+          customerId={customerId}
+          isOpen={isContractFormOpen}
+          onClose={() => {
+            setIsContractFormOpen(false);
+            setRenewContractId(undefined);
+          }}
+          renewFromContractId={renewContractId}
+        />
+      )}
     </div>
   );
 }

@@ -2313,6 +2313,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get customer contracts
+  app.get("/api/customers/:id/contracts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      const contracts = await storage.getContractsByCustomerId(customerId);
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching customer contracts:", error);
+      res.status(500).json({ message: "Failed to fetch contracts" });
+    }
+  });
+
   // Create new customer with validation
   app.post("/api/customers", authenticateToken, async (req: Request, res: Response) => {
     try {
@@ -2681,6 +2693,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching plots:", error);
       res.status(500).json({ message: "Failed to fetch plots" });
+    }
+  });
+
+  // Contract management routes
+  app.get("/api/contracts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contracts = await storage.getAllContracts();
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching contracts:", error);
+      res.status(500).json({ message: "Failed to fetch contracts" });
+    }
+  });
+
+  app.get("/api/contracts/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contract = await storage.getContractById(id);
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+      res.json(contract);
+    } catch (error) {
+      console.error("Error fetching contract:", error);
+      res.status(500).json({ message: "Failed to fetch contract" });
+    }
+  });
+
+  app.post("/api/contracts", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertContractSchema.parse(req.body);
+      const userId = req.user?.id;
+
+      const contractData = {
+        ...validatedData,
+        createdBy: userId || 'system',
+        updatedBy: userId || 'system'
+      };
+
+      const contract = await storage.createContract(contractData);
+      res.status(201).json(contract);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating contract:", error);
+      res.status(500).json({ message: "Failed to create contract" });
+    }
+  });
+
+  app.put("/api/contracts/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertContractSchema.partial().parse(req.body);
+      const userId = req.user?.id;
+
+      const updateData = {
+        ...validatedData,
+        updatedBy: userId || 'system'
+      };
+
+      const contract = await storage.updateContract(id, updateData);
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+      res.json(contract);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error updating contract:", error);
+      res.status(500).json({ message: "Failed to update contract" });
+    }
+  });
+
+  app.delete("/api/contracts/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteContract(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting contract:", error);
+      res.status(500).json({ message: "Failed to delete contract" });
     }
   });
 

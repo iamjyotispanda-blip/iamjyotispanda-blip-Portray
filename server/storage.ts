@@ -1137,6 +1137,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(contracts).where(eq(contracts.customerId, customerId));
   }
 
+  async getContractById(id: number): Promise<Contract | undefined> {
+    const [contract] = await db.select().from(contracts).where(eq(contracts.id, id));
+    return contract || undefined;
+  }
+
   async createContract(contractData: InsertContract): Promise<Contract> {
     const [contract] = await db.insert(contracts).values({
       ...contractData,
@@ -1144,6 +1149,18 @@ export class DatabaseStorage implements IStorage {
       updatedAt: new Date(),
     }).returning();
     return contract;
+  }
+
+  async updateContract(id: number, updates: Partial<Contract>): Promise<Contract | undefined> {
+    const [updated] = await db.update(contracts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contracts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContract(id: number): Promise<void> {
+    await db.delete(contracts).where(eq(contracts.id, id));
   }
 
   // Contract tariffs
