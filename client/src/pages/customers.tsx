@@ -183,7 +183,8 @@ export default function Customers() {
 
   const getTerminalName = (terminalId: number) => {
     const terminal = terminals.find((t: Terminal) => t.id === terminalId);
-    return terminal?.terminalName || "Unknown";
+    if (!terminal) return "Unknown";
+    return `${terminal.terminalName}${terminal.shortCode ? ` (${terminal.shortCode})` : ''}`;
   };
 
   if (customersLoading) {
@@ -386,7 +387,7 @@ export default function Customers() {
                           <SelectContent>
                             {terminals.map((terminal: any) => (
                               <SelectItem key={terminal.id} value={terminal.id.toString()}>
-                                {terminal.terminalName || terminal.name}
+                                {terminal.terminalName}{terminal.shortCode ? ` (${terminal.shortCode})` : ''}
                               </SelectItem>
                             ))}
                           </SelectContent>
