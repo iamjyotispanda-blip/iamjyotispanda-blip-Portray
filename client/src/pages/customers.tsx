@@ -108,21 +108,7 @@ function CustomersContent() {
   const createCustomerMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
       const { confirmEmail, ...customerData } = data;
-      const response = await fetch('/api/customers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify(customerData),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create customer');
-      }
-      
-      return response.json();
+      return apiRequest("POST", "/api/customers", customerData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
