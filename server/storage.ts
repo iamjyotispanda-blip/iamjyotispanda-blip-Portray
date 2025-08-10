@@ -1163,6 +1163,58 @@ export class DatabaseStorage implements IStorage {
     await db.delete(contracts).where(eq(contracts.id, id));
   }
 
+  // Contract cargo details management
+  async getContractCargoDetailsByContractId(contractId: number): Promise<ContractCargoDetail[]> {
+    return await db.select().from(contractCargoDetails).where(eq(contractCargoDetails.contractId, contractId));
+  }
+
+  async createContractCargoDetail(cargoDetail: InsertContractCargoDetail): Promise<ContractCargoDetail> {
+    const [created] = await db.insert(contractCargoDetails).values({
+      ...cargoDetail,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractCargoDetail(id: number, updates: Partial<ContractCargoDetail>): Promise<ContractCargoDetail | undefined> {
+    const [updated] = await db.update(contractCargoDetails)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractCargoDetails.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractCargoDetail(id: number): Promise<void> {
+    await db.delete(contractCargoDetails).where(eq(contractCargoDetails.id, id));
+  }
+
+  // Contract storage charges management
+  async getContractStorageChargesByContractId(contractId: number): Promise<ContractStorageCharge[]> {
+    return await db.select().from(contractStorageCharges).where(eq(contractStorageCharges.contractId, contractId));
+  }
+
+  async createContractStorageCharge(storageCharge: InsertContractStorageCharge): Promise<ContractStorageCharge> {
+    const [created] = await db.insert(contractStorageCharges).values({
+      ...storageCharge,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return created;
+  }
+
+  async updateContractStorageCharge(id: number, updates: Partial<ContractStorageCharge>): Promise<ContractStorageCharge | undefined> {
+    const [updated] = await db.update(contractStorageCharges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractStorageCharges.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteContractStorageCharge(id: number): Promise<void> {
+    await db.delete(contractStorageCharges).where(eq(contractStorageCharges.id, id));
+  }
+
   // Contract tariffs
   async getContractTariffsByContractId(contractId: number): Promise<ContractTariff[]> {
     return await db.select().from(contractTariffs).where(eq(contractTariffs.contractId, contractId));

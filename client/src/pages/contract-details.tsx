@@ -48,11 +48,26 @@ export default function ContractDetails() {
       ? contracts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
       : null;
 
-  // Temporary placeholder data - will be replaced with actual API calls
-  const contacts: CustomerContact[] = [];
-  const tariffs: ContractTariff[] = [];
-  const cargoDetails: ContractCargoDetail[] = [];
-  const storageCharges: ContractStorageCharge[] = [];
+  // Fetch contract-specific data when a contract is selected
+  const { data: contacts = [] } = useQuery<CustomerContact[]>({
+    queryKey: ['/api/customers', customerId, 'contacts'],
+    enabled: !!customerId,
+  });
+
+  const { data: tariffs = [] } = useQuery<ContractTariff[]>({
+    queryKey: ['/api/contracts', contract?.id, 'tariffs'],
+    enabled: !!contract?.id,
+  });
+
+  const { data: cargoDetails = [] } = useQuery<ContractCargoDetail[]>({
+    queryKey: ['/api/contracts', contract?.id, 'cargo'],
+    enabled: !!contract?.id,
+  });
+
+  const { data: storageCharges = [] } = useQuery<ContractStorageCharge[]>({
+    queryKey: ['/api/contracts', contract?.id, 'storage'],
+    enabled: !!contract?.id,
+  });
 
   if (customerLoading || contractsLoading) {
     return (
@@ -294,9 +309,14 @@ export default function ContractDetails() {
                     {/* Current Contract Details */}
                     {contract && (
                       <div className="border-t pt-6">
-                        <h3 className="text-lg font-semibold mb-4">
-                          Current Contract Details - {contract.contractNumber}
-                        </h3>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold">
+                            Contract Details - {contract.contractNumber}
+                          </h3>
+                          <div className="text-sm text-muted-foreground">
+                            All associated data (contacts, cargo, tariffs, storage) linked to this contract
+                          </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-sm font-medium text-muted-foreground">Contract ID</label>
@@ -304,7 +324,9 @@ export default function ContractDetails() {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-muted-foreground">Contract Number</label>
-                            <p data-testid="current-contract-number">{contract.contractNumber}</p>
+                            <p data-testid="current-contract-number" className="font-semibold text-primary">
+                              {contract.contractNumber}
+                            </p>
                           </div>
                           <div>
                             <label className="text-sm font-medium text-muted-foreground">Valid From</label>
@@ -318,6 +340,17 @@ export default function ContractDetails() {
                               {new Date(contract.validTo).toLocaleDateString()}
                             </p>
                           </div>
+                        </div>
+                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <div className="flex items-center space-x-2">
+                            <Package className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              Contract Reference: {contract.contractNumber}
+                            </span>
+                          </div>
+                          <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                            This contract number serves as the reference for all associated contacts, cargo details, tariff rates, and storage charges shown in the tabs above.
+                          </p>
                         </div>
                       </div>
                     )}
@@ -418,6 +451,16 @@ export default function ContractDetails() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {contract && (
+                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        Cargo Details for Contract: {contract.contractNumber}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {cargoDetails.length > 0 ? (
                   <div className="space-y-4">
                     {cargoDetails.map((cargo) => (
@@ -446,7 +489,10 @@ export default function ContractDetails() {
                     <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No Cargo Details</h3>
                     <p className="text-muted-foreground mb-4">
-                      No cargo details have been added for this contract yet.
+                      {contract 
+                        ? `No cargo details have been added for contract ${contract.contractNumber} yet.`
+                        : "No cargo details have been added for this contract yet."
+                      }
                     </p>
                     <Button data-testid="button-add-cargo">
                       Add Cargo Details
@@ -467,6 +513,16 @@ export default function ContractDetails() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {contract && (
+                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        Tariff Rates for Contract: {contract.contractNumber}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {tariffs.length > 0 ? (
                   <div className="space-y-4">
                     {tariffs.map((tariff) => (
@@ -497,7 +553,10 @@ export default function ContractDetails() {
                     <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No Tariffs</h3>
                     <p className="text-muted-foreground mb-4">
-                      No tariff details have been added for this contract yet.
+                      {contract 
+                        ? `No tariff rates have been set for contract ${contract.contractNumber} yet.`
+                        : "No tariff details have been added for this contract yet."
+                      }
                     </p>
                     <Button data-testid="button-add-tariff">
                       Add Tariff
@@ -518,6 +577,16 @@ export default function ContractDetails() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {contract && (
+                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Warehouse className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        Storage Charges for Contract: {contract.contractNumber}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {storageCharges.length > 0 ? (
                   <div className="space-y-4">
                     {storageCharges.map((storage) => (
@@ -544,7 +613,10 @@ export default function ContractDetails() {
                     <Warehouse className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No Storage Charges</h3>
                     <p className="text-muted-foreground mb-4">
-                      No storage charges have been added for this contract yet.
+                      {contract 
+                        ? `No storage charges have been configured for contract ${contract.contractNumber} yet.`
+                        : "No storage charges have been added for this contract yet."
+                      }
                     </p>
                     <Button data-testid="button-add-storage">
                       Add Storage Charge

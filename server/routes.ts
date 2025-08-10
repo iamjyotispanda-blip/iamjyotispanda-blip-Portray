@@ -2785,6 +2785,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Contract-specific data routes (linked by contract number)
+  app.get("/api/contracts/:id/tariffs", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const tariffs = await storage.getContractTariffsByContractId(contractId);
+      res.json(tariffs);
+    } catch (error) {
+      console.error("Error fetching contract tariffs:", error);
+      res.status(500).json({ message: "Failed to fetch contract tariffs" });
+    }
+  });
+
+  app.get("/api/contracts/:id/cargo", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const cargoDetails = await storage.getContractCargoDetailsByContractId(contractId);
+      res.json(cargoDetails);
+    } catch (error) {
+      console.error("Error fetching contract cargo details:", error);
+      res.status(500).json({ message: "Failed to fetch contract cargo details" });
+    }
+  });
+
+  app.get("/api/contracts/:id/storage", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const storageCharges = await storage.getContractStorageChargesByContractId(contractId);
+      res.json(storageCharges);
+    } catch (error) {
+      console.error("Error fetching contract storage charges:", error);
+      res.status(500).json({ message: "Failed to fetch contract storage charges" });
+    }
+  });
+
+  // Contract tariff management
+  app.post("/api/contracts/:id/tariffs", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const validatedData = insertContractTariffSchema.parse({
+        ...req.body,
+        contractId
+      });
+      
+      const tariff = await storage.createContractTariff(validatedData);
+      res.status(201).json(tariff);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating contract tariff:", error);
+      res.status(500).json({ message: "Failed to create contract tariff" });
+    }
+  });
+
+  // Contract cargo management
+  app.post("/api/contracts/:id/cargo", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const validatedData = insertContractCargoDetailSchema.parse({
+        ...req.body,
+        contractId
+      });
+      
+      const cargoDetail = await storage.createContractCargoDetail(validatedData);
+      res.status(201).json(cargoDetail);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating contract cargo detail:", error);
+      res.status(500).json({ message: "Failed to create contract cargo detail" });
+    }
+  });
+
+  // Contract storage management
+  app.post("/api/contracts/:id/storage", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const validatedData = insertContractStorageChargeSchema.parse({
+        ...req.body,
+        contractId
+      });
+      
+      const storageCharge = await storage.createContractStorageCharge(validatedData);
+      res.status(201).json(storageCharge);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating contract storage charge:", error);
+      res.status(500).json({ message: "Failed to create contract storage charge" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
