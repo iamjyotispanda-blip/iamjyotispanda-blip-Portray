@@ -27,10 +27,8 @@ const customerFormSchema = z.object({
   displayName: z.string().min(1, "Display name is required"),
   email: z.string().email("Invalid email"),
   confirmEmail: z.string().email("Invalid email"),
-  phone: z.string().min(1, "Phone is required"),
-  pan: z.string().min(10, "PAN must be at least 10 characters"),
-  gst: z.string().min(15, "GST must be at least 15 characters"),
-  registeredAddress: z.string().min(1, "Billing address is required"),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Please enter a valid PAN number (e.g., ABCDE1234F)"),
+  gst: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Please enter a valid GST number"),
   country: z.string().default("India"),
   state: z.string().min(1, "Please select a state"),
   terminalId: z.number().min(1, "Please select a terminal"),
@@ -108,7 +106,12 @@ function CustomersContent() {
   const createCustomerMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
       const { confirmEmail, ...customerData } = data;
-      return apiRequest("POST", "/api/customers", customerData);
+      // Add portId automatically - for now using port 5 (JSW Paradip Port)
+      const customerDataWithPort = {
+        ...customerData,
+        portId: 5
+      };
+      return apiRequest("POST", "/api/customers", customerDataWithPort);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
@@ -135,10 +138,8 @@ function CustomersContent() {
       displayName: "",
       email: "",
       confirmEmail: "",
-      phone: "",
       pan: "",
       gst: "",
-      registeredAddress: "",
       country: "India",
       state: "",
       terminalId: 0,
@@ -285,40 +286,21 @@ function CustomersContent() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter phone number" 
-                            data-testid="input-phone"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country</FormLabel>
-                        <FormControl>
-                          <div className="w-full h-10 px-3 py-2 border border-input rounded-md bg-muted flex items-center">
-                            <CountryFlag country={{ code: "IN", name: "India", flag: "🇮🇳" }} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl>
+                        <div className="w-full h-10 px-3 py-2 border border-input rounded-md bg-muted flex items-center">
+                          <CountryFlag country={{ code: "IN", name: "India", flag: "🇮🇳" }} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -408,24 +390,7 @@ function CustomersContent() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="registeredAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Billing Address *</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter billing address" 
-                          data-testid="textarea-billing-address"
-                          rows={3}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
 
                 <div className="flex justify-end space-x-2 pt-4">
                   <Button 
