@@ -28,7 +28,7 @@ const customerFormSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   pan: z.string().min(10, "PAN must be at least 10 characters"),
   gst: z.string().min(15, "GST must be at least 15 characters"),
-  registeredAddress: z.string().min(1, "Registered address is required"),
+  registeredAddress: z.string().min(1, "Billing address is required"),
   country: z.string().default("India"),
   state: z.string().min(1, "Please select a state"),
   terminalId: z.number().min(1, "Please select a terminal"),
@@ -403,11 +403,11 @@ export default function Customers() {
                   name="registeredAddress"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Registered Address *</FormLabel>
+                      <FormLabel>Billing Address *</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Enter registered address" 
-                          data-testid="textarea-registered-address"
+                          placeholder="Enter billing address" 
+                          data-testid="textarea-billing-address"
                           rows={3}
                           {...field} 
                         />
