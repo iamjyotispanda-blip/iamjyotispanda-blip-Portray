@@ -863,32 +863,38 @@ function CustomersContent() {
 
                     {/* Actions Column */}
                     <TableCell className="pr-6">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem data-testid={`menu-view-${customer.id}`}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleEditCustomer(customer)}
-                            data-testid={`menu-edit-${customer.id}`}
+                      <div className="flex items-center space-x-2">
+                        {customer.status === "Draft" && (
+                          <Button 
+                            size="sm" 
+                            className="h-8"
+                            data-testid={`button-contract-${customer.id}`}
                           >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Customer
-                          </DropdownMenuItem>
-                          {customer.status === "Draft" && (
-                            <DropdownMenuItem data-testid={`menu-contract-${customer.id}`}>
-                              <FileText className="mr-2 h-4 w-4" />
-                              Create Contract
+                            <FileText className="mr-2 h-4 w-4" />
+                            Create Contract
+                          </Button>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem data-testid={`menu-view-${customer.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
                             </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuItem 
+                              onClick={() => handleEditCustomer(customer)}
+                              data-testid={`menu-edit-${customer.id}`}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Customer
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -962,7 +968,7 @@ function CustomersContent() {
                       </div>
                       
                       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mb-3">
                           <div className="text-xs space-y-1">
                             <div>
                               <span className="text-muted-foreground">ID: </span>
@@ -984,6 +990,17 @@ function CustomersContent() {
                             {customer.status}
                           </Badge>
                         </div>
+                        
+                        {customer.status === "Draft" && (
+                          <Button 
+                            size="sm" 
+                            className="w-full h-8"
+                            data-testid={`card-button-contract-${customer.id}`}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Create Contract
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
