@@ -857,8 +857,6 @@ export const insertCustomerSchema = createInsertSchema(customers).pick({
   email: true,
   terminalId: true,
   portId: true,
-  status: true,
-  createdBy: true,
 }).extend({
   pan: z.string().regex(indianPANRegex, "Please enter a valid PAN number (e.g., ABCDE1234F)"),
   gst: z.string().regex(indianGSTRegex, "Please enter a valid GST number"),

@@ -123,6 +123,7 @@ function CustomersContent() {
       });
     },
     onError: (error: any) => {
+      console.error("Customer creation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create customer",
