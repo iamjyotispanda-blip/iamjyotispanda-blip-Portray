@@ -17,17 +17,17 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Search, FileText, Users, Building, Mail, Phone } from "lucide-react";
 
-// For demo purposes, we'll use a simplified schema that matches the UI needs
+// Updated schema with country and state dropdowns, removed website and operational address
 const customerFormSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
   email: z.string().email("Invalid email"),
   confirmEmail: z.string().email("Invalid email"),
   phone: z.string().min(1, "Phone is required"),
-  website: z.string().optional(),
   pan: z.string().min(10, "PAN must be at least 10 characters"),
   gst: z.string().min(15, "GST must be at least 15 characters"),
   registeredAddress: z.string().min(1, "Registered address is required"),
-  operationalAddress: z.string().optional(),
+  country: z.string().min(1, "Please select a country"),
+  state: z.string().min(1, "Please select a state"),
   terminalId: z.number().min(1, "Please select a terminal"),
 }).refine((data) => data.email === data.confirmEmail, {
   message: "Email addresses must match",
@@ -48,6 +48,14 @@ export default function Customers() {
 
   const { data: terminals = [] } = useQuery({
     queryKey: ['/api/terminals'],
+  });
+
+  const { data: countries = [] } = useQuery({
+    queryKey: ['/api/countries'],
+  });
+
+  const { data: states = [] } = useQuery({
+    queryKey: ['/api/states'],
   });
 
   const createCustomerMutation = useMutation({
@@ -94,11 +102,11 @@ export default function Customers() {
       email: "",
       confirmEmail: "",
       phone: "",
-      website: "",
       pan: "",
       gst: "",
       registeredAddress: "",
-      operationalAddress: "",
+      country: "",
+      state: "",
       terminalId: 0,
     },
   });
@@ -246,17 +254,24 @@ export default function Customers() {
                   />
                   <FormField
                     control={form.control}
-                    name="website"
+                    name="country"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Website</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter website URL" 
-                            data-testid="input-website"
-                            {...field} 
-                          />
-                        </FormControl>
+                        <FormLabel>Country *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-country">
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {countries.map((country: any) => (
+                              <SelectItem key={country.id} value={country.name}>
+                                {country.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -300,6 +315,57 @@ export default function Customers() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-state">
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {states.map((state: any) => (
+                              <SelectItem key={state.id} value={state.name}>
+                                {state.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="terminalId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Terminal *</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-terminal">
+                              <SelectValue placeholder="Select terminal" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {terminals.map((terminal: any) => (
+                              <SelectItem key={terminal.id} value={terminal.id.toString()}>
+                                {terminal.terminalName || terminal.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
                   name="registeredAddress"
@@ -314,50 +380,6 @@ export default function Customers() {
                           {...field} 
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="operationalAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Operational Address</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter operational address (if different)" 
-                          data-testid="textarea-operational-address"
-                          rows={3}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="terminalId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Terminal *</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-terminal">
-                            <SelectValue placeholder="Select terminal" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {terminals.map((terminal: Terminal) => (
-                            <SelectItem key={terminal.id} value={terminal.id.toString()}>
-                              {terminal.name} ({terminal.shortCode})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -193,6 +193,7 @@ export interface IStorage {
 
   // Master data operations
   getAllCountries(): Promise<Country[]>;
+  getAllStates(): Promise<State[]>;
   getStatesByCountryId(countryId: number): Promise<State[]>;
   getAllCargoTypes(): Promise<CargoType[]>;
   getPlotsByTerminalId(terminalId: number): Promise<Plot[]>;
@@ -2107,6 +2108,10 @@ export class MemStorage implements IStorage {
   // Master data operations
   async getAllCountries(): Promise<Country[]> {
     return await db.select().from(countries).where(eq(countries.isActive, true));
+  }
+
+  async getAllStates(): Promise<State[]> {
+    return await db.select().from(states).where(eq(states.isActive, true));
   }
 
   async getStatesByCountryId(countryId: number): Promise<State[]> {

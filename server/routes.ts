@@ -2582,6 +2582,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/states", async (req: Request, res: Response) => {
+    try {
+      const states = await storage.getAllStates();
+      res.json(states);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+      res.status(500).json({ message: "Failed to fetch states" });
+    }
+  });
+
   app.get("/api/countries/:countryId/states", async (req: Request, res: Response) => {
     try {
       const countryId = parseInt(req.params.countryId);
