@@ -254,10 +254,6 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               <MenuIcon className="h-5 w-5" />
             </Button>
             
-            {/* Page Title */}
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {title}
-            </h1>
           </div>
 
           {/* Right Side */}

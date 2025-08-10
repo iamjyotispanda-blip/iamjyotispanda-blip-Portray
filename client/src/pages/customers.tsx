@@ -185,6 +185,10 @@ function CustomersContent() {
 
   return (
     <div className="space-y-2">
+      {/* Page Title */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Customers</span>
+      </div>
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <div className="relative w-80">
