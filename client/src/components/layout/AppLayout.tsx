@@ -18,7 +18,7 @@ import { PortrayLogo } from "@/components/portray-logo";
 import { TreeNavigation } from "@/components/navigation/TreeNavigation";
 import { AuthService } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
-import type { Notification } from "@shared/schema";
+import type { Notification, Menu as MenuType } from "@shared/schema";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -31,6 +31,59 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
+
+  // System Configuration Dropdown Component
+  const SystemConfigDropdown = () => {
+    const { data: allMenus = [] } = useQuery<MenuType[]>({
+      queryKey: ["/api/menus"],
+    });
+
+    // Get system configuration menus
+    const systemConfigParent = allMenus.find(menu => menu.name === 'system-config' && menu.menuType === 'glink');
+    const systemConfigMenus = allMenus.filter(menu => 
+      menu.menuType === 'plink' && 
+      menu.parentId === systemConfigParent?.id &&
+      menu.isActive
+    ).sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const getIconComponent = (iconName: string | null) => {
+      switch (iconName) {
+        case 'Mail': return Mail;
+        case 'Menu': return Menu;
+        case 'Shield': return Shield;
+        case 'Users': return Users;
+        default: return Settings;
+      }
+    };
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="relative">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b">
+            System Configuration
+          </div>
+          {systemConfigMenus.map((menu) => {
+            const IconComponent = getIconComponent(menu.icon);
+            return (
+              <DropdownMenuItem 
+                key={menu.id}
+                onClick={() => setLocation(menu.route || '#')}
+                className="cursor-pointer"
+              >
+                <IconComponent className="w-4 h-4 mr-2" />
+                {menu.label}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
 
   // Debug state changes
   React.useEffect(() => {
@@ -258,7 +311,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-
+            {/* System Configuration Dropdown */}
+            {user && (
+              <SystemConfigDropdown />
+            )}
             
             {/* Notifications */}
             {user && (
