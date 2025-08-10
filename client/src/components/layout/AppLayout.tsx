@@ -258,49 +258,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {/* System Configuration Dropdown */}
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative">
-                    <Settings className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b">
-                    System Configuration
-                  </div>
-                  <DropdownMenuItem 
-                    onClick={() => setLocation('/configuration/email')}
-                    className="cursor-pointer"
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Email Configuration
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLocation('/configuration/menu')}
-                    className="cursor-pointer"
-                  >
-                    <Menu className="w-4 h-4 mr-2" />
-                    Menu Management
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLocation('/roles')}
-                    className="cursor-pointer"
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Role Management
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setLocation('/users')}
-                    className="cursor-pointer"
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    User Management
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+
             
             {/* Notifications */}
             {user && (
