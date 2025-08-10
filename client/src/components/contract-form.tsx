@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { UploadResult } from "@uppy/core";
 
+// Create a form schema with proper date handling
 const contractFormSchema = z.object({
   customerId: z.number(),
   contractNumber: z.string().min(1, "Contract number is required"),
@@ -72,13 +73,11 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
 
   // Get upload parameters for file upload
   const handleGetUploadParameters = async () => {
-    const response = await apiRequest('/api/objects/upload', {
-      method: 'POST',
-      body: JSON.stringify({}),
-    });
+    const response = await apiRequest('POST', '/api/objects/upload', {});
+    const data = await response.json();
     return {
       method: 'PUT' as const,
-      url: response.uploadURL,
+      url: data.uploadURL,
     };
   };
 
@@ -108,14 +107,12 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
 
   const createContractMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      return await apiRequest(`/api/contracts`, {
-        method: "POST",
-        body: JSON.stringify({
-          ...data,
-          validFrom: data.validFrom.toISOString(),
-          validTo: data.validTo.toISOString(),
-        }),
+      const response = await apiRequest("POST", `/api/contracts`, {
+        ...data,
+        validFrom: data.validFrom.toISOString(),
+        validTo: data.validTo.toISOString(),
       });
+      return await response.json();
     },
     onSuccess: () => {
       toast({
