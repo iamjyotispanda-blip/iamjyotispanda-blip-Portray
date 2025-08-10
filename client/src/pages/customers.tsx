@@ -29,7 +29,7 @@ const customerFormSchema = z.object({
   pan: z.string().min(10, "PAN must be at least 10 characters"),
   gst: z.string().min(15, "GST must be at least 15 characters"),
   registeredAddress: z.string().min(1, "Registered address is required"),
-  country: z.string().min(1, "Please select a country"),
+  country: z.string().default("India"),
   state: z.string().min(1, "Please select a state"),
   terminalId: z.number().min(1, "Please select a terminal"),
 }).refine((data) => data.email === data.confirmEmail, {
@@ -87,19 +87,19 @@ export default function Customers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: customers = [], isLoading: customersLoading } = useQuery({
+  const { data: customers = [], isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
   });
 
-  const { data: terminals = [] } = useQuery({
+  const { data: terminals = [] } = useQuery<Terminal[]>({
     queryKey: ['/api/terminals'],
   });
 
-  const { data: countries = [] } = useQuery({
+  const { data: countries = [] } = useQuery<any[]>({
     queryKey: ['/api/countries'],
   });
 
-  const { data: states = [] } = useQuery({
+  const { data: states = [] } = useQuery<any[]>({
     queryKey: ['/api/states'],
   });
 
@@ -150,7 +150,7 @@ export default function Customers() {
       pan: "",
       gst: "",
       registeredAddress: "",
-      country: "",
+      country: "India",
       state: "",
       terminalId: 0,
     },
@@ -181,14 +181,9 @@ export default function Customers() {
     }
   };
 
-  const getCompanyTypeName = (typeId: number) => {
-    const type = companyTypes.find((ct: CompanyType) => ct.id === typeId);
-    return type?.typeName || "Unknown";
-  };
-
   const getTerminalName = (terminalId: number) => {
     const terminal = terminals.find((t: Terminal) => t.id === terminalId);
-    return terminal?.name || "Unknown";
+    return terminal?.terminalName || "Unknown";
   };
 
   if (customersLoading) {
@@ -302,65 +297,12 @@ export default function Customers() {
                     name="country"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Country *</FormLabel>
-                        <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={countryOpen}
-                                className="w-full justify-between h-10 px-3"
-                                data-testid="select-country"
-                              >
-                                {field.value ? (
-                                  (() => {
-                                    const country = countries.find((c: any) => c.name === field.value);
-                                    if (country) {
-                                      const displayCountry = { code: country.code || 'XX', name: country.name, flag: '' };
-                                      return <CountryFlag country={displayCountry} />;
-                                    }
-                                    return field.value;
-                                  })()
-                                ) : (
-                                  "Select a country..."
-                                )}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <Command>
-                              <CommandInput placeholder="Search countries..." />
-                              <CommandList>
-                                <CommandEmpty>No country found.</CommandEmpty>
-                                <CommandGroup className="max-h-[200px] overflow-y-auto">
-                                  {countries.map((country: any) => {
-                                    const displayCountry = { code: country.code || 'XX', name: country.name, flag: '' };
-                                    return (
-                                      <CommandItem
-                                        key={country.id}
-                                        value={country.name}
-                                        onSelect={(currentValue) => {
-                                          field.onChange(currentValue === field.value ? "" : currentValue);
-                                          setCountryOpen(false);
-                                        }}
-                                      >
-                                        <CountryFlag country={displayCountry} />
-                                        <Check
-                                          className={cn(
-                                            "ml-auto h-4 w-4",
-                                            field.value === country.name ? "opacity-100" : "opacity-0"
-                                          )}
-                                        />
-                                      </CommandItem>
-                                    );
-                                  })}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <FormLabel>Country</FormLabel>
+                        <FormControl>
+                          <div className="w-full h-10 px-3 py-2 border border-input rounded-md bg-muted flex items-center">
+                            <CountryFlag country={{ code: "IN", name: "India", flag: "🇮🇳" }} />
+                          </div>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -418,7 +360,7 @@ export default function Customers() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {states.map((state: any) => (
+                            {states.filter((state: any) => state.countryId === 1).map((state: any) => (
                               <SelectItem key={state.id} value={state.name}>
                                 {state.name}
                               </SelectItem>
@@ -573,9 +515,8 @@ export default function Customers() {
                 <TableRow>
                   <TableHead>Customer Code</TableHead>
                   <TableHead>Customer Name</TableHead>
-                  <TableHead>Company Type</TableHead>
                   <TableHead>Terminal</TableHead>
-                  <TableHead>Contact Info</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
@@ -590,26 +531,15 @@ export default function Customers() {
                     <TableCell className="font-medium" data-testid={`text-customer-name-${customer.id}`}>
                       {customer.customerName}
                     </TableCell>
-                    <TableCell data-testid={`text-company-type-${customer.id}`}>
-                      {getCompanyTypeName(customer.companyTypeId)}
-                    </TableCell>
                     <TableCell data-testid={`text-terminal-${customer.id}`}>
                       {getTerminalName(customer.terminalId)}
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm">
-                          <Mail className="h-3 w-3 mr-1" />
-                          <span data-testid={`text-customer-email-${customer.id}`}>
-                            {customer.email}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <Phone className="h-3 w-3 mr-1" />
-                          <span data-testid={`text-customer-phone-${customer.id}`}>
-                            {customer.phone}
-                          </span>
-                        </div>
+                      <div className="flex items-center text-sm">
+                        <Mail className="h-3 w-3 mr-1" />
+                        <span data-testid={`text-customer-email-${customer.id}`}>
+                          {customer.email}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
