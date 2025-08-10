@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,6 +89,7 @@ function CustomersContent() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [countryOpen, setCountryOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "card">("list");
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -868,6 +870,7 @@ function CustomersContent() {
                           <Button 
                             size="sm" 
                             className="h-8"
+                            onClick={() => setLocation(`/customers/${customer.id}/contracts`)}
                             data-testid={`button-contract-${customer.id}`}
                           >
                             <FileText className="mr-2 h-4 w-4" />
@@ -995,6 +998,7 @@ function CustomersContent() {
                           <Button 
                             size="sm" 
                             className="w-full h-8"
+                            onClick={() => setLocation(`/customers/${customer.id}/contracts`)}
                             data-testid={`card-button-contract-${customer.id}`}
                           >
                             <FileText className="mr-2 h-4 w-4" />

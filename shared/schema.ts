@@ -604,6 +604,8 @@ export const insertUserAuditLogSchema = createInsertSchema(userAuditLogs).pick({
 export type UserAuditLog = typeof userAuditLogs.$inferSelect;
 export type InsertUserAuditLog = z.infer<typeof insertUserAuditLogSchema>;
 
+
+
 // Customer Management Tables
 export const customers = pgTable("customers", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -863,6 +865,19 @@ export const insertCustomerSchema = createInsertSchema(customers).pick({
   email: z.string().email("Please enter a valid email address"),
 });
 
+export const updateCustomerSchema = createInsertSchema(customers).pick({
+  customerName: true,
+  displayName: true,
+  country: true,
+  state: true,
+  pan: true,
+  gst: true,
+  email: true,
+  terminalId: true,
+  status: true,
+  updatedBy: true,
+}).partial();
+
 export const insertCustomerContactSchema = createInsertSchema(customerContacts).pick({
   customerId: true,
   contactName: true,
@@ -971,6 +986,7 @@ export type CargoType = typeof cargoTypes.$inferSelect;
 export type Plot = typeof plots.$inferSelect;
 
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+export type UpdateCustomer = z.infer<typeof updateCustomerSchema>;
 export type InsertCustomerContact = z.infer<typeof insertCustomerContactSchema>;
 export type InsertCustomerAddress = z.infer<typeof insertCustomerAddressSchema>;
 export type InsertContract = z.infer<typeof insertContractSchema>;

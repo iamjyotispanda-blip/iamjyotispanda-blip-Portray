@@ -32,6 +32,7 @@ import ProfilePage from "@/pages/profile";
 import PermissionAssignmentPage from "@/pages/permission-assignment";
 import CustomersPage from "@/pages/customers";
 import ContractsPage from "@/pages/contracts";
+import ContractDetails from "@/pages/contract-details";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -157,6 +158,9 @@ function Router() {
       </Route>
       <Route path="/customers">
         {() => <ProtectedRoute component={CustomersPage} />}
+      </Route>
+      <Route path="/customers/:customerId/contracts/:contractId?">
+        {() => <ProtectedRoute component={ContractDetails} />}
       </Route>
       <Route path="/contracts">
         {() => <ProtectedRoute component={ContractsPage} />}
