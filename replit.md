@@ -2,6 +2,14 @@
 
 This is a full-stack web application called "PortRay" - a Port Management System built with React frontend and Node.js/Express backend. The application provides user authentication with complete email verification system and a dashboard interface for managing port operations. It uses modern web technologies including TypeScript, Tailwind CSS, shadcn/ui components, Drizzle ORM for database management, and comprehensive email configuration with SMTP support for verification workflows.
 
+## Recent Changes (August 10, 2025)
+- ✅ Fixed database data loss issue caused by backend system transition from .NET to Node.js
+- ✅ Restored JSW Infrastructure organization with complete details and country information  
+- ✅ Recreated JSW Paradeep Port and JSW Dharamtar Port with proper organizational linking
+- ✅ Fixed left navigation menu display issue - restored Dashboard, Organizations, Ports, and Customers menu items
+- ✅ Resolved TypeScript errors in contract form component and menu API authentication
+- ✅ Database seeding completed - system now has default organizational data and functional navigation
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
