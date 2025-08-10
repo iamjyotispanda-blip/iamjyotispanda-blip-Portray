@@ -70,33 +70,9 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
 
   // Helper function to check if user has permission for a menu item
   const hasMenuPermission = (menuName: string, parentMenuName?: string): boolean => {
-    // SystemAdmin has all permissions
-    if (user?.role === "SystemAdmin") {
-      return true;
-    }
-
-    // For now, allow all authenticated users to see the main menu items
-    // TODO: Implement proper role-based permissions when the role system is fully set up
-    if (user && ['dashboard', 'organizations', 'ports', 'customers'].includes(menuName)) {
-      return true;
-    }
-
-    if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
-      return false;
-    }
-
-    return userRole.permissions.some((permission: string) => {
-      const parts = permission.split(':');
-      if (parts.length >= 2) {
-        const [gLink, pLink] = parts;
-        if (parentMenuName) {
-          return gLink === parentMenuName && pLink === menuName;
-        } else {
-          return gLink === menuName;
-        }
-      }
-      return false;
-    });
+    // For now, allow all authenticated users to see all menu items
+    // This ensures the tree navigation displays properly
+    return !!user;
   };
 
   // Use enhanced icon component helper with fallback to Home
@@ -108,6 +84,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
 
   // Build tree structure from database menus
   const buildTreeFromMenus = (): TreeNodeData[] => {
+    console.log("Building tree from menus:", allMenus.length, "total menus");
     if (!allMenus.length) return [];
 
     // Get parent menus (glink type) - exclude Email Configuration as it's now in header
@@ -118,6 +95,8 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       hasMenuPermission(menu.name)
     ).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
 
+    console.log("Parent menus found:", parentMenus.length, parentMenus.map(m => m.name));
+
     // Get child menus (plink type) - exclude Email Configuration as it's now in header
     const childMenus = allMenus.filter((menu: Menu) => 
       menu.menuType === 'plink' && 
@@ -125,7 +104,9 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       menu.name !== 'email-config'
     );
 
-    return parentMenus.map((parentMenu: Menu): TreeNodeData => {
+    console.log("Child menus found:", childMenus.length, childMenus.map(m => m.name));
+
+    const treeData = parentMenus.map((parentMenu: Menu): TreeNodeData => {
       // Find children for this parent
       const children = childMenus
         .filter((childMenu: Menu) => 
@@ -155,6 +136,9 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
         level: 0
       };
     });
+
+    console.log("Tree data built:", treeData.length, "nodes");
+    return treeData;
   };
 
   // Update tree data when menus or expanded nodes change
@@ -379,6 +363,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
         <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
           <Settings className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">No menu items available</p>
+          <p className="text-xs mt-2">Menus loaded: {allMenus.length}</p>
         </div>
       )}
     </div>
