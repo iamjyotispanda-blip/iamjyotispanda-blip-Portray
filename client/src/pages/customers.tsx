@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Search, FileText, Users, Building, Mail, Phone, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 // Updated schema with country and state dropdowns, removed website and operational address
 const customerFormSchema = z.object({
@@ -81,7 +82,7 @@ const COUNTRIES = [
   { code: "SG", name: "Singapore", flag: "🇸🇬" },
 ];
 
-export default function Customers() {
+function CustomersContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
@@ -194,15 +195,21 @@ export default function Customers() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Customer Management</h1>
-          <p className="text-muted-foreground">Manage customer onboarding and relationships</p>
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+            data-testid="input-search-customers"
+          />
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="button-add-customer">
+            <Button className="h-8" data-testid="button-add-customer">
               <Plus className="h-4 w-4 mr-2" />
               Add Customer
             </Button>
@@ -457,75 +464,7 @@ export default function Customers() {
         </Dialog>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-total-customers">
-              {customers.length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Prospects</CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-prospects">
-              {customers.filter((c: Customer) => c.status === "Prospect").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-active-customers">
-              {customers.filter((c: Customer) => c.status === "Customer TC").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Under Contract</CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-under-contract">
-              {customers.filter((c: Customer) => c.status === "Customer SC").length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Customers</CardTitle>
-              <CardDescription>Manage customer onboarding and profiles</CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search customers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                  data-testid="input-search-customers"
-                />
-              </div>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
@@ -605,5 +544,13 @@ export default function Customers() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function Customers() {
+  return (
+    <AppLayout title="Customers" activeSection="customers">
+      <CustomersContent />
+    </AppLayout>
   );
 }
