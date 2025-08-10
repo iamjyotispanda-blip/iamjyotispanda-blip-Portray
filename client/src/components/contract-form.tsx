@@ -9,17 +9,30 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, FileText } from "lucide-react";
+import { CalendarIcon, FileText, Upload, Link, FileCheck } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertContractSchema, type InsertContract } from "@shared/schema";
 import { z } from "zod";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { UploadResult } from "@uppy/core";
 
-const contractFormSchema = insertContractSchema.extend({
+const contractFormSchema = z.object({
+  customerId: z.number(),
+  contractNumber: z.string().min(1, "Contract number is required"),
+  contractCopyUrl: z.string().min(1, "Contract document URL or file is required"),
+  documentType: z.enum(["upload", "url"], { 
+    required_error: "Document type is required" 
+  }),
+  documentName: z.string().optional(),
+  documentSize: z.number().optional(),
   validFrom: z.date({ required_error: "Valid from date is required" }),
   validTo: z.date({ required_error: "Valid to date is required" }),
+  createdBy: z.string(),
 }).refine((data) => data.validTo > data.validFrom, {
   message: "End date must be after start date",
   path: ["validTo"],
@@ -37,6 +50,12 @@ interface ContractFormProps {
 export function ContractForm({ customerId, isOpen, onClose, renewFromContractId }: ContractFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [documentType, setDocumentType] = useState<"upload" | "url">("url");
+  const [uploadedFile, setUploadedFile] = useState<{
+    url: string;
+    name: string;
+    size: number;
+  } | null>(null);
 
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
@@ -44,20 +63,57 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
       customerId,
       contractNumber: "",
       contractCopyUrl: "",
+      documentType: "url",
       validFrom: renewFromContractId ? new Date() : undefined,
       validTo: renewFromContractId ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) : undefined, // 1 year from now
+      createdBy: "current-user-id", // This should come from auth context
     },
   });
 
+  // Get upload parameters for file upload
+  const handleGetUploadParameters = async () => {
+    const response = await apiRequest('/api/objects/upload', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    return {
+      method: 'PUT' as const,
+      url: response.uploadURL,
+    };
+  };
+
+  // Handle file upload completion
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const file = result.successful[0];
+      const uploadedFileData = {
+        url: file.uploadURL || "",
+        name: file.name || "",
+        size: file.size || 0,
+      };
+      setUploadedFile(uploadedFileData);
+      
+      // Update form with uploaded file information
+      form.setValue("contractCopyUrl", uploadedFileData.url);
+      form.setValue("documentType", "upload");
+      form.setValue("documentName", uploadedFileData.name);
+      form.setValue("documentSize", uploadedFileData.size);
+      
+      toast({
+        title: "Success",
+        description: `File "${uploadedFileData.name}" uploaded successfully`,
+      });
+    }
+  };
+
   const createContractMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      return apiRequest(`/api/contracts`, {
+      return await apiRequest(`/api/contracts`, {
         method: "POST",
         body: JSON.stringify({
           ...data,
           validFrom: data.validFrom.toISOString(),
           validTo: data.validTo.toISOString(),
-          createdBy: "current-user-id", // This should come from auth context
         }),
       });
     },
@@ -69,6 +125,8 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
       queryClient.invalidateQueries({ queryKey: ['/api/customers', customerId, 'contracts'] });
       onClose();
       form.reset();
+      setUploadedFile(null);
+      setDocumentType("url");
     },
     onError: (error) => {
       toast({
@@ -121,23 +179,95 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="contractCopyUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contract Document URL</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://example.com/contract.pdf" 
-                        {...field} 
-                        data-testid="input-contract-url"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Document Upload/URL Section */}
+              <FormItem>
+                <FormLabel>Contract Document *</FormLabel>
+                <Tabs value={documentType} onValueChange={(value) => {
+                  setDocumentType(value as "upload" | "url");
+                  form.setValue("documentType", value as "upload" | "url");
+                  if (value === "url") {
+                    setUploadedFile(null);
+                    form.setValue("documentName", undefined);
+                    form.setValue("documentSize", undefined);
+                  }
+                }}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="url" className="flex items-center gap-2">
+                      <Link className="h-4 w-4" />
+                      URL Link
+                    </TabsTrigger>
+                    <TabsTrigger value="upload" className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      File Upload
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="url" className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="contractCopyUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input 
+                              placeholder="https://example.com/contract.pdf" 
+                              {...field} 
+                              data-testid="input-contract-url"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="upload" className="space-y-2">
+                    {uploadedFile ? (
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <FileCheck className="h-5 w-5 text-green-600" />
+                              <div>
+                                <p className="font-medium">{uploadedFile.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setUploadedFile(null);
+                                form.setValue("contractCopyUrl", "");
+                                form.setValue("documentName", undefined);
+                                form.setValue("documentSize", undefined);
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={50 * 1024 * 1024} // 50MB
+                        onGetUploadParameters={handleGetUploadParameters}
+                        onComplete={handleUploadComplete}
+                        buttonClassName="w-full"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          <span>Upload Contract Document</span>
+                        </div>
+                      </ObjectUploader>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </FormItem>
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
