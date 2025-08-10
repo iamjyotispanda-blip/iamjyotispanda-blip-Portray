@@ -999,10 +999,19 @@ export default function MenuManagementPage() {
             </div>
             
             {/* Add menu button */}
-            <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
+            <Sheet open={showAddForm} onOpenChange={(open) => {
+              setShowAddForm(open);
+              if (!open) {
+                // Reset form when sheet closes
+                setEditingMenu(null);
+                resetForm();
+              }
+            }}>
               <SheetTrigger asChild>
                 <Button className="flex items-center space-x-2" data-testid="button-add-menu" onClick={() => {
-                  resetForm(); // Pre-populate form with selected menu type
+                  setEditingMenu(null); // Ensure we're not in edit mode
+                  resetForm(); // Reset form data
+                  setShowAddForm(true);
                 }}>
                   <Plus className="h-4 w-4" />
                   <span>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</span>
@@ -1315,7 +1324,14 @@ export default function MenuManagementPage() {
         )}
 
             {/* Edit Sheet */}
-            <Sheet open={showEditForm} onOpenChange={setShowEditForm}>
+            <Sheet open={showEditForm} onOpenChange={(open) => {
+              setShowEditForm(open);
+              if (!open) {
+                // Reset form when sheet closes
+                setEditingMenu(null);
+                resetForm();
+              }
+            }}>
               <SheetContent className="w-[95vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500">
                 <SheetHeader>
                   <SheetTitle>Edit Menu</SheetTitle>
