@@ -84,6 +84,8 @@ const COUNTRIES = [
 function CustomersContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [countryOpen, setCountryOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "card">("list");
   const { toast } = useToast();
@@ -134,7 +136,47 @@ function CustomersContent() {
     },
   });
 
+  const updateCustomerMutation = useMutation({
+    mutationFn: async (data: CustomerFormData & { id: number }) => {
+      const { confirmEmail, id, ...customerData } = data;
+      return apiRequest("PUT", `/api/customers/${id}`, customerData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      setIsEditDialogOpen(false);
+      setEditingCustomer(null);
+      editForm.reset();
+      toast({
+        title: "Success",
+        description: "Customer updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Customer update error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update customer",
+        variant: "destructive",
+      });
+    },
+  });
+
   const form = useForm<CustomerFormData>({
+    resolver: zodResolver(customerFormSchema),
+    defaultValues: {
+      customerName: "",
+      displayName: "",
+      email: "",
+      confirmEmail: "",
+      pan: "",
+      gst: "",
+      country: "India",
+      state: "",
+      terminalId: 0,
+    },
+  });
+
+  const editForm = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
       customerName: "",
@@ -151,6 +193,28 @@ function CustomersContent() {
 
   const onSubmit = (data: CustomerFormData) => {
     createCustomerMutation.mutate(data);
+  };
+
+  const onEditSubmit = (data: CustomerFormData) => {
+    if (editingCustomer) {
+      updateCustomerMutation.mutate({ ...data, id: editingCustomer.id });
+    }
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingCustomer(customer);
+    editForm.reset({
+      customerName: customer.customerName,
+      displayName: customer.displayName,
+      email: customer.email,
+      confirmEmail: customer.email,
+      pan: customer.pan,
+      gst: customer.gst,
+      country: customer.country,
+      state: customer.state,
+      terminalId: customer.terminalId,
+    });
+    setIsEditDialogOpen(true);
   };
 
   const filteredCustomers = customers.filter((customer: Customer) =>
@@ -449,6 +513,231 @@ function CustomersContent() {
             </Form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Customer Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Customer</DialogTitle>
+              <DialogDescription>
+                Update customer profile information
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="customerName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Customer Name *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter customer name" 
+                            data-testid="edit-input-customer-name"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="displayName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Display Name *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter display name" 
+                            data-testid="edit-input-display-name"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Enter email address" 
+                            data-testid="edit-input-email"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="confirmEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Email *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Confirm email address" 
+                            data-testid="edit-input-confirm-email"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="pan"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PAN Number *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., ABCDE1234F" 
+                            data-testid="edit-input-pan"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="gst"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>GST Number *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., 22ABCDE1234F1Z5" 
+                            data-testid="edit-input-gst"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Country *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              value="India"
+                              disabled
+                              className="bg-gray-50 cursor-not-allowed"
+                              data-testid="edit-input-country"
+                            />
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center">
+                              <img 
+                                src="https://flagcdn.com/w20/in.png"
+                                alt="India flag"
+                                className="w-4 h-3 mr-2"
+                              />
+                            </div>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="edit-select-state">
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {states.map((state: any) => (
+                              <SelectItem key={state.id} value={state.name}>
+                                {state.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={editForm.control}
+                  name="terminalId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Terminal *</FormLabel>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger data-testid="edit-select-terminal">
+                            <SelectValue placeholder="Select terminal" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {terminals.map((terminal: Terminal) => (
+                            <SelectItem key={terminal.id} value={terminal.id.toString()}>
+                              {terminal.terminalName} {terminal.shortCode && `(${terminal.shortCode})`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsEditDialogOpen(false)}
+                    data-testid="edit-button-cancel"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={updateCustomerMutation.isPending}
+                    data-testid="edit-button-update-customer"
+                  >
+                    {updateCustomerMutation.isPending ? "Updating..." : "Update Customer"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Professional Customer List Table */}
@@ -585,7 +874,10 @@ function CustomersContent() {
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem data-testid={`menu-edit-${customer.id}`}>
+                          <DropdownMenuItem 
+                            onClick={() => handleEditCustomer(customer)}
+                            data-testid={`menu-edit-${customer.id}`}
+                          >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Customer
                           </DropdownMenuItem>
@@ -637,7 +929,10 @@ function CustomersContent() {
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem data-testid={`card-menu-edit-${customer.id}`}>
+                            <DropdownMenuItem 
+                              onClick={() => handleEditCustomer(customer)}
+                              data-testid={`card-menu-edit-${customer.id}`}
+                            >
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Customer
                             </DropdownMenuItem>

@@ -2320,8 +2320,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id;
 
       // Validation checks as per requirements
-      const existingCustomerName = await storage.getCustomerById(validatedData.customerId || 0);
-      if (existingCustomerName && existingCustomerName.customerName === validatedData.customerName) {
+      const allCustomers = await storage.getAllCustomers();
+      const existingCustomerName = allCustomers.find(c => c.customerName === validatedData.customerName);
+      if (existingCustomerName) {
         return res.status(400).json({ message: "Customer name already exists" });
       }
 
@@ -2362,6 +2363,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error creating customer:", error);
       res.status(500).json({ message: "Failed to create customer" });
+    }
+  });
+
+  // Update customer
+  app.put("/api/customers/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertCustomerSchema.partial().parse(req.body);
+      
+      // Check if customer exists
+      const existingCustomer = await storage.getCustomerById(id);
+      if (!existingCustomer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+
+      // Validation checks - exclude current customer from uniqueness checks
+      if (validatedData.customerName) {
+        const allCustomers = await storage.getAllCustomers();
+        const existingCustomerName = allCustomers.find(c => c.customerName === validatedData.customerName);
+        if (existingCustomerName && existingCustomerName.id !== id) {
+          return res.status(400).json({ message: "Customer name already exists" });
+        }
+      }
+
+      if (validatedData.pan) {
+        const existingPAN = await storage.getCustomerByPAN(validatedData.pan);
+        if (existingPAN && existingPAN.id !== id) {
+          return res.status(400).json({ message: "PAN number already exists" });
+        }
+      }
+
+      if (validatedData.gst) {
+        const existingGST = await storage.getCustomerByGST(validatedData.gst);
+        if (existingGST && existingGST.id !== id) {
+          return res.status(400).json({ message: "GST number already exists" });
+        }
+      }
+
+      if (validatedData.email) {
+        const existingCustomerEmail = await storage.getCustomerByEmail(validatedData.email);
+        const existingUserEmail = await storage.getUserByEmail(validatedData.email);
+        if ((existingCustomerEmail && existingCustomerEmail.id !== id) || existingUserEmail) {
+          return res.status(400).json({ 
+            message: existingUserEmail ? "Email already exists as a registered user" : "Email already exists as a customer" 
+          });
+        }
+      }
+
+      const customer = await storage.updateCustomer(id, validatedData);
+      res.json(customer);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      console.error("Error updating customer:", error);
+      res.status(500).json({ message: "Failed to update customer" });
     }
   });
 
