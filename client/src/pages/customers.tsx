@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +18,7 @@ import { insertCustomerSchema, type Customer, type Terminal } from "@shared/sche
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Search, FileText, Users, Building, Mail, Phone, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Search, FileText, Users, Building2, Mail, Phone, Check, ChevronsUpDown, MoreHorizontal, Eye, Edit, MapPin, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppLayout } from "@/components/layout/AppLayout";
 
@@ -416,85 +417,138 @@ function CustomersContent() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer Code</TableHead>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead>Display Name</TableHead>
-                  <TableHead>Terminal</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCustomers.map((customer: Customer) => (
-                  <TableRow key={customer.id} data-testid={`row-customer-${customer.id}`}>
-                    <TableCell className="font-mono text-sm" data-testid={`text-customer-code-${customer.id}`}>
+      {/* Customer Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCustomers.map((customer: Customer) => (
+          <Card key={customer.id} className="hover:shadow-lg transition-shadow duration-200" data-testid={`card-customer-${customer.id}`}>
+            <CardContent className="p-6">
+              {/* Header with Customer Code and Status */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-mono text-sm text-muted-foreground" data-testid={`text-customer-code-${customer.id}`}>
                       {customer.customerCode}
-                    </TableCell>
-                    <TableCell className="font-medium" data-testid={`text-customer-name-${customer.id}`}>
-                      {customer.customerName}
-                    </TableCell>
-                    <TableCell data-testid={`text-display-name-${customer.id}`}>
-                      {customer.displayName}
-                    </TableCell>
-                    <TableCell data-testid={`text-terminal-${customer.id}`}>
+                    </p>
+                    <Badge className={`${getStatusColor(customer.status)} mt-1`} data-testid={`badge-status-${customer.id}`}>
+                      {customer.status}
+                    </Badge>
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem data-testid={`menu-view-${customer.id}`}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem data-testid={`menu-edit-${customer.id}`}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Customer
+                    </DropdownMenuItem>
+                    {customer.status === "Activation in Progress" && (
+                      <DropdownMenuItem data-testid={`menu-contract-${customer.id}`}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Create Contract
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Customer Information */}
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-semibold text-lg leading-6" data-testid={`text-customer-name-${customer.id}`}>
+                    {customer.customerName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground" data-testid={`text-display-name-${customer.id}`}>
+                    {customer.displayName}
+                  </p>
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate" data-testid={`text-customer-email-${customer.id}`}>
+                      {customer.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span data-testid={`text-location-${customer.id}`}>
+                      {customer.state}, {customer.country}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Truck className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span data-testid={`text-terminal-${customer.id}`}>
                       {getTerminalName(customer.terminalId)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center text-sm">
-                        <Mail className="h-3 w-3 mr-1" />
-                        <span data-testid={`text-customer-email-${customer.id}`}>
-                          {customer.email}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(customer.status)} data-testid={`badge-status-${customer.id}`}>
-                        {customer.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell data-testid={`text-created-${customer.id}`}>
-                      {new Date(customer.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          data-testid={`button-view-customer-${customer.id}`}
-                        >
-                          View
-                        </Button>
-                        {customer.status === "Prospect" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            data-testid={`button-create-contract-${customer.id}`}
-                          >
-                            Create Contract
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {filteredCustomers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground" data-testid="text-no-customers">
-              No customers found.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Business Details */}
+                <div className="pt-3 border-t border-border">
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">PAN</p>
+                      <p className="font-mono font-medium" data-testid={`text-pan-${customer.id}`}>
+                        {customer.pan}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">GST</p>
+                      <p className="font-mono font-medium truncate" data-testid={`text-gst-${customer.id}`}>
+                        {customer.gst}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Created</span>
+                    <span data-testid={`text-created-${customer.id}`}>
+                      {new Date(customer.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {filteredCustomers.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Users className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No customers found</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              {searchTerm ? 
+                "No customers match your search criteria. Try adjusting your search." :
+                "Get started by adding your first customer to the system."
+              }
+            </p>
+            {!searchTerm && (
+              <Button onClick={() => setIsCreateDialogOpen(true)} data-testid="button-add-first-customer">
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Customer
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
