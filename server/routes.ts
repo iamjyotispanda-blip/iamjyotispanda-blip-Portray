@@ -1020,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // If user is system admin, return all menus
-      if (user.is_system_admin || user.role === "SystemAdmin") {
+      if (user.is_system_admin || user.role === "SystemAdmin" || user.role === "System Admin") {
         return res.json(menus);
       }
 
