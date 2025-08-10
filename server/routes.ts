@@ -5,9 +5,10 @@ import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdmi
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
-// Object storage imports removed - using fallback system
 import { EmailService } from "./emailService";
 import { AuditService } from "./auditService";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { isAuthenticated } from "./replitAuth";
 
 // Extend Express Request to include user session
 declare global {
@@ -2885,6 +2886,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error creating contract storage charge:", error);
       res.status(500).json({ message: "Failed to create contract storage charge" });
+    }
+  });
+
+  // ========================
+  // Object Storage API Routes
+  // ========================
+
+  // Get upload URL for object storage
+  app.post("/api/objects/upload", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Get upload URL error:", error);
+      res.status(500).json({ message: "Failed to get upload URL" });
+    }
+  });
+
+  // Serve private objects (contract documents)
+  app.get("/objects/:objectPath(*)", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      
+      // For contract documents, we can allow access if user is authenticated
+      // In a real system, you might want to check if user has access to the specific contract
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Update contract document after upload
+  app.put("/api/contracts/:id/document", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const { contractCopyUrl, documentType, documentName, documentSize } = req.body;
+
+      if (!contractCopyUrl || !documentType) {
+        return res.status(400).json({ message: "contractCopyUrl and documentType are required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      let normalizedPath = contractCopyUrl;
+
+      if (documentType === "upload") {
+        // Set ACL policy for uploaded files
+        normalizedPath = await objectStorageService.trySetObjectEntityAclPolicy(
+          contractCopyUrl,
+          {
+            owner: req.user?.id || "system",
+            visibility: "private", // Contract documents should be private
+          }
+        );
+      }
+
+      // Update contract with document information
+      const contract = await storage.updateContract(contractId, {
+        contractCopyUrl: normalizedPath,
+        documentType,
+        documentName,
+        documentSize: documentSize || null,
+        updatedBy: req.user?.id || "system",
+      });
+
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+
+      res.json({ 
+        message: "Contract document updated successfully",
+        objectPath: normalizedPath 
+      });
+    } catch (error) {
+      console.error("Update contract document error:", error);
+      res.status(500).json({ message: "Failed to update contract document" });
     }
   });
 

@@ -657,7 +657,10 @@ export const contracts = pgTable("contracts", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   customerId: integer("customer_id").notNull().references(() => customers.id, { onDelete: 'cascade' }),
   contractNumber: text("contract_number").notNull().unique(),
-  contractCopyUrl: text("contract_copy_url"), // PDF/Doc upload URL
+  contractCopyUrl: text("contract_copy_url"), // PDF/Doc upload URL or external link
+  documentType: text("document_type"), // 'upload' or 'url'
+  documentName: text("document_name"), // Original filename for uploads
+  documentSize: integer("document_size"), // File size in bytes for uploads
   validFrom: timestamp("valid_from").notNull(),
   validTo: timestamp("valid_to").notNull(),
   createdBy: varchar("created_by").notNull().references(() => users.id),
@@ -908,9 +911,22 @@ export const insertContractSchema = createInsertSchema(contracts).pick({
   customerId: true,
   contractNumber: true,
   contractCopyUrl: true,
+  documentType: true,
+  documentName: true,
+  documentSize: true,
   validFrom: true,
   validTo: true,
   createdBy: true,
+}).extend({
+  contractCopyUrl: z.string().min(1, "Contract document URL or file is required"),
+  documentType: z.enum(["upload", "url"], { 
+    required_error: "Document type is required" 
+  }),
+  validFrom: z.coerce.date(),
+  validTo: z.coerce.date(),
+}).refine((data) => data.validTo > data.validFrom, {
+  message: "End date must be after start date",
+  path: ["validTo"],
 });
 
 export const insertContractTariffSchema = createInsertSchema(contractTariffs).pick({
