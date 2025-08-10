@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 // Updated schema with country and state dropdowns, removed website and operational address
 const customerFormSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
+  displayName: z.string().min(1, "Display name is required"),
   email: z.string().email("Invalid email"),
   confirmEmail: z.string().email("Invalid email"),
   phone: z.string().min(1, "Phone is required"),
@@ -144,6 +145,7 @@ export default function Customers() {
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
       customerName: "",
+      displayName: "",
       email: "",
       confirmEmail: "",
       phone: "",
@@ -232,8 +234,23 @@ export default function Customers() {
                       </FormItem>
                     )}
                   />
-                  {/* Company Type field removed for now - can be added later when company_types table is created */}
-                  <div className="min-h-[1px]"></div>
+                  <FormField
+                    control={form.control}
+                    name="displayName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Display Name *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter display name" 
+                            data-testid="input-display-name"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -516,6 +533,7 @@ export default function Customers() {
                 <TableRow>
                   <TableHead>Customer Code</TableHead>
                   <TableHead>Customer Name</TableHead>
+                  <TableHead>Display Name</TableHead>
                   <TableHead>Terminal</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
@@ -531,6 +549,9 @@ export default function Customers() {
                     </TableCell>
                     <TableCell className="font-medium" data-testid={`text-customer-name-${customer.id}`}>
                       {customer.customerName}
+                    </TableCell>
+                    <TableCell data-testid={`text-display-name-${customer.id}`}>
+                      {customer.displayName}
                     </TableCell>
                     <TableCell data-testid={`text-terminal-${customer.id}`}>
                       {getTerminalName(customer.terminalId)}
