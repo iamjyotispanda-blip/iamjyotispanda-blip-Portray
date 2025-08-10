@@ -9,13 +9,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCustomerSchema, type Customer, type Terminal } from "@shared/schema";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Search, FileText, Users, Building, Mail, Phone } from "lucide-react";
+import { Plus, Search, FileText, Users, Building, Mail, Phone, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Updated schema with country and state dropdowns, removed website and operational address
 const customerFormSchema = z.object({
@@ -36,9 +39,51 @@ const customerFormSchema = z.object({
 
 type CustomerFormData = z.infer<typeof customerFormSchema>;
 
+// Country flag component with fallback
+const CountryFlag = ({ country }: { country: { code: string; name: string; flag: string } }) => {
+  return (
+    <div className="flex items-center space-x-2 min-w-0">
+      <img 
+        src={`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`}
+        alt={`${country.name} flag`}
+        className="w-6 h-4 rounded-sm border border-gray-200 object-cover"
+        title={`${country.name} (${country.code})`}
+        onError={(e) => {
+          // Fallback to code badge if image fails to load
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+          const fallback = target.nextElementSibling as HTMLElement;
+          if (fallback && fallback.classList.contains('flag-fallback')) {
+            fallback.style.display = 'flex';
+          }
+        }}
+      />
+      <div 
+        className="flag-fallback w-6 h-4 rounded-sm border border-gray-200 items-center justify-center text-xs font-bold bg-gradient-to-br from-blue-500 to-green-500 text-white shadow-sm"
+        style={{ display: 'none' }}
+        title={`${country.name} (${country.code})`}
+      >
+        {country.code}
+      </div>
+      <span className="truncate">{country.name}</span>
+    </div>
+  );
+};
+
+// Use database countries data instead of static list
+const COUNTRIES = [
+  { code: "IN", name: "India", flag: "🇮🇳" },
+  { code: "US", name: "United States", flag: "🇺🇸" },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "AU", name: "Australia", flag: "🇦🇺" },
+  { code: "CA", name: "Canada", flag: "🇨🇦" },
+  { code: "SG", name: "Singapore", flag: "🇸🇬" },
+];
+
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -258,20 +303,64 @@ export default function Customers() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Country *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-country">
-                              <SelectValue placeholder="Select country" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {countries.map((country: any) => (
-                              <SelectItem key={country.id} value={country.name}>
-                                {country.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={countryOpen}
+                                className="w-full justify-between h-10 px-3"
+                                data-testid="select-country"
+                              >
+                                {field.value ? (
+                                  (() => {
+                                    const country = countries.find((c: any) => c.name === field.value);
+                                    if (country) {
+                                      const displayCountry = { code: country.code || 'XX', name: country.name, flag: '' };
+                                      return <CountryFlag country={displayCountry} />;
+                                    }
+                                    return field.value;
+                                  })()
+                                ) : (
+                                  "Select a country..."
+                                )}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Search countries..." />
+                              <CommandList>
+                                <CommandEmpty>No country found.</CommandEmpty>
+                                <CommandGroup className="max-h-[200px] overflow-y-auto">
+                                  {countries.map((country: any) => {
+                                    const displayCountry = { code: country.code || 'XX', name: country.name, flag: '' };
+                                    return (
+                                      <CommandItem
+                                        key={country.id}
+                                        value={country.name}
+                                        onSelect={(currentValue) => {
+                                          field.onChange(currentValue === field.value ? "" : currentValue);
+                                          setCountryOpen(false);
+                                        }}
+                                      >
+                                        <CountryFlag country={displayCountry} />
+                                        <Check
+                                          className={cn(
+                                            "ml-auto h-4 w-4",
+                                            field.value === country.name ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                      </CommandItem>
+                                    );
+                                  })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}
