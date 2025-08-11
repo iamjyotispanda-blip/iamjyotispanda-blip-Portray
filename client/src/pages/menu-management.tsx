@@ -437,9 +437,12 @@ export default function MenuManagementPage() {
                       <span>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</span>
                     </Button>
                   </SheetTrigger>
-                  <SheetContent className="w-[95vw] sm:w-[640px] max-w-[95vw] sm:max-w-[640px] overflow-y-auto">
+                  <SheetContent className="w-[95vw] sm:w-[640px] max-w-[95vw] sm:max-w-[640px] overflow-y-auto" aria-describedby="add-menu-description">
                     <SheetHeader>
                       <SheetTitle>Add New {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</SheetTitle>
+                      <div id="add-menu-description" className="sr-only">
+                        Create a new menu item for the navigation system
+                      </div>
                     </SheetHeader>
                     <MenuForm />
                   </SheetContent>
@@ -453,9 +456,12 @@ export default function MenuManagementPage() {
                     resetForm();
                   }
                 }}>
-                  <SheetContent className="w-[95vw] sm:w-[640px] max-w-[95vw] sm:max-w-[640px] overflow-y-auto">
+                  <SheetContent className="w-[95vw] sm:w-[640px] max-w-[95vw] sm:max-w-[640px] overflow-y-auto" aria-describedby="edit-menu-description">
                     <SheetHeader>
                       <SheetTitle>Edit Menu</SheetTitle>
+                      <div id="edit-menu-description" className="sr-only">
+                        Edit the selected menu item properties and settings
+                      </div>
                     </SheetHeader>
                     <MenuForm isEdit={true} />
                   </SheetContent>
