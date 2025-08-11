@@ -63,11 +63,6 @@ export default function MenuManagementPage() {
   // Fetch all menus
   const { data: allMenus = [], isLoading } = useQuery<Menu[]>({
     queryKey: ["/api/menus"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/menus");
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    }
   });
 
   // Get filtered menus based on selected type - memoized to prevent re-renders
