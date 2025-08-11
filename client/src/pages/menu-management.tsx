@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -70,9 +70,15 @@ export default function MenuManagementPage() {
     }
   });
 
-  // Get filtered menus based on selected type
-  const filteredMenus = allMenus.filter(menu => menu.menuType === selectedMenuType);
-  const glinkMenus = allMenus.filter(menu => menu.menuType === 'glink');
+  // Get filtered menus based on selected type - memoized to prevent re-renders
+  const filteredMenus = useMemo(() => 
+    allMenus.filter(menu => menu.menuType === selectedMenuType), 
+    [allMenus, selectedMenuType]
+  );
+  const glinkMenus = useMemo(() => 
+    allMenus.filter(menu => menu.menuType === 'glink'), 
+    [allMenus]
+  );
 
   // Save menu mutation
   const saveMenuMutation = useMutation({
@@ -123,12 +129,12 @@ export default function MenuManagementPage() {
     }
   });
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData(initialFormData);
     setEditingMenu(null);
-  };
+  }, []);
 
-  const handleEdit = (menu: Menu) => {
+  const handleEdit = useCallback((menu: Menu) => {
     setEditingMenu(menu);
     setFormData({
       name: menu.name,
@@ -141,9 +147,9 @@ export default function MenuManagementPage() {
       isSystemConfig: menu.isSystemConfig || false
     });
     setShowEditForm(true);
-  };
+  }, []);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!formData.name || !formData.label) {
       toast({
         title: "Validation Error",
@@ -154,13 +160,18 @@ export default function MenuManagementPage() {
     }
 
     saveMenuMutation.mutate(formData);
-  };
+  }, [formData, saveMenuMutation, toast]);
 
-  const handleDelete = (menuId: number) => {
+  const handleDelete = useCallback((menuId: number) => {
     if (confirm("Are you sure you want to delete this menu?")) {
       deleteMenuMutation.mutate(menuId);
     }
-  };
+  }, [deleteMenuMutation]);
+
+  // Memoized form input handlers to prevent re-renders
+  const handleFormDataChange = useCallback((field: keyof FormData) => (value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <div className="space-y-6 pb-8 max-w-none">
@@ -170,11 +181,13 @@ export default function MenuManagementPage() {
           <Switch
             id="isSystemConfig"
             checked={formData.isSystemConfig}
-            onCheckedChange={(checked) => setFormData({ 
-              ...formData, 
-              isSystemConfig: checked,
-              parentId: checked ? null : formData.parentId
-            })}
+            onCheckedChange={(checked) => {
+              setFormData(prev => ({ 
+                ...prev, 
+                isSystemConfig: checked,
+                parentId: checked ? null : prev.parentId
+              }));
+            }}
           />
           <Label htmlFor="isSystemConfig" className="text-sm font-medium">
             System Configuration
@@ -190,11 +203,13 @@ export default function MenuManagementPage() {
         <Label htmlFor="menuType">Menu Type *</Label>
         <Select
           value={formData.menuType}
-          onValueChange={(value: 'glink' | 'plink') => setFormData({ 
-            ...formData, 
-            menuType: value,
-            parentId: value === 'glink' ? null : formData.parentId
-          })}
+          onValueChange={(value: 'glink' | 'plink') => {
+            setFormData(prev => ({ 
+              ...prev, 
+              menuType: value,
+              parentId: value === 'glink' ? null : prev.parentId
+            }));
+          }}
         >
           <SelectTrigger id="menuType">
             <SelectValue placeholder="Select menu type" />
@@ -215,10 +230,12 @@ export default function MenuManagementPage() {
           <Label htmlFor="parentId">Parent GLink Menu *</Label>
           <Select
             value={formData.parentId?.toString() || ""}
-            onValueChange={(value: string) => setFormData({ 
-              ...formData, 
-              parentId: value ? parseInt(value) : null 
-            })}
+            onValueChange={(value: string) => {
+              setFormData(prev => ({ 
+                ...prev, 
+                parentId: value ? parseInt(value) : null 
+              }));
+            }}
           >
             <SelectTrigger id="parentId">
               <SelectValue placeholder="Select parent GLink menu" />
@@ -250,7 +267,7 @@ export default function MenuManagementPage() {
         <Input
           id="name"
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) => handleFormDataChange('name')(e.target.value)}
           placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
           autoComplete="off"
           className="touch-manipulation"
@@ -264,7 +281,7 @@ export default function MenuManagementPage() {
         <Input
           id="label"
           value={formData.label}
-          onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+          onChange={(e) => handleFormDataChange('label')(e.target.value)}
           placeholder="Dashboard"
           autoComplete="off"
           className="touch-manipulation"
@@ -277,7 +294,9 @@ export default function MenuManagementPage() {
         <Label htmlFor="icon">Icon</Label>
         <Select
           value={formData.icon || "no-icon"}
-          onValueChange={(value: string) => setFormData({ ...formData, icon: value === "no-icon" ? "" : value })}
+          onValueChange={(value: string) => {
+            setFormData(prev => ({ ...prev, icon: value === "no-icon" ? "" : value }));
+          }}
         >
           <SelectTrigger id="icon">
             <SelectValue placeholder="Select an icon">
@@ -321,7 +340,7 @@ export default function MenuManagementPage() {
         <Input
           id="route"
           value={formData.route}
-          onChange={(e) => setFormData({ ...formData, route: e.target.value })}
+          onChange={(e) => handleFormDataChange('route')(e.target.value)}
           placeholder="/dashboard"
           autoComplete="off"
           className="touch-manipulation"
@@ -336,7 +355,7 @@ export default function MenuManagementPage() {
           id="sortOrder"
           type="number"
           value={formData.sortOrder}
-          onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
+          onChange={(e) => handleFormDataChange('sortOrder')(parseInt(e.target.value) || 0)}
           placeholder="0"
           autoComplete="off"
           className="touch-manipulation"
