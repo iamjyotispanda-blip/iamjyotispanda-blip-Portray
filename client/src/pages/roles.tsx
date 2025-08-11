@@ -300,14 +300,14 @@ export default function RolesPage() {
     deleteRoleMutation.mutate(roleId);
   };
 
-  const filteredRoles = roles.filter((role: Role) =>
+  const filteredRoles = (roles as Role[]).filter((role: Role) =>
     role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     role.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!canRead("roles", "user-access")) {
     return (
-      <AppLayout>
+      <AppLayout title="Roles">
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -320,7 +320,7 @@ export default function RolesPage() {
   }
 
   return (
-    <AppLayout>
+    <AppLayout title="Roles">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

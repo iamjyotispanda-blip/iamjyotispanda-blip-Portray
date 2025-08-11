@@ -69,13 +69,7 @@ export class AuthService {
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiRequest("POST", "/api/auth/login", credentials);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Login failed");
-      }
-      
+      const response = await apiRequest("/api/auth/login", "POST", credentials);
       const data: AuthResponse = await response.json();
       
       console.log("Login successful, storing token:", data.token);
@@ -94,7 +88,7 @@ export class AuthService {
     try {
       const token = AuthService.getToken();
       if (token) {
-        await apiRequest("POST", "/api/auth/logout", undefined);
+        await apiRequest("/api/auth/logout", "POST");
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -105,7 +99,7 @@ export class AuthService {
   }
 
   static async getCurrentUser(): Promise<User> {
-    const response = await apiRequest("GET", "/api/auth/me");
+    const response = await apiRequest("/api/auth/me", "GET");
     const data = await response.json();
     AuthService.setUser(data.user);
     return data.user;
