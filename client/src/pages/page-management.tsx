@@ -90,6 +90,7 @@ const SYSTEM_PAGES: PageInfo[] = [
   { id: "email-config", name: "email-config", title: "Email Configuration", route: "/configuration/email", category: "System Configuration", icon: "Mail", description: "SMTP email configuration management", isActive: true, isSystem: false },
   { id: "menu-management", name: "menu-management", title: "Menu Management", route: "/configuration/menu", category: "System Configuration", icon: "Menu", description: "Navigation menu structure management", isActive: true, isSystem: false },
   { id: "page-management", name: "page-management", title: "Page Management", route: "/configuration/pages", category: "System Configuration", icon: "FileText", description: "System page management and control", isActive: true, isSystem: false },
+  { id: "permission-assignment", name: "permission-assignment", title: "Permission Assignment", route: "/permission-assignment", category: "System Configuration", icon: "Shield", description: "Role-based permission assignment for menu items", isActive: true, isSystem: false },
   { id: "role-management", name: "role-management", title: "Role Management", route: "/roles", category: "System Configuration", icon: "Shield", description: "User roles and permissions management", isActive: true, isSystem: false },
   { id: "user-management", name: "user-management", title: "User Management", route: "/users", category: "System Configuration", icon: "Users", description: "User account administration", isActive: true, isSystem: false },
   
