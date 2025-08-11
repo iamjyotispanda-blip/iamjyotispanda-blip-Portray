@@ -126,7 +126,7 @@ export default function PageManagementPage() {
   // Initialize pages with database menu integration
   useEffect(() => {
     const SYSTEM_PAGES = getAllSystemPages();
-    const updatedPages = SYSTEM_PAGES.map(page => {
+    const updatedPages = SYSTEM_PAGES.map((page: PageInfo) => {
       // Find corresponding menu item by matching page name with menu name
       const correspondingMenu = Array.isArray(menuData) ? 
         menuData.find((menu: any) => 
@@ -151,7 +151,7 @@ export default function PageManagementPage() {
   }, [menuData]);
 
   // Get unique categories
-  const categories = ["All", ...Array.from(new Set(SYSTEM_PAGES.map(page => page.category)))];
+  const categories = ["All", ...Array.from(new Set(getAllSystemPages().map(page => page.category)))];
 
   // Filter pages based on search and category
   const filteredPages = pages.filter(page => {
@@ -378,7 +378,7 @@ export default function PageManagementPage() {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
-            {categories.map(category => (
+            {categories.map((category: string) => (
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
