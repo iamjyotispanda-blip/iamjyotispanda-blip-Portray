@@ -725,10 +725,12 @@ export default function MenuManagementPage() {
         <Input
           id="name"
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) => {
+            e.preventDefault();
+            setFormData({ ...formData, name: e.target.value });
+          }}
           placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
           data-testid="input-name"
-          className="touch-manipulation"
           autoComplete="off"
         />
         <p className="text-xs text-gray-500">Used as the unique identifier (lowercase, no spaces)</p>
@@ -739,10 +741,12 @@ export default function MenuManagementPage() {
         <Input
           id="label"
           value={formData.label}
-          onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+          onChange={(e) => {
+            e.preventDefault();
+            setFormData({ ...formData, label: e.target.value });
+          }}
           placeholder="Dashboard"
           data-testid="input-label"
-          className="touch-manipulation"
           autoComplete="off"
         />
         <p className="text-xs text-gray-500">Display name shown in navigation</p>
@@ -904,10 +908,12 @@ export default function MenuManagementPage() {
         <Input
           id="route"
           value={formData.route}
-          onChange={(e) => setFormData({ ...formData, route: e.target.value })}
+          onChange={(e) => {
+            e.preventDefault();
+            setFormData({ ...formData, route: e.target.value });
+          }}
           placeholder="/dashboard"
           data-testid="input-route"
-          className="touch-manipulation"
           autoComplete="off"
         />
         <p className="text-xs text-gray-500">URL path for this menu item</p>
@@ -919,10 +925,12 @@ export default function MenuManagementPage() {
           id="sortOrder"
           type="number"
           value={formData.sortOrder}
-          onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
+          onChange={(e) => {
+            e.preventDefault();
+            setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 });
+          }}
           placeholder="0"
           data-testid="input-sort-order"
-          className="touch-manipulation"
           autoComplete="off"
         />
         <p className="text-xs text-gray-500">Display order in navigation (lower numbers appear first)</p>
