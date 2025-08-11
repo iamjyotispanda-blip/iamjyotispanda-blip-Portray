@@ -490,6 +490,7 @@ export const roles = pgTable("roles", {
   description: text("description"),
   permissions: text("permissions").array(), // Array of permission strings
   isActive: boolean("is_active").notNull().default(true),
+  isSystem: boolean("is_system").notNull().default(false), // System roles cannot be deleted
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });

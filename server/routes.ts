@@ -1382,8 +1382,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prevent deletion of system roles
-      if (role.name === "SystemAdmin" || role.name === "PortAdmin") {
-        return res.status(400).json({ message: "Cannot delete system roles" });
+      if (role.isSystem) {
+        return res.status(400).json({ message: "Cannot delete system roles. System roles are protected and cannot be removed." });
       }
       
       await storage.deleteRole(id);

@@ -574,7 +574,7 @@ export function RolesContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleToggleRoleStatus(role.id)}
-                            disabled={toggleRoleStatusMutation.isPending || role.name === "SystemAdmin" || role.name === "PortAdmin"}
+                            disabled={toggleRoleStatusMutation.isPending || role.isSystem}
                             className="h-9 px-3"
                             data-testid={`button-toggle-role-${role.id}`}
                           >
@@ -586,7 +586,7 @@ export function RolesContent() {
                           </Button>
                         )}
                         
-                        {canManage("roles", "user-access") && role.name !== "SystemAdmin" && role.name !== "PortAdmin" && (
+                        {canManage("roles", "user-access") && !role.isSystem && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="destructive" size="sm" className="h-9 px-3" data-testid={`button-delete-role-${role.id}`}>
