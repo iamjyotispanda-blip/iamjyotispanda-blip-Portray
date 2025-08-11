@@ -99,8 +99,8 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     return (IconComp as React.ComponentType<any>) || Home;
   };
 
-  // Get base tree data (without expansion state to avoid circular deps)
-  const baseTreeData = React.useMemo((): TreeNodeData[] => {
+  // Get tree data directly without complex state management
+  const treeData = React.useMemo((): TreeNodeData[] => {
     if (!allMenus.length) return [];
 
     // Get parent menus (glink type) - include all active menus
@@ -142,34 +142,24 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
         icon: parentMenu.icon,
         route: parentMenu.route,
         children,
-        isExpanded: false, // Will be calculated on render
+        isExpanded: expandedNodes.has(parentMenu.name),
         level: 0
       };
     });
-  }, [allMenus, userRole]);
-
-  // Apply expansion state to tree data
-  const treeData = baseTreeData.map(node => ({
-    ...node,
-    isExpanded: expandedNodes.has(node.name)
-  }));
+  }, [allMenus, userRole, expandedNodes]);
 
   // Auto-expand parent node if active section is a child
   React.useEffect(() => {
-    if (!activeSection || !baseTreeData.length) return;
+    if (!activeSection || !treeData.length) return;
     
-    const activeParent = baseTreeData.find(node => 
+    const activeParent = treeData.find(node => 
       node.children.some(child => child.id === activeSection)
     );
     
     if (activeParent && !expandedNodes.has(activeParent.id)) {
-      setExpandedNodes(prev => {
-        const newSet = new Set(prev);
-        newSet.add(activeParent.id);
-        return newSet;
-      });
+      setExpandedNodes(prev => new Set([...Array.from(prev), activeParent.id]));
     }
-  }, [activeSection, baseTreeData]);
+  }, [activeSection]);
 
   // Toggle node expansion
   const toggleNode = (nodeId: string) => {

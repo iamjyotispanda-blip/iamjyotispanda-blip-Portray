@@ -1282,7 +1282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/roles", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can create roles
-      if (req.user?.role !== "SystemAdmin" && req.user?.role !== "System Admin" && !req.user?.isSystemAdmin) {
+      if (req.user?.role !== "SystemAdmin") {
         return res.status(403).json({ message: "Access denied. Only System Administrators can create roles." });
       }
 
@@ -1311,7 +1311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/roles/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can update roles
-      if (req.user?.role !== "SystemAdmin" && req.user?.role !== "System Admin" && !req.user?.isSystemAdmin) {
+      if (req.user?.role !== "SystemAdmin") {
         return res.status(403).json({ message: "Access denied. Only System Administrators can update roles." });
       }
 
@@ -1348,7 +1348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/roles/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can toggle role status
-      if (req.user?.role !== "SystemAdmin" && req.user?.role !== "System Admin" && !req.user?.isSystemAdmin) {
+      if (req.user?.role !== "SystemAdmin") {
         return res.status(403).json({ message: "Access denied. Only System Administrators can toggle role status." });
       }
 
@@ -1369,7 +1369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/roles/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can delete roles
-      if (req.user?.role !== "SystemAdmin" && req.user?.role !== "System Admin" && !req.user?.isSystemAdmin) {
+      if (req.user?.role !== "SystemAdmin") {
         return res.status(403).json({ message: "Access denied. Only System Administrators can delete roles." });
       }
 

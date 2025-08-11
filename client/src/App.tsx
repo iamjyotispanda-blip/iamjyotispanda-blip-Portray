@@ -16,7 +16,7 @@ import PortContactsPage from "@/pages/port-contacts";
 import PortAdminVerificationPage from "@/pages/port-admin-verification";
 import PortAdminDashboard from "@/pages/port-admin-dashboard";
 import EmailConfigurationPage from "@/pages/email-configuration";
-import MenuManagementPage from "@/pages/menu-management-simple";
+import MenuManagementPage from "@/pages/menu-management";
 import PageManagementPage from "@/pages/page-management";
 import OrganizationsPage from "@/pages/organizations";
 import VerifyPage from "@/pages/verify";
