@@ -54,8 +54,17 @@ export function usePermissions() {
       ];
     }
 
-    // Parse role-based permissions
+    // Parse role-based permissions from role data
+    // For now, get permissions from user object or assume full permissions for System Admin
     const rolePermissions = user.user.rolePermissions || [];
+    
+    // If no role permissions defined but user is System Admin, grant all permissions
+    if (rolePermissions.length === 0 && (user.user.isSystemAdmin || user.user.role === "SystemAdmin" || user.user.role === "System Admin")) {
+      return [
+        { section: "*", levels: ['read', 'write', 'manage'] }
+      ];
+    }
+    
     return parsePermissions(rolePermissions);
   };
 

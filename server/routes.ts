@@ -138,7 +138,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get current user endpoint
   app.get("/api/auth/me", authenticateToken, async (req: Request, res: Response) => {
-    res.json({ user: req.user });
+    try {
+      const user = req.user;
+      let userWithPermissions = { ...user };
+
+      // If user has a role, fetch the role permissions
+      if (user.role) {
+        const role = await storage.getRoleByName(user.role);
+        if (role && role.permissions) {
+          userWithPermissions.rolePermissions = role.permissions;
+        }
+      }
+
+      res.json({ user: userWithPermissions });
+    } catch (error) {
+      console.error("Get user me error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   // Refresh token endpoint
