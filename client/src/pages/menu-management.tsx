@@ -241,7 +241,7 @@ export default function MenuManagementPage() {
                 .filter(menu => menu.isActive && menu.menuType === 'glink')
                 .sort((a, b) => a.sortOrder - b.sortOrder)
                 .map((menu) => {
-                  const IconComponent = getIconComponent(menu.icon) as React.ComponentType<{ className?: string }>;
+                  const IconComponent = getIconComponent(menu.icon) as any;
                   return (
                     <SelectItem key={menu.id} value={menu.id.toString()}>
                       <div className="flex items-center space-x-2">
@@ -296,10 +296,10 @@ export default function MenuManagementPage() {
         >
           <SelectTrigger id="icon">
             <SelectValue placeholder="Select an icon">
-              {formData.icon && (
+              {formData.icon && formData.icon !== "no-icon" && (
                 <div className="flex items-center space-x-2">
                   {(() => {
-                    const IconComponent = getIconComponent(formData.icon) as React.ComponentType<{ className?: string }>;
+                    const IconComponent = getIconComponent(formData.icon) as any;
                     return <IconComponent className="h-4 w-4" />;
                   })()}
                   <span>{formData.icon}</span>
@@ -315,7 +315,7 @@ export default function MenuManagementPage() {
               </div>
             </SelectItem>
             {iconOptions.map((iconOption) => {
-              const IconComponent = iconOption.component;
+              const IconComponent = iconOption.component as any;
               return (
                 <SelectItem key={iconOption.name} value={iconOption.name}>
                   <div className="flex items-center space-x-2">
