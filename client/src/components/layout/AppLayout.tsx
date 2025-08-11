@@ -34,9 +34,11 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   // System Configuration Dropdown Component
   const SystemConfigDropdown = () => {
-    const { data: allMenus = [] } = useQuery<MenuType[]>({
+    const { data: allMenus = [], isLoading, error } = useQuery<MenuType[]>({
       queryKey: ["/api/menus"],
     });
+
+    console.log('SystemConfigDropdown rendering - allMenus:', allMenus.length, 'isLoading:', isLoading, 'error:', error);
 
     // Get system configuration menus
     const systemConfigParent = allMenus.find(menu => menu.name === 'system-config');
@@ -66,16 +68,21 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="relative">
+          <Button variant="ghost" size="sm" className="relative" data-testid="system-config-dropdown">
             <Settings className="h-5 w-5" />
+            {isLoading && <span className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full animate-pulse" />}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b">
-            System Configuration
+            System Configuration {isLoading && '(Loading...)'}
           </div>
-          {systemConfigMenus.length === 0 ? (
-            <div className="px-3 py-2 text-xs text-gray-500">No menu items found</div>
+          {isLoading ? (
+            <div className="px-3 py-2 text-xs text-gray-500">Loading menu items...</div>
+          ) : error ? (
+            <div className="px-3 py-2 text-xs text-red-500">Error loading menu items</div>
+          ) : systemConfigMenus.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-gray-500">No menu items found (Total menus: {allMenus.length})</div>
           ) : (
             systemConfigMenus.map((menu) => {
               const IconComponent = getIconComponent(menu.icon);
