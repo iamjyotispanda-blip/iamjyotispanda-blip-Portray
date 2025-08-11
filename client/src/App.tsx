@@ -31,6 +31,7 @@ import RolesPage from "@/pages/roles";
 import UsersPage from "@/pages/users";
 import ProfilePage from "@/pages/profile";
 import PermissionAssignmentPage from "@/pages/permission-assignment";
+import DynamicPermissionsPage from "@/pages/dynamic-permissions";
 import CustomersPage from "@/pages/customers";
 import ContractsPage from "@/pages/contracts";
 import ContractDetails from "@/pages/contract-details";
@@ -159,6 +160,9 @@ function Router() {
       </Route>
       <Route path="/permission-assignment">
         {() => <ProtectedRoute component={PermissionAssignmentPage} />}
+      </Route>
+      <Route path="/dynamic-permissions">
+        {() => <ProtectedRoute component={DynamicPermissionsPage} />}
       </Route>
       <Route path="/customers">
         {() => <ProtectedRoute component={CustomersPage} />}

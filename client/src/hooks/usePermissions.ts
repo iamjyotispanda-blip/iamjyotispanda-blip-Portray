@@ -1,153 +1,219 @@
 import { useQuery } from "@tanstack/react-query";
 import { AuthService } from "@/lib/auth";
-import { PermissionService, type PermissionLevel } from "@/lib/permissions";
-import { apiRequest } from "@/lib/queryClient";
-import type { Role, User } from "@shared/schema";
+
+export interface Permission {
+  section: string;
+  subsection?: string;
+  levels: ('read' | 'write' | 'manage')[];
+}
 
 export function usePermissions() {
-  // Get current user
-  const { data: user } = useQuery<User>({
+  // Get current user data with permissions
+  const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
-    queryFn: AuthService.getCurrentUser,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Get user's role with permissions
-  const { data: userRole } = useQuery<Role>({
-    queryKey: ["/api/roles", user?.roleId],
-    queryFn: async () => {
-      if (!user?.roleId) return null;
-      try {
-        const response = await apiRequest("GET", `/api/roles/${user.roleId}`);
-        return await response.json();
-      } catch (error) {
-        console.error("Failed to fetch user role:", error);
-        return null;
+  // Parse permission string into structured format
+  const parsePermissions = (permissions: string[]): Permission[] => {
+    return permissions.map(permission => {
+      const parts = permission.split(':');
+      const levels = parts[parts.length - 1].split(',') as ('read' | 'write' | 'manage')[];
+      
+      if (parts.length === 2) {
+        // Simple permission: "dashboard:read,write"
+        return {
+          section: parts[0],
+          levels,
+        };
+      } else if (parts.length === 3) {
+        // Nested permission: "users-access:users:read,write,manage"
+        return {
+          section: parts[0],
+          subsection: parts[1],
+          levels,
+        };
+      } else {
+        // Fallback for malformed permissions
+        return {
+          section: parts[0] || permission,
+          levels: ['read'],
+        };
       }
-    },
-    enabled: !!user?.roleId,
-  });
+    });
+  };
+
+  // Get user's permissions
+  const getUserPermissions = (): Permission[] => {
+    if (!user || !user.user?.role) return [];
+    
+    // System admin has all permissions
+    if (user.user.isSystemAdmin || user.user.role === "SystemAdmin" || user.user.role === "System Admin") {
+      return [
+        { section: "*", levels: ['read', 'write', 'manage'] }
+      ];
+    }
+
+    // Parse role-based permissions
+    const rolePermissions = user.user.rolePermissions || [];
+    return parsePermissions(rolePermissions);
+  };
+
+  // Check if user has specific permission level
+  const hasPermission = (section: string, subsection?: string, level: 'read' | 'write' | 'manage' = 'read'): boolean => {
+    const permissions = getUserPermissions();
+    
+    // System admin check
+    const hasWildcard = permissions.some(p => p.section === "*");
+    if (hasWildcard) return true;
+
+    // Level hierarchy: manage > write > read
+    const levelHierarchy = { read: 0, write: 1, manage: 2 };
+    const requiredLevel = levelHierarchy[level];
+
+    return permissions.some(permission => {
+      // Check section match
+      const sectionMatch = permission.section === section;
+      if (!sectionMatch) return false;
+
+      // Check subsection match if provided
+      if (subsection && permission.subsection !== subsection) {
+        return false;
+      }
+
+      // Check if user has required level or higher
+      return permission.levels.some(userLevel => {
+        return levelHierarchy[userLevel] >= requiredLevel;
+      });
+    });
+  };
+
+  // Convenience functions for common permission checks
+  const canRead = (section: string, subsection?: string): boolean => {
+    return hasPermission(section, subsection, 'read');
+  };
+
+  const canWrite = (section: string, subsection?: string): boolean => {
+    return hasPermission(section, subsection, 'write');
+  };
+
+  const canManage = (section: string, subsection?: string): boolean => {
+    return hasPermission(section, subsection, 'manage');
+  };
+
+  const canEdit = (section: string, subsection?: string): boolean => {
+    return canWrite(section, subsection);
+  };
+
+  const canDelete = (section: string, subsection?: string): boolean => {
+    return canManage(section, subsection);
+  };
+
+  const canCreate = (section: string, subsection?: string): boolean => {
+    return canWrite(section, subsection);
+  };
+
+  // Check multiple permissions at once
+  const hasAnyPermission = (checks: Array<{ section: string; subsection?: string; level?: 'read' | 'write' | 'manage' }>): boolean => {
+    return checks.some(check => hasPermission(check.section, check.subsection, check.level));
+  };
+
+  const hasAllPermissions = (checks: Array<{ section: string; subsection?: string; level?: 'read' | 'write' | 'manage' }>): boolean => {
+    return checks.every(check => hasPermission(check.section, check.subsection, check.level));
+  };
+
+  // Get user's role information
+  const getUserRole = () => {
+    return {
+      name: (user && user.user?.role) || '',
+      isSystemAdmin: (user && user.user?.isSystemAdmin) || false,
+      isAuthenticated: AuthService.isAuthenticated(),
+    };
+  };
+
+  // Get permission summary for current user
+  const getPermissionSummary = () => {
+    const permissions = getUserPermissions();
+    const summary = {
+      totalPermissions: permissions.length,
+      readCount: 0,
+      writeCount: 0,
+      manageCount: 0,
+      sections: new Set<string>(),
+    };
+
+    permissions.forEach(permission => {
+      summary.sections.add(permission.section);
+      permission.levels.forEach(level => {
+        summary[`${level}Count` as keyof typeof summary]++;
+      });
+    });
+
+    return {
+      ...summary,
+      sections: Array.from(summary.sections),
+    };
+  };
 
   return {
-    user,
-    userRole,
+    // Basic permission checks
+    hasPermission,
+    canRead,
+    canWrite,
+    canEdit,
+    canManage,
+    canDelete,
+    canCreate,
     
-    /**
-     * Check if user has specific permission level for a menu item
-     */
-    hasPermission: (
-      menuName: string,
-      permissionType: 'read' | 'write' | 'manage',
-      parentMenuName?: string
-    ): boolean => {
-      return PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        permissionType,
-        parentMenuName
-      );
-    },
-
-    /**
-     * Get all permission levels for a menu item
-     */
-    getPermissionLevels: (
-      menuName: string,
-      parentMenuName?: string
-    ): PermissionLevel => {
-      return PermissionService.getPermissionLevels(
-        userRole || null,
-        user || null,
-        menuName,
-        parentMenuName
-      );
-    },
-
-    /**
-     * Check if user has any access to a menu
-     */
-    hasAnyPermission: (
-      menuName: string,
-      parentMenuName?: string
-    ): boolean => {
-      return PermissionService.hasAnyPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        parentMenuName
-      );
-    },
-
-    /**
-     * Check if user can perform create operations
-     */
-    canCreate: (menuName: string, parentMenuName?: string): boolean => {
-      return PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        'write',
-        parentMenuName
-      );
-    },
-
-    /**
-     * Check if user can perform edit operations
-     */
-    canEdit: (menuName: string, parentMenuName?: string): boolean => {
-      return PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        'write',
-        parentMenuName
-      ) || PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        'manage',
-        parentMenuName
-      );
-    },
-
-    /**
-     * Check if user can perform delete/manage operations
-     */
-    canManage: (menuName: string, parentMenuName?: string): boolean => {
-      return PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        'manage',
-        parentMenuName
-      );
-    },
-
-    /**
-     * Check if user can view/read
-     */
-    canRead: (menuName: string, parentMenuName?: string): boolean => {
-      return PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        'read',
-        parentMenuName
-      ) || PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        'write',
-        parentMenuName
-      ) || PermissionService.hasPermission(
-        userRole || null,
-        user || null,
-        menuName,
-        'manage',
-        parentMenuName
-      );
-    },
-
-    isLoading: !user || !userRole,
+    // Advanced permission checks
+    hasAnyPermission,
+    hasAllPermissions,
+    
+    // User information
+    getUserRole,
+    getUserPermissions,
+    getPermissionSummary,
+    
+    // Computed values
+    isSystemAdmin: getUserRole().isSystemAdmin,
+    userRole: getUserRole().name,
+    isAuthenticated: getUserRole().isAuthenticated,
   };
+}
+
+// Permission checking utility functions for conditional logic
+export function checkPermissionCondition(
+  userPermissions: Permission[],
+  isSystemAdmin: boolean,
+  section: string,
+  subsection?: string,
+  level: 'read' | 'write' | 'manage' = 'read'
+): boolean {
+  // System admin has all permissions
+  if (isSystemAdmin) return true;
+
+  // Check for wildcard permission
+  const hasWildcard = userPermissions.some(p => p.section === "*");
+  if (hasWildcard) return true;
+
+  // Level hierarchy: manage > write > read
+  const levelHierarchy = { read: 0, write: 1, manage: 2 };
+  const requiredLevel = levelHierarchy[level];
+
+  return userPermissions.some(permission => {
+    // Check section match
+    if (permission.section !== section && permission.section !== "*") {
+      return false;
+    }
+
+    // Check subsection match if provided
+    if (subsection && permission.subsection && permission.subsection !== subsection) {
+      return false;
+    }
+
+    // Check if user has required level or higher
+    return permission.levels.some(userLevel => {
+      return levelHierarchy[userLevel] >= requiredLevel;
+    });
+  });
 }
