@@ -92,6 +92,7 @@ const SYSTEM_PAGES: PageInfo[] = [
   { id: "page-management", name: "page-management", title: "Page Management", route: "/configuration/pages", category: "System Configuration", icon: "FileText", description: "System page management and control", isActive: true, isSystem: false },
   { id: "role-management", name: "role-management", title: "Role Management", route: "/roles", category: "System Configuration", icon: "Shield", description: "User roles and permissions management", isActive: true, isSystem: false },
   { id: "user-management", name: "user-management", title: "User Management", route: "/users", category: "System Configuration", icon: "Users", description: "User account administration", isActive: true, isSystem: false },
+  { id: "permission-assignment", name: "permission-assignment", title: "Permission Assignment", route: "/permission-assignment", category: "System Configuration", icon: "Shield", description: "Assign permissions to users and roles", isActive: true, isSystem: false },
   
   // Other System Pages
   { id: "profile", name: "profile", title: "User Profile", route: "/profile", category: "User Management", icon: "Users", description: "User profile management", isActive: true, isSystem: false },
