@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { 
   Search, Plus, Edit, Trash2, Eye, EyeOff, ExternalLink, Settings,
   Home, Building2, MapPin, Users, Ship, CheckCircle, Mail, Menu,
-  Shield, FileText, Calendar, Clock, Database, BarChart3
+  Shield, FileText, Calendar, Clock, Database, BarChart3, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,60 +50,63 @@ interface PageInfo {
   menuName?: string; // Name of the corresponding menu
 }
 
-// Complete list of all pages in the system
-const SYSTEM_PAGES: PageInfo[] = [
-  // Authentication Pages
-  { id: "login", name: "login", title: "Login", route: "/login", category: "Authentication", icon: "Home", description: "User authentication and login", isActive: true, isSystem: true },
-  { id: "setup-password", name: "setup-password", title: "Setup Password", route: "/setup-password", category: "Authentication", icon: "Shield", description: "Password setup for new users", isActive: true, isSystem: true },
-  
-  // Dashboard Pages
-  { id: "dashboard", name: "dashboard", title: "Dashboard", route: "/dashboard", category: "Dashboard", icon: "Home", description: "Main dashboard overview", isActive: true, isSystem: false },
-  { id: "port-admin-dashboard", name: "port-admin-dashboard", title: "Port Admin Dashboard", route: "/port-admin-dashboard", category: "Dashboard", icon: "Ship", description: "Port administrator dashboard", isActive: true, isSystem: false },
-  
-  // Organization Management
-  { id: "organizations", name: "organizations", title: "Organizations", route: "/organizations", category: "Organization", icon: "Building2", description: "Organization management and listing", isActive: true, isSystem: false },
-  { id: "organization-new", name: "organization-new", title: "New Organization", route: "/organizations/new", category: "Organization", icon: "Plus", description: "Create new organization", isActive: true, isSystem: false },
-  { id: "organization-edit", name: "organization-edit", title: "Edit Organization", route: "/organizations/edit/:id", category: "Organization", icon: "Edit", description: "Edit organization details", isActive: true, isSystem: false },
-  { id: "organization-details", name: "organization-details", title: "Organization Details", route: "/organizations/:id", category: "Organization", icon: "Eye", description: "View organization details", isActive: true, isSystem: false },
-  
-  // Port Management
-  { id: "ports", name: "ports", title: "Ports", route: "/ports", category: "Port Management", icon: "MapPin", description: "Port management and listing", isActive: true, isSystem: false },
-  { id: "port-new", name: "port-new", title: "New Port", route: "/ports/new", category: "Port Management", icon: "Plus", description: "Create new port", isActive: true, isSystem: false },
-  { id: "port-edit", name: "port-edit", title: "Edit Port", route: "/ports/edit/:id", category: "Port Management", icon: "Edit", description: "Edit port details", isActive: true, isSystem: false },
-  { id: "port-details", name: "port-details", title: "Port Details", route: "/ports/:id", category: "Port Management", icon: "Eye", description: "View port details", isActive: true, isSystem: false },
-  
-  // Terminal Management
-  { id: "terminals", name: "terminals", title: "Terminals", route: "/terminals", category: "Terminal Management", icon: "CheckCircle", description: "Terminal management and listing", isActive: true, isSystem: false },
-  { id: "terminal-activation", name: "terminal-activation", title: "Terminal Activation", route: "/terminal-activation", category: "Terminal Management", icon: "CheckCircle", description: "Terminal activation management", isActive: true, isSystem: false },
-  
-  // Customer & Contract Management
-  { id: "customers", name: "customers", title: "Customers", route: "/customers", category: "Customer Management", icon: "Users", description: "Customer management and listing", isActive: true, isSystem: false },
-  { id: "customer-new", name: "customer-new", title: "New Customer", route: "/customers/new", category: "Customer Management", icon: "Plus", description: "Create new customer", isActive: true, isSystem: false },
-  { id: "customer-edit", name: "customer-edit", title: "Edit Customer", route: "/customers/edit/:id", category: "Customer Management", icon: "Edit", description: "Edit customer details", isActive: true, isSystem: false },
-  { id: "customer-details", name: "customer-details", title: "Customer Details", route: "/customers/:id", category: "Customer Management", icon: "Eye", description: "View customer details", isActive: true, isSystem: false },
-  { id: "contracts", name: "contracts", title: "Contracts", route: "/contracts", category: "Contract Management", icon: "FileText", description: "Contract management and listing", isActive: true, isSystem: false },
-  { id: "contract-new", name: "contract-new", title: "New Contract", route: "/contracts/new", category: "Contract Management", icon: "Plus", description: "Create new contract", isActive: true, isSystem: false },
-  { id: "contract-edit", name: "contract-edit", title: "Edit Contract", route: "/contracts/edit/:id", category: "Contract Management", icon: "Edit", description: "Edit contract details", isActive: true, isSystem: false },
-  { id: "contract-details", name: "contract-details", title: "Contract Details", route: "/contracts/:id", category: "Contract Management", icon: "Eye", description: "View contract details with tabs", isActive: true, isSystem: false },
-  
-  // System Configuration
-  { id: "email-config", name: "email-config", title: "Email Configuration", route: "/configuration/email", category: "System Configuration", icon: "Mail", description: "SMTP email configuration management", isActive: true, isSystem: false },
-  { id: "menu-management", name: "menu-management", title: "Menu Management", route: "/configuration/menu", category: "System Configuration", icon: "Menu", description: "Navigation menu structure management", isActive: true, isSystem: false },
-  { id: "page-management", name: "page-management", title: "Page Management", route: "/configuration/pages", category: "System Configuration", icon: "FileText", description: "System page management and control", isActive: true, isSystem: false },
-  { id: "role-management", name: "role-management", title: "Role Management", route: "/roles", category: "System Configuration", icon: "Shield", description: "User roles and permissions management", isActive: true, isSystem: false },
-  { id: "user-management", name: "user-management", title: "User Management", route: "/users", category: "System Configuration", icon: "Users", description: "User account administration", isActive: true, isSystem: false },
-  { id: "permission-assignment", name: "permission-assignment", title: "Permission Assignment", route: "/permission-assignment", category: "System Configuration", icon: "Shield", description: "Assign permissions to users and roles", isActive: true, isSystem: false },
-  
-  // Other System Pages
-  { id: "profile", name: "profile", title: "User Profile", route: "/profile", category: "User Management", icon: "Users", description: "User profile management", isActive: true, isSystem: false },
-  { id: "notifications", name: "notifications", title: "Notifications", route: "/notifications", category: "System", icon: "Bell", description: "Notification center and management", isActive: true, isSystem: false },
-];
+// Dynamic page discovery from actual routes
+const getAllSystemPages = (): PageInfo[] => {
+  return [
+    // Authentication Pages
+    { id: "login", name: "login", title: "Login", route: "/login", category: "Authentication", icon: "Home", description: "User authentication and login", isActive: true, isSystem: true },
+    { id: "verify", name: "verify", title: "Email Verification", route: "/verify", category: "Authentication", icon: "Shield", description: "Email verification for new users", isActive: true, isSystem: true },
+    { id: "verify-email", name: "verify-email", title: "Verify Email", route: "/verify-email", category: "Authentication", icon: "Shield", description: "Email verification page", isActive: true, isSystem: true },
+    { id: "setup-password", name: "setup-password", title: "Setup Password", route: "/setup-password", category: "Authentication", icon: "Shield", description: "Password setup for new users", isActive: true, isSystem: true },
+    { id: "port-admin-verification", name: "port-admin-verification", title: "Port Admin Verification", route: "/port-admin-verification", category: "Authentication", icon: "Shield", description: "Port admin verification page", isActive: true, isSystem: true },
+    
+    // Dashboard Pages
+    { id: "dashboard", name: "dashboard", title: "Dashboard", route: "/dashboard", category: "Dashboard", icon: "Home", description: "Main dashboard overview", isActive: true, isSystem: false },
+    { id: "port-admin-dashboard", name: "port-admin-dashboard", title: "Port Admin Dashboard", route: "/port-admin-dashboard", category: "Dashboard", icon: "Ship", description: "Port administrator dashboard", isActive: true, isSystem: false },
+    { id: "portal-welcome", name: "portal-welcome", title: "Portal Welcome", route: "/portal/welcome", category: "Dashboard", icon: "Home", description: "Welcome portal page", isActive: true, isSystem: false },
+    
+    // Organization Management
+    { id: "organizations", name: "organizations", title: "Organizations", route: "/organizations", category: "Organization Management", icon: "Building2", description: "Organization management and listing", isActive: true, isSystem: false },
+    
+    // Port Management
+    { id: "ports", name: "ports", title: "Ports", route: "/ports", category: "Port Management", icon: "MapPin", description: "Port management and listing", isActive: true, isSystem: false },
+    { id: "port-new", name: "port-new", title: "New Port", route: "/ports/new", category: "Port Management", icon: "Plus", description: "Create new port", isActive: true, isSystem: false },
+    { id: "port-edit", name: "port-edit", title: "Edit Port", route: "/ports/edit/:id", category: "Port Management", icon: "Edit", description: "Edit port details", isActive: true, isSystem: false },
+    { id: "port-contacts", name: "port-contacts", title: "Port Contacts", route: "/ports/:portId/contacts", category: "Port Management", icon: "Users", description: "Manage port administrator contacts", isActive: true, isSystem: false },
+    
+    // Terminal Management
+    { id: "terminals", name: "terminals", title: "Terminals", route: "/terminals", category: "Terminal Management", icon: "CheckCircle", description: "Terminal management and listing", isActive: true, isSystem: false },
+    { id: "terminal-new", name: "terminal-new", title: "New Terminal", route: "/terminals/new", category: "Terminal Management", icon: "Plus", description: "Create new terminal", isActive: true, isSystem: false },
+    { id: "terminal-edit", name: "terminal-edit", title: "Edit Terminal", route: "/terminals/edit/:id", category: "Terminal Management", icon: "Edit", description: "Edit terminal details", isActive: true, isSystem: false },
+    { id: "terminal-profile", name: "terminal-profile", title: "Terminal Profile", route: "/terminals/:id", category: "Terminal Management", icon: "Eye", description: "View terminal details", isActive: true, isSystem: false },
+    { id: "terminal-activation", name: "terminal-activation", title: "Terminal Activation", route: "/terminal-activation", category: "Terminal Management", icon: "CheckCircle", description: "Terminal activation management", isActive: true, isSystem: false },
+    
+    // Customer & Contract Management
+    { id: "customers", name: "customers", title: "Customers", route: "/customers", category: "Customer Management", icon: "Users", description: "Customer management and listing", isActive: true, isSystem: false },
+    { id: "customer-contracts", name: "customer-contracts", title: "Customer Contracts", route: "/customers/:customerId/contracts/:contractId?", category: "Customer Management", icon: "FileText", description: "Customer contract details with tabs", isActive: true, isSystem: false },
+    { id: "contracts", name: "contracts", title: "Contracts", route: "/contracts", category: "Contract Management", icon: "FileText", description: "Contract management and listing", isActive: true, isSystem: false },
+    
+    // System Configuration
+    { id: "email-configuration", name: "email-configuration", title: "Email Configuration", route: "/configuration/email", category: "System Configuration", icon: "Mail", description: "SMTP email configuration management", isActive: true, isSystem: false },
+    { id: "menu-management", name: "menu-management", title: "Menu Management", route: "/configuration/menu", category: "System Configuration", icon: "Menu", description: "Navigation menu structure management", isActive: true, isSystem: false },
+    { id: "page-management", name: "page-management", title: "Page Management", route: "/configuration/pages", category: "System Configuration", icon: "FileText", description: "System page management and control", isActive: true, isSystem: false },
+    
+    // User & Role Management
+    { id: "roles", name: "roles", title: "Role Management", route: "/roles", category: "User & Role Management", icon: "Shield", description: "User roles and permissions management", isActive: true, isSystem: false },
+    { id: "users", name: "users", title: "User Management", route: "/users", category: "User & Role Management", icon: "Users", description: "User account administration", isActive: true, isSystem: false },
+    { id: "permission-assignment", name: "permission-assignment", title: "Permission Assignment", route: "/permission-assignment", category: "User & Role Management", icon: "Shield", description: "Assign permissions to users and roles", isActive: true, isSystem: false },
+    
+    // Other System Pages
+    { id: "notifications", name: "notifications", title: "Notifications", route: "/notifications", category: "System", icon: "Bell", description: "Notification center and management", isActive: true, isSystem: false },
+    { id: "profile", name: "profile", title: "User Profile", route: "/profile", category: "User Management", icon: "Users", description: "User profile management", isActive: true, isSystem: false },
+  ];
+};
 
 const getIconComponent = (iconName: string) => {
   const iconMap: Record<string, any> = {
     Home, Building2, MapPin, Users, Ship, CheckCircle, Mail, Menu,
     Shield, FileText, Calendar, Clock, Database, BarChart3, Plus, Edit,
-    Eye, Trash2, Search, Settings, ExternalLink
+    Eye, Trash2, Search, Settings, ExternalLink, Bell
   };
   return iconMap[iconName] || FileText;
 };
@@ -122,6 +125,7 @@ export default function PageManagementPage() {
 
   // Initialize pages with database menu integration
   useEffect(() => {
+    const SYSTEM_PAGES = getAllSystemPages();
     const updatedPages = SYSTEM_PAGES.map(page => {
       // Find corresponding menu item by matching page name with menu name
       const correspondingMenu = Array.isArray(menuData) ? 
