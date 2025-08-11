@@ -94,6 +94,7 @@ export default function MenuManagementPage() {
       setShowEditForm(false);
     },
     onError: (error: any) => {
+      console.error("Menu save error:", error);
       toast({
         title: "Error",
         description: error.message || `Failed to ${editingMenu ? 'update' : 'create'} menu`,
@@ -132,13 +133,13 @@ export default function MenuManagementPage() {
   const handleEdit = useCallback((menu: Menu) => {
     setEditingMenu(menu);
     setFormData({
-      name: menu.name,
-      label: menu.label,
+      name: menu.name || '',
+      label: menu.label || '',
       icon: menu.icon || '',
       route: menu.route || '',
-      sortOrder: menu.sortOrder,
-      menuType: menu.menuType as 'glink' | 'plink',
-      parentId: menu.parentId,
+      sortOrder: menu.sortOrder || 0,
+      menuType: (menu.menuType as 'glink' | 'plink') || 'glink',
+      parentId: menu.parentId || null,
       isSystemConfig: menu.isSystemConfig || false
     });
     setShowEditForm(true);
