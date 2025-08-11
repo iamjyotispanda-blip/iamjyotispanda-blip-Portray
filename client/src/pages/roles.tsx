@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Shield, Edit, ToggleLeft, ToggleRight, Trash2, Search, Users } from "lucide-react";
+import { Plus, Shield, Edit, ToggleLeft, ToggleRight, Trash2, Search, Users, Settings, Eye, Pencil, Wrench } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,89 @@ interface RoleFormData {
   isActive: boolean;
 }
 
+interface PermissionTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  permissions: string[];
+}
+
+// Dynamic permission templates for different roles
+const PERMISSION_TEMPLATES: PermissionTemplate[] = [
+  {
+    id: "system-admin",
+    name: "System Administrator",
+    description: "Full system access with all permissions",
+    category: "System",
+    permissions: [
+      "dashboard:read,write,manage",
+      "users-access:users:read,write,manage",
+      "users-access:roles:read,write,manage",
+      "users-access:permissions:read,write,manage",
+      "configuration:system:read,write,manage",
+      "configuration:email:read,write,manage",
+      "configuration:pages:read,write,manage",
+      "menu-management:read,write,manage"
+    ]
+  },
+  {
+    id: "port-admin",
+    name: "Port Administrator",
+    description: "Port-level administration with limited system access",
+    category: "Port Management",
+    permissions: [
+      "dashboard:read,write",
+      "port-management:ports:read,write,manage",
+      "port-management:terminals:read,write,manage",
+      "customers:read,write,manage",
+      "contracts:read,write,manage"
+    ]
+  },
+  {
+    id: "terminal-operator",
+    name: "Terminal Operator",
+    description: "Terminal operations with limited access",
+    category: "Operations",
+    permissions: [
+      "dashboard:read",
+      "terminals:operations:read,write",
+      "vessel-management:read,write",
+      "cargo-handling:read,write"
+    ]
+  },
+  {
+    id: "customer-user",
+    name: "Customer User",
+    description: "Customer portal access with read-only permissions",
+    category: "Customer",
+    permissions: [
+      "dashboard:read",
+      "contracts:read",
+      "invoices:read",
+      "reports:read"
+    ]
+  },
+  {
+    id: "supervisor",
+    name: "Supervisor",
+    description: "Supervisory access with reporting capabilities",
+    category: "Management",
+    permissions: [
+      "dashboard:read,write",
+      "reports:read,write",
+      "users:read",
+      "operations:read,write"
+    ]
+  }
+];
+
+const PERMISSION_LEVELS = [
+  { value: "read", label: "Read", icon: Eye, color: "bg-blue-100 text-blue-800" },
+  { value: "write", label: "Write", icon: Pencil, color: "bg-green-100 text-green-800" },
+  { value: "manage", label: "Manage", icon: Wrench, color: "bg-purple-100 text-purple-800" }
+];
+
 export function RolesContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -60,6 +144,8 @@ export function RolesContent() {
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [selectedGLink, setSelectedGLink] = useState<string>("");
   const [selectedPLink, setSelectedPLink] = useState<string>("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("roles");
   const [permissionLevels, setPermissionLevels] = useState({
     read: false,
     write: false,
@@ -322,25 +408,45 @@ export function RolesContent() {
     });
   };
 
+  // Handle template selection
+  const handleTemplateSelect = (template: PermissionTemplate) => {
+    setFormData({
+      ...formData,
+      name: template.name.replace(/\s+/g, ''),
+      displayName: template.name,
+      description: template.description,
+      permissions: [...template.permissions]
+    });
+    setSelectedTemplate(template.id);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <div className="border-b border-gray-200 dark:border-gray-700">
-        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Roles</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Roles & Permissions</span>
       </div>
       
       <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search roles..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                data-testid="input-search-roles"
-              />
-            </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="roles">Role Management</TabsTrigger>
+            <TabsTrigger value="templates">Permission Templates</TabsTrigger>
+            <TabsTrigger value="statistics">Statistics</TabsTrigger>
+          </TabsList>
+          
+          {/* Roles Tab */}
+          <TabsContent value="roles" className="space-y-2 mt-4">
+            <div className="flex justify-between items-center">
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search roles..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-search-roles"
+                />
+              </div>
             {canCreate("roles", "user-access") && (
               <Sheet open={showAddForm} onOpenChange={setShowAddForm}>
                 <SheetTrigger asChild>
@@ -358,6 +464,32 @@ export function RolesContent() {
                 </SheetHeader>
                 
                 <div className="space-y-4 mt-6 pb-6">
+                  {/* Permission Template Selection */}
+                  <div className="space-y-2">
+                    <Label>Start with Template (Optional)</Label>
+                    <Select value={selectedTemplate} onValueChange={(value) => {
+                      const template = PERMISSION_TEMPLATES.find(t => t.id === value);
+                      if (template) handleTemplateSelect(template);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a role template or create from scratch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PERMISSION_TEMPLATES.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{template.name}</span>
+                              <span className="text-xs text-gray-500">{template.category} • {template.permissions.length} permissions</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedTemplate && (
+                      <p className="text-sm text-blue-600">Template applied! You can customize the role below.</p>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="name">Role Name *</Label>
                     <Input
@@ -620,6 +752,7 @@ export function RolesContent() {
               })
             )}
           </div>
+          </TabsContent>
 
           {/* Edit Form Sheet */}
           <Sheet open={showEditForm} onOpenChange={(open) => {
@@ -861,7 +994,145 @@ export function RolesContent() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
+
+          {/* Templates Tab */}
+          <TabsContent value="templates" className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {PERMISSION_TEMPLATES.map((template) => (
+                <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Shield className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{template.name}</CardTitle>
+                          <Badge variant="outline" className="mt-1 text-xs">
+                            {template.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-gray-600">{template.description}</p>
+                    
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Permissions ({template.permissions.length}):</p>
+                      <div className="flex flex-wrap gap-1">
+                        {template.permissions.slice(0, 3).map((permission, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {permission.split(':')[0]}
+                          </Badge>
+                        ))}
+                        {template.permissions.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{template.permissions.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={() => {
+                        handleTemplateSelect(template);
+                        setShowAddForm(true);
+                        setActiveTab("roles");
+                      }}
+                    >
+                      Use Template
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Statistics Tab */}
+          <TabsContent value="statistics" className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Shield className="w-8 h-8 text-blue-600" />
+                    <div className="ml-4">
+                      <p className="text-2xl font-bold">{roles.length}</p>
+                      <p className="text-xs text-gray-500">Total Roles</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Users className="w-8 h-8 text-green-600" />
+                    <div className="ml-4">
+                      <p className="text-2xl font-bold">0</p>
+                      <p className="text-xs text-gray-500">Active Users</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Settings className="w-8 h-8 text-purple-600" />
+                    <div className="ml-4">
+                      <p className="text-2xl font-bold">{PERMISSION_TEMPLATES.length}</p>
+                      <p className="text-xs text-gray-500">Templates Available</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Eye className="w-8 h-8 text-orange-600" />
+                    <div className="ml-4">
+                      <p className="text-2xl font-bold">{roles.filter(r => r.isActive).length}</p>
+                      <p className="text-xs text-gray-500">Active Roles</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Permission Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {PERMISSION_LEVELS.map((level) => {
+                    const count = roles.reduce((acc, role) => {
+                      const levelCount = (role.permissions || []).filter(p => 
+                        p.includes(`:${level.value}`) || p.includes(`,${level.value}`)
+                      ).length;
+                      return acc + levelCount;
+                    }, 0);
+                    
+                    const Icon = level.icon;
+                    return (
+                      <div key={level.value} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Icon className="w-4 h-4" />
+                          <span className="capitalize">{level.label} Permissions</span>
+                        </div>
+                        <Badge className={level.color}>{count}</Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
