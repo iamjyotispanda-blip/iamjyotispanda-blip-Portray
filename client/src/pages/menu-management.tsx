@@ -630,7 +630,7 @@ export default function MenuManagementPage() {
   };
 
   const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
-    <div className="space-y-6 pb-8 max-w-none">
+    <form onSubmit={(e) => e.preventDefault()} className="space-y-6 pb-8 max-w-none">
       {/* FIRST FIELD: System Configuration Flag */}
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
@@ -949,7 +949,7 @@ export default function MenuManagementPage() {
           {saveMenuMutation.isPending ? "Saving..." : (isEdit ? "Update" : "Create")}
         </Button>
       </div>
-    </div>
+    </form>
   );
 
   return (
