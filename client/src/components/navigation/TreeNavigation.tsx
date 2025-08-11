@@ -28,7 +28,6 @@ interface TreeNavigationProps {
 export function TreeNavigation({ activeSection, onNavigate, collapsed = false }: TreeNavigationProps) {
   const [, setLocation] = useLocation();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [treeData, setTreeData] = useState<TreeNodeData[]>([]);
 
   // Get current user
   const { data: user } = useQuery<User>({
@@ -100,8 +99,8 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     return (IconComp as React.ComponentType<any>) || Home;
   };
 
-  // Build tree structure from database menus (without expandedNodes dependency)
-  const buildTreeFromMenus = React.useMemo((): TreeNodeData[] => {
+  // Get tree data directly without complex state management
+  const treeData = React.useMemo((): TreeNodeData[] => {
     if (!allMenus.length) return [];
 
     // Get parent menus (glink type) - include all active menus
@@ -143,39 +142,24 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
         icon: parentMenu.icon,
         route: parentMenu.route,
         children,
-        isExpanded: false, // Will be set separately
+        isExpanded: expandedNodes.has(parentMenu.name),
         level: 0
       };
     });
-  }, [allMenus, userRole]);
+  }, [allMenus, userRole, expandedNodes]);
 
-  // Update tree data with expansion state
-  useEffect(() => {
-    const baseTreeData = buildTreeFromMenus;
-    const updatedTreeData = baseTreeData.map(node => ({
-      ...node,
-      isExpanded: expandedNodes.has(node.name)
-    }));
-    setTreeData(updatedTreeData);
-  }, [buildTreeFromMenus, expandedNodes]);
-
-  // Auto-expand parent node if active section is a child (only when activeSection changes)
-  useEffect(() => {
-    if (activeSection && treeData.length > 0) {
-      const activeParent = treeData.find(node => 
-        node.children.some(child => child.id === activeSection)
-      );
-      
-      if (activeParent && !expandedNodes.has(activeParent.id)) {
-        setExpandedNodes(prev => {
-          if (prev.has(activeParent.id)) return prev; // Already expanded
-          const newSet = new Set(prev);
-          newSet.add(activeParent.id);
-          return newSet;
-        });
-      }
+  // Auto-expand parent node if active section is a child
+  React.useEffect(() => {
+    if (!activeSection || !treeData.length) return;
+    
+    const activeParent = treeData.find(node => 
+      node.children.some(child => child.id === activeSection)
+    );
+    
+    if (activeParent && !expandedNodes.has(activeParent.id)) {
+      setExpandedNodes(prev => new Set([...prev, activeParent.id]));
     }
-  }, [activeSection, treeData]);
+  }, [activeSection]);
 
   // Toggle node expansion
   const toggleNode = (nodeId: string) => {
