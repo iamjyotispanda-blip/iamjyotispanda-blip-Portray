@@ -5,19 +5,106 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Home, Settings, List, LayoutGrid, Plus, Edit, Trash2 } from "lucide-react";
+import { 
+  Home, Settings, List, LayoutGrid, Plus, Edit, Trash2, Users, User, 
+  Building, Ship, Anchor, Package, FileText, Calendar, Mail, Bell,
+  Shield, Key, Database, Server, Globe, MapPin, Truck, Plane,
+  BarChart3, PieChart, Activity, TrendingUp, DollarSign, CreditCard,
+  Clock, Search, Filter, Download, Upload, RefreshCw, Zap,
+  CheckCircle, AlertCircle, Info, HelpCircle, Phone, MessageSquare,
+  Camera, Image, Video, Music, Folder, File, Archive, Tag,
+  Star, Heart, Bookmark, Flag, Award, Target, Compass, Map
+} from "lucide-react";
 import { getIconComponent } from "@/lib/iconRecommendations";
 import type { Menu } from "@shared/schema";
 
 // Icon options for selection
 const iconOptions = [
+  // Navigation & Layout
   { name: "Home", component: Home },
   { name: "Settings", component: Settings },
   { name: "List", component: List },
   { name: "LayoutGrid", component: LayoutGrid },
+  
+  // Actions
   { name: "Plus", component: Plus },
   { name: "Edit", component: Edit },
-  { name: "Trash2", component: Trash2 }
+  { name: "Trash2", component: Trash2 },
+  { name: "Search", component: Search },
+  { name: "Filter", component: Filter },
+  { name: "Download", component: Download },
+  { name: "Upload", component: Upload },
+  { name: "RefreshCw", component: RefreshCw },
+  
+  // People & Organizations
+  { name: "Users", component: Users },
+  { name: "User", component: User },
+  { name: "Building", component: Building },
+  
+  // Port & Maritime
+  { name: "Ship", component: Ship },
+  { name: "Anchor", component: Anchor },
+  
+  // Business & Commerce
+  { name: "Package", component: Package },
+  { name: "Truck", component: Truck },
+  { name: "Plane", component: Plane },
+  { name: "DollarSign", component: DollarSign },
+  { name: "CreditCard", component: CreditCard },
+  
+  // Documents & Communication
+  { name: "FileText", component: FileText },
+  { name: "Mail", component: Mail },
+  { name: "Phone", component: Phone },
+  { name: "MessageSquare", component: MessageSquare },
+  { name: "Bell", component: Bell },
+  
+  // Time & Planning
+  { name: "Calendar", component: Calendar },
+  { name: "Clock", component: Clock },
+  
+  // Security & Access
+  { name: "Shield", component: Shield },
+  { name: "Key", component: Key },
+  
+  // System & Data
+  { name: "Database", component: Database },
+  { name: "Server", component: Server },
+  { name: "Globe", component: Globe },
+  { name: "MapPin", component: MapPin },
+  { name: "Zap", component: Zap },
+  
+  // Analytics & Reports
+  { name: "BarChart3", component: BarChart3 },
+  { name: "PieChart", component: PieChart },
+  { name: "Activity", component: Activity },
+  { name: "TrendingUp", component: TrendingUp },
+  
+  // Status & Alerts
+  { name: "CheckCircle", component: CheckCircle },
+  { name: "AlertCircle", component: AlertCircle },
+  { name: "Info", component: Info },
+  { name: "HelpCircle", component: HelpCircle },
+  
+  // Media & Files
+  { name: "Camera", component: Camera },
+  { name: "Image", component: Image },
+  { name: "Video", component: Video },
+  { name: "Music", component: Music },
+  { name: "Folder", component: Folder },
+  { name: "File", component: File },
+  { name: "Archive", component: Archive },
+  { name: "Tag", component: Tag },
+  
+  // Favorites & Bookmarks
+  { name: "Star", component: Star },
+  { name: "Heart", component: Heart },
+  { name: "Bookmark", component: Bookmark },
+  { name: "Flag", component: Flag },
+  { name: "Award", component: Award },
+  { name: "Target", component: Target },
+  { name: "Compass", component: Compass },
+  { name: "Map", component: Map }
 ];
 
 interface FormData {
