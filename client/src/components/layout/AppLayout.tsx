@@ -39,9 +39,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     });
 
     // Get system configuration menus
-    const systemConfigParent = allMenus.find(menu => menu.name === 'system-config' && menu.menuType === 'glink');
+    const systemConfigParent = allMenus.find(menu => menu.name === 'system-config');
     const systemConfigMenus = allMenus.filter(menu => 
-      menu.menuType === 'plink' && 
       menu.parentId === systemConfigParent?.id &&
       menu.isActive
     ).sort((a, b) => a.sortOrder - b.sortOrder);
@@ -52,6 +51,10 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         case 'Menu': return Menu;
         case 'Shield': return Shield;
         case 'Users': return Users;
+        case 'Bell': return Bell;
+        case 'Zap': return require('lucide-react').Zap;
+        case 'FileText': return require('lucide-react').FileText;
+        case 'Cog': return require('lucide-react').Cog;
         default: return Settings;
       }
     };
