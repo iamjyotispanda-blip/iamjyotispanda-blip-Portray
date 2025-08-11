@@ -136,7 +136,7 @@ export default function MenuManagementPage() {
       icon: menu.icon || '',
       route: menu.route || '',
       sortOrder: menu.sortOrder,
-      menuType: menu.menuType,
+      menuType: menu.menuType as 'glink' | 'plink',
       parentId: menu.parentId,
       isSystemConfig: menu.isSystemConfig || false
     });
@@ -228,7 +228,7 @@ export default function MenuManagementPage() {
                 .filter(menu => menu.isActive && menu.menuType === 'glink')
                 .sort((a, b) => a.sortOrder - b.sortOrder)
                 .map((menu) => {
-                  const IconComponent = getIconComponent(menu.icon);
+                  const IconComponent = getIconComponent(menu.icon) as React.ComponentType<{ className?: string }>;
                   return (
                     <SelectItem key={menu.id} value={menu.id.toString()}>
                       <div className="flex items-center space-x-2">
@@ -253,6 +253,7 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
           autoComplete="off"
+          className="touch-manipulation"
         />
         <p className="text-xs text-gray-500">Used as the unique identifier (lowercase, no spaces)</p>
       </div>
@@ -266,6 +267,7 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, label: e.target.value })}
           placeholder="Dashboard"
           autoComplete="off"
+          className="touch-manipulation"
         />
         <p className="text-xs text-gray-500">Display name shown in navigation</p>
       </div>
@@ -282,7 +284,7 @@ export default function MenuManagementPage() {
               {formData.icon && (
                 <div className="flex items-center space-x-2">
                   {(() => {
-                    const IconComponent = getIconComponent(formData.icon);
+                    const IconComponent = getIconComponent(formData.icon) as React.ComponentType<{ className?: string }>;
                     return <IconComponent className="h-4 w-4" />;
                   })()}
                   <span>{formData.icon}</span>
@@ -322,6 +324,7 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, route: e.target.value })}
           placeholder="/dashboard"
           autoComplete="off"
+          className="touch-manipulation"
         />
         <p className="text-xs text-gray-500">URL path for this menu item</p>
       </div>
@@ -336,6 +339,7 @@ export default function MenuManagementPage() {
           onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
           placeholder="0"
           autoComplete="off"
+          className="touch-manipulation"
         />
         <p className="text-xs text-gray-500">Display order in navigation (lower numbers appear first)</p>
       </div>
@@ -491,7 +495,7 @@ export default function MenuManagementPage() {
                         {filteredMenus
                           .sort((a, b) => a.sortOrder - b.sortOrder)
                           .map((menu) => {
-                            const IconComponent = getIconComponent(menu.icon);
+                            const IconComponent = getIconComponent(menu.icon) as React.ComponentType<{ className?: string }>;
                             return (
                               <TableRow key={menu.id}>
                                 <TableCell>
@@ -548,7 +552,7 @@ export default function MenuManagementPage() {
                   filteredMenus
                     .sort((a, b) => a.sortOrder - b.sortOrder)
                     .map((menu) => {
-                      const IconComponent = getIconComponent(menu.icon);
+                      const IconComponent = getIconComponent(menu.icon) as React.ComponentType<{ className?: string }>;
                       return (
                         <Card key={menu.id}>
                           <CardHeader className="pb-3">
