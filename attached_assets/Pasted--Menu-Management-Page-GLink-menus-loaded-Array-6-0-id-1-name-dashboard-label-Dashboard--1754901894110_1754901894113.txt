@@ -1,0 +1,26 @@
+[Menu Management Page] GLink menus loaded: Array(6)0: {id: 1, name: 'dashboard', label: 'Dashboard', icon: 'Home', route: '/dashboard', …}1: {id: 6, name: 'system-config', label: 'System Configuration', icon: 'Settings', route: null, …}2: {id: 13, name: 'port-admin-dashboard', label: 'Port Admin Dashboard', icon: 'Ship', route: '/port-admin-dashboard', …}3: {id: 2, name: 'organizations', label: 'Organizations', icon: 'Building2', route: '/organizations', …}4: {id: 3, name: 'ports', label: 'Ports', icon: 'MapPin', route: '/ports', …}5: {id: 4, name: 'customers', label: 'Customers', icon: 'Users', route: '/customers', …}length: 6[[Prototype]]: Array(0)at: ƒ at()concat: ƒ concat()constructor: ƒ Array()copyWithin: ƒ copyWithin()entries: ƒ entries()every: ƒ every()fill: ƒ fill()filter: ƒ filter()find: ƒ find()findIndex: ƒ findIndex()findLast: ƒ findLast()findLastIndex: ƒ findLastIndex()flat: ƒ flat()flatMap: ƒ flatMap()forEach: ƒ forEach()includes: ƒ includes()indexOf: ƒ indexOf()join: ƒ join()keys: ƒ keys()lastIndexOf: ƒ lastIndexOf()length: 0map: ƒ map()pop: ƒ pop()push: ƒ push()reduce: ƒ reduce()reduceRight: ƒ reduceRight()reverse: ƒ reverse()shift: ƒ shift()slice: ƒ slice()some: ƒ some()sort: ƒ sort()splice: ƒ splice()toLocaleString: ƒ toLocaleString()toReversed: ƒ toReversed()toSorted: ƒ toSorted()toSpliced: ƒ toSpliced()toString: ƒ toString()unshift: ƒ unshift()values: ƒ values()with: ƒ with()Symbol(Symbol.iterator): ƒ values()Symbol(Symbol.unscopables): {at: true, copyWithin: true, entries: true, fill: true, find: true, …}[[Prototype]]: Object
+213chunk-RPCDYKBN.js?v=d508f884:521 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    at TreeNavigation (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/src/components/navigation/TreeNavigation.tsx:25:34)
+    at div
+    at div
+    at https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=d508f884:42:13
+    at https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=d508f884:114:13
+    at div
+    at https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=d508f884:42:13
+    at Provider (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=d508f884:38:15)
+    at https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=d508f884:52:7
+    at _c (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/src/components/ui/scroll-area.tsx:21:11)
+    at div
+    at div
+    at div
+    at AppLayout (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/src/components/layout/AppLayout.tsx:49:29)
+    at MenuManagementPage (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/src/pages/menu-management.tsx:189:41)
+    at ProtectedRoute (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/src/App.tsx?v=NdZgcOrT2cjK9YCv8dt7V:63:38)
+    at Route (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=d508f884:323:16)
+    at Switch (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=d508f884:379:17)
+    at Router
+    at Provider (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=d508f884:38:15)
+    at TooltipProvider (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=d508f884:63:5)
+    at ThemeProvider (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/src/components/theme-provider.tsx:25:3)
+    at QueryClientProvider (https://1387cf99-71cf-4c14-ae5a-79f1e337f10b-00-2w815ypr0446i.pike.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=d508f884:2805:3)
+    at App

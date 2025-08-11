@@ -100,7 +100,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     return (IconComp as React.ComponentType<any>) || Home;
   };
 
-  // Build tree structure from database menus (memoized to prevent re-creation)
+  // Build tree structure from database menus (without expandedNodes dependency)
   const buildTreeFromMenus = React.useMemo((): TreeNodeData[] => {
     if (!allMenus.length) return [];
 
@@ -143,33 +143,39 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
         icon: parentMenu.icon,
         route: parentMenu.route,
         children,
-        isExpanded: expandedNodes.has(parentMenu.name),
+        isExpanded: false, // Will be set separately
         level: 0
       };
     });
-  }, [allMenus, userRole, expandedNodes]);
+  }, [allMenus, userRole]);
 
-  // Update tree data when buildTreeFromMenus result changes
+  // Update tree data with expansion state
   useEffect(() => {
-    setTreeData(buildTreeFromMenus);
-  }, [buildTreeFromMenus]);
+    const baseTreeData = buildTreeFromMenus;
+    const updatedTreeData = baseTreeData.map(node => ({
+      ...node,
+      isExpanded: expandedNodes.has(node.name)
+    }));
+    setTreeData(updatedTreeData);
+  }, [buildTreeFromMenus, expandedNodes]);
 
   // Auto-expand parent node if active section is a child (only when activeSection changes)
   useEffect(() => {
-    if (activeSection && buildTreeFromMenus.length > 0) {
-      const activeParent = buildTreeFromMenus.find(node => 
+    if (activeSection && treeData.length > 0) {
+      const activeParent = treeData.find(node => 
         node.children.some(child => child.id === activeSection)
       );
       
       if (activeParent && !expandedNodes.has(activeParent.id)) {
         setExpandedNodes(prev => {
+          if (prev.has(activeParent.id)) return prev; // Already expanded
           const newSet = new Set(prev);
           newSet.add(activeParent.id);
           return newSet;
         });
       }
     }
-  }, [activeSection]);
+  }, [activeSection, treeData]);
 
   // Toggle node expansion
   const toggleNode = (nodeId: string) => {
