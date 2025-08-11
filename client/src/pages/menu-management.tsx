@@ -629,7 +629,7 @@ export default function MenuManagementPage() {
     );
   };
 
-  const MenuForm = ({ isEdit = false }: { isEdit?: boolean }) => (
+  const MenuForm = React.memo(({ isEdit = false }: { isEdit?: boolean }) => (
     <form onSubmit={(e) => e.preventDefault()} className="space-y-6 pb-8 max-w-none">
       {/* FIRST FIELD: System Configuration Flag */}
       <div className="space-y-2">
@@ -637,11 +637,11 @@ export default function MenuManagementPage() {
           <Switch
             id="isSystemConfig"
             checked={formData.isSystemConfig}
-            onCheckedChange={(checked) => setFormData({ 
-              ...formData, 
+            onCheckedChange={(checked) => setFormData(prev => ({ 
+              ...prev, 
               isSystemConfig: checked,
-              parentId: checked ? null : formData.parentId // Clear parent if system config
-            })}
+              parentId: checked ? null : prev.parentId
+            }))}
             data-testid="switch-system-config"
           />
           <Label htmlFor="isSystemConfig" className="text-sm font-medium">
@@ -658,11 +658,11 @@ export default function MenuManagementPage() {
         <Label htmlFor="menuType">Menu Type *</Label>
         <Select
           value={formData.menuType}
-          onValueChange={(value: 'glink' | 'plink') => setFormData({ 
-            ...formData, 
+          onValueChange={(value: 'glink' | 'plink') => setFormData(prev => ({ 
+            ...prev, 
             menuType: value,
-            parentId: value === 'glink' ? null : formData.parentId
-          })}
+            parentId: value === 'glink' ? null : prev.parentId
+          }))}
           data-testid="select-menu-type"
         >
           <SelectTrigger id="menuType">
@@ -684,10 +684,10 @@ export default function MenuManagementPage() {
           <Label htmlFor="parentId">Parent GLink Menu *</Label>
           <Select
             value={formData.parentId?.toString() || ""}
-            onValueChange={(value: string) => setFormData({ 
-              ...formData, 
+            onValueChange={(value: string) => setFormData(prev => ({ 
+              ...prev, 
               parentId: value ? parseInt(value) : null 
-            })}
+            }))}
             data-testid="select-parent-menu"
           >
             <SelectTrigger id="parentId">
@@ -726,8 +726,8 @@ export default function MenuManagementPage() {
           id="name"
           value={formData.name}
           onChange={(e) => {
-            e.preventDefault();
-            setFormData({ ...formData, name: e.target.value });
+            const newValue = e.target.value;
+            setFormData(prev => ({ ...prev, name: newValue }));
           }}
           placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
           data-testid="input-name"
@@ -742,8 +742,8 @@ export default function MenuManagementPage() {
           id="label"
           value={formData.label}
           onChange={(e) => {
-            e.preventDefault();
-            setFormData({ ...formData, label: e.target.value });
+            const newValue = e.target.value;
+            setFormData(prev => ({ ...prev, label: newValue }));
           }}
           placeholder="Dashboard"
           data-testid="input-label"
@@ -756,7 +756,7 @@ export default function MenuManagementPage() {
         <Label htmlFor="icon">Icon</Label>
         <Select
           value={formData.icon || "no-icon"}
-          onValueChange={(value: string) => setFormData({ ...formData, icon: value === "no-icon" ? "" : value })}
+          onValueChange={(value: string) => setFormData(prev => ({ ...prev, icon: value === "no-icon" ? "" : value }))}
         >
           <SelectTrigger id="icon" data-testid="select-icon">
             <SelectValue placeholder="Select an icon">
@@ -909,8 +909,8 @@ export default function MenuManagementPage() {
           id="route"
           value={formData.route}
           onChange={(e) => {
-            e.preventDefault();
-            setFormData({ ...formData, route: e.target.value });
+            const newValue = e.target.value;
+            setFormData(prev => ({ ...prev, route: newValue }));
           }}
           placeholder="/dashboard"
           data-testid="input-route"
@@ -926,8 +926,8 @@ export default function MenuManagementPage() {
           type="number"
           value={formData.sortOrder}
           onChange={(e) => {
-            e.preventDefault();
-            setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 });
+            const newValue = parseInt(e.target.value) || 0;
+            setFormData(prev => ({ ...prev, sortOrder: newValue }));
           }}
           placeholder="0"
           data-testid="input-sort-order"
@@ -958,7 +958,7 @@ export default function MenuManagementPage() {
         </Button>
       </div>
     </form>
-  );
+  ));
 
   return (
     <AppLayout title="Menu Management" activeSection="menu-management">
