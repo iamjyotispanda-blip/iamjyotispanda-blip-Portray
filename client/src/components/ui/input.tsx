@@ -3,7 +3,18 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, onFocus, onBlur, ...props }, ref) => {
+  ({ className, type, onFocus, onBlur, onKeyUp, ...props }, ref) => {
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+    
+    const setRef = React.useCallback((node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    }, [ref]);
+
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       // Prevent mobile viewport jumping on focus
       if (window.innerWidth <= 768) {
@@ -30,6 +41,14 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
       if (onBlur) onBlur(e);
     };
 
+    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Prevent focus loss on keyup by ensuring the element stays focused
+      if (inputRef.current && document.activeElement !== inputRef.current) {
+        inputRef.current.focus();
+      }
+      if (onKeyUp) onKeyUp(e);
+    };
+
     return (
       <input
         type={type}
@@ -39,7 +58,8 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         )}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        ref={ref}
+        onKeyUp={handleKeyUp}
+        ref={setRef}
         {...props}
       />
     )

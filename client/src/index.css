@@ -38,6 +38,22 @@
     border-color: rgb(59 130 246) !important;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
   }
+}
+
+/* Global input focus preservation for all screen sizes */
+input:focus,
+textarea:focus {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  outline: none !important;
+}
+
+/* Prevent focus loss on all interactions */
+input {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
   
   /* Ensure mobile keyboard doesn't shift layout */
   body.mobile-keyboard-open {
