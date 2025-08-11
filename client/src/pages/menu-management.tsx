@@ -480,54 +480,6 @@ export default function MenuManagementPage() {
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.label || !formData.menuType) {
-      toast({
-        title: "Error",
-        description: "Name, Label, and Menu Type are required",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check for duplicate label names
-    const existingMenuWithSameLabel = safeAllMenus.find(menu => 
-      menu.label.toLowerCase() === formData.label.toLowerCase() && 
-      (!editingMenu || menu.id !== editingMenu.id)
-    );
-    
-    if (existingMenuWithSameLabel) {
-      toast({
-        title: "Error",
-        description: `Label "${formData.label}" already exists. Please choose a different label name.`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check for duplicate name identifiers
-    const existingMenuWithSameName = safeAllMenus.find(menu => 
-      menu.name.toLowerCase() === formData.name.toLowerCase() && 
-      (!editingMenu || menu.id !== editingMenu.id)
-    );
-    
-    if (existingMenuWithSameName) {
-      toast({
-        title: "Error",
-        description: `Name "${formData.name}" already exists. Please choose a different name identifier.`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (formData.menuType === 'plink' && !formData.isSystemConfig && !formData.parentId) {
-      toast({
-        title: "Error",
-        description: "Parent GLink menu is required for PLink menus (unless System Configuration is enabled)",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     saveMenuMutation.mutate(formData);
   };
 
@@ -637,11 +589,7 @@ export default function MenuManagementPage() {
           <Switch
             id="isSystemConfig"
             checked={formData.isSystemConfig}
-            onCheckedChange={(checked) => setFormData(prev => ({ 
-              ...prev, 
-              isSystemConfig: checked,
-              parentId: checked ? null : prev.parentId
-            }))}
+            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isSystemConfig: checked, parentId: checked ? null : prev.parentId }))}
             data-testid="switch-system-config"
           />
           <Label htmlFor="isSystemConfig" className="text-sm font-medium">
@@ -658,11 +606,7 @@ export default function MenuManagementPage() {
         <Label htmlFor="menuType">Menu Type *</Label>
         <Select
           value={formData.menuType}
-          onValueChange={(value: 'glink' | 'plink') => setFormData(prev => ({ 
-            ...prev, 
-            menuType: value,
-            parentId: value === 'glink' ? null : prev.parentId
-          }))}
+          onValueChange={(value: 'glink' | 'plink') => setFormData(prev => ({ ...prev, menuType: value, parentId: value === 'glink' ? null : prev.parentId }))}
           data-testid="select-menu-type"
         >
           <SelectTrigger id="menuType">
@@ -684,10 +628,7 @@ export default function MenuManagementPage() {
           <Label htmlFor="parentId">Parent GLink Menu *</Label>
           <Select
             value={formData.parentId?.toString() || ""}
-            onValueChange={(value: string) => setFormData(prev => ({ 
-              ...prev, 
-              parentId: value ? parseInt(value) : null 
-            }))}
+            onValueChange={(value: string) => setFormData(prev => ({ ...prev, parentId: value ? parseInt(value) : null }))}
             data-testid="select-parent-menu"
           >
             <SelectTrigger id="parentId">
@@ -725,10 +666,7 @@ export default function MenuManagementPage() {
         <Input
           id="name"
           value={formData.name}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            setFormData(prev => ({ ...prev, name: newValue }));
-          }}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
           placeholder={formData.menuType === 'glink' ? 'dashboard' : 'settings'}
           data-testid="input-name"
           autoComplete="off"
@@ -741,10 +679,7 @@ export default function MenuManagementPage() {
         <Input
           id="label"
           value={formData.label}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            setFormData(prev => ({ ...prev, label: newValue }));
-          }}
+          onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
           placeholder="Dashboard"
           data-testid="input-label"
           autoComplete="off"
@@ -908,10 +843,7 @@ export default function MenuManagementPage() {
         <Input
           id="route"
           value={formData.route}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            setFormData(prev => ({ ...prev, route: newValue }));
-          }}
+          onChange={(e) => setFormData(prev => ({ ...prev, route: e.target.value }))}
           placeholder="/dashboard"
           data-testid="input-route"
           autoComplete="off"
@@ -925,10 +857,7 @@ export default function MenuManagementPage() {
           id="sortOrder"
           type="number"
           value={formData.sortOrder}
-          onChange={(e) => {
-            const newValue = parseInt(e.target.value) || 0;
-            setFormData(prev => ({ ...prev, sortOrder: newValue }));
-          }}
+          onChange={(e) => setFormData(prev => ({ ...prev, sortOrder: parseInt(e.target.value) || 0 }))}
           placeholder="0"
           data-testid="input-sort-order"
           autoComplete="off"
