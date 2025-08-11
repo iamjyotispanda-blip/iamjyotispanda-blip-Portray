@@ -159,8 +159,10 @@ export function getAllAvailableIcons(): string[] {
   ).sort();
 }
 
-export function getIconComponent(iconName: string | null) {
-  if (!iconName) return LucideIcons.Circle;
+export function getIconComponent(iconName: string | null | undefined) {
+  if (!iconName || iconName === '' || iconName === 'null' || iconName === 'undefined') {
+    return LucideIcons.Circle;
+  }
   const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons];
   return IconComponent || LucideIcons.Circle;
 }
