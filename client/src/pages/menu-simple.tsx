@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { Menu } from "@shared/schema";
 
 export default function MenuSimple() {
   const [name, setName] = useState("");
@@ -22,13 +23,13 @@ export default function MenuSimple() {
   const [isActive, setIsActive] = useState(true);
   const [isSystemConfig, setIsSystemConfig] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [expanded, setExpanded] = useState(new Set());
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: menus = [], isLoading } = useQuery({
+  const { data: menus = [], isLoading } = useQuery<Menu[]>({
     queryKey: ["/api/menus"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/menus");
@@ -37,7 +38,7 @@ export default function MenuSimple() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const url = editingId ? `/api/menus/${editingId}` : "/api/menus";
       const method = editingId ? "PUT" : "POST";
       const response = await apiRequest(method, url, data);
@@ -51,7 +52,7 @@ export default function MenuSimple() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/menus/${id}`);
     },
     onSuccess: () => {
@@ -73,7 +74,7 @@ export default function MenuSimple() {
     setEditingId(null);
   };
 
-  const handleEdit = (menu) => {
+  const handleEdit = (menu: Menu) => {
     setName(menu.name);
     setLabel(menu.label);
     setMenuType(menu.menuType);
@@ -100,13 +101,13 @@ export default function MenuSimple() {
     saveMutation.mutate(data);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id: number) => {
     if (confirm("Delete this menu?")) {
       deleteMutation.mutate(id);
     }
   };
 
-  const toggleExpand = (id) => {
+  const toggleExpand = (id: number) => {
     const newExpanded = new Set(expanded);
     if (newExpanded.has(id)) {
       newExpanded.delete(id);
@@ -126,10 +127,13 @@ export default function MenuSimple() {
 
   return (
     <AppLayout title="Menu Management" activeSection="menu-management">
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold">Menu Management</h1>
-          <Button onClick={() => setShowForm(true)}>
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold">Menu Management</h1>
+            <p className="text-sm text-gray-600 hidden sm:block">Manage navigation menus with GLink/PLink hierarchy</p>
+          </div>
+          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Add Menu
           </Button>
@@ -140,19 +144,19 @@ export default function MenuSimple() {
             <CardHeader>
               <CardTitle>{editingId ? 'Edit Menu' : 'Add New Menu'}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6">
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={isSystemConfig}
                   onCheckedChange={setIsSystemConfig}
                 />
-                <Label>System Configuration</Label>
+                <Label className="text-sm">System Configuration</Label>
               </div>
 
               <div className="space-y-2">
-                <Label>Menu Type</Label>
+                <Label className="text-sm">Menu Type</Label>
                 <Select value={menuType} onValueChange={setMenuType}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -164,9 +168,9 @@ export default function MenuSimple() {
 
               {menuType === 'plink' && !isSystemConfig && (
                 <div className="space-y-2">
-                  <Label>Parent Menu</Label>
+                  <Label className="text-sm">Parent Menu</Label>
                   <Select value={parentId} onValueChange={setParentId}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9">
                       <SelectValue placeholder="Select parent" />
                     </SelectTrigger>
                     <SelectContent>
@@ -180,40 +184,59 @@ export default function MenuSimple() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} />
+                  <Label className="text-sm">Name</Label>
+                  <Input 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-9" 
+                    placeholder="menu-name"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Label</Label>
-                  <Input value={label} onChange={(e) => setLabel(e.target.value)} />
+                  <Label className="text-sm">Label</Label>
+                  <Input 
+                    value={label} 
+                    onChange={(e) => setLabel(e.target.value)}
+                    className="h-9" 
+                    placeholder="Menu Label"
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Route</Label>
-                  <Input value={route} onChange={(e) => setRoute(e.target.value)} />
+                  <Label className="text-sm">Route</Label>
+                  <Input 
+                    value={route} 
+                    onChange={(e) => setRoute(e.target.value)}
+                    className="h-9" 
+                    placeholder="/menu-route"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Sort Order</Label>
+                  <Label className="text-sm">Sort Order</Label>
                   <Input 
                     type="number" 
                     value={sortOrder} 
-                    onChange={(e) => setSortOrder(e.target.value)} 
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="h-9" 
+                    placeholder="0"
                   />
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
                 <Switch checked={isActive} onCheckedChange={setIsActive} />
-                <Label>Active</Label>
+                <Label className="text-sm">Active</Label>
               </div>
 
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={resetForm}>Cancel</Button>
-                <Button onClick={handleSubmit} disabled={saveMutation.isPending}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-4">
+                <Button variant="outline" onClick={resetForm} className="h-8">
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmit} disabled={saveMutation.isPending} className="h-8">
                   {saveMutation.isPending ? "Saving..." : (editingId ? "Update" : "Create")}
                 </Button>
               </div>
@@ -225,21 +248,28 @@ export default function MenuSimple() {
           <CardHeader>
             <CardTitle>Menu Hierarchy</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             {isLoading ? (
-              <div className="text-center py-8">Loading...</div>
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-600">Loading menus...</p>
+              </div>
+            ) : menuTree.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-sm">No menus found. Create your first menu to get started.</p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {menuTree.map(menu => (
                   <div key={menu.id} className="border rounded-lg">
                     <div className="p-3 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
                         {menu.children.length > 0 && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => toggleExpand(menu.id)}
-                            className="p-0 h-auto"
+                            className="p-1 h-auto flex-shrink-0"
                           >
                             {expanded.has(menu.id) ? (
                               <ChevronDown className="h-4 w-4" />
@@ -248,49 +278,55 @@ export default function MenuSimple() {
                             )}
                           </Button>
                         )}
-                        <Badge variant="default">GLINK</Badge>
-                        {menu.isSystemConfig && <Badge variant="outline">System</Badge>}
-                        <span className="font-medium">{menu.label}</span>
-                        <span className="text-sm text-gray-500">({menu.name})</span>
-                        {!menu.isActive && <Badge variant="destructive">Inactive</Badge>}
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 min-w-0">
+                          <Badge variant="default" className="text-xs">GLINK</Badge>
+                          {menu.isSystemConfig && <Badge variant="outline" className="text-xs">System</Badge>}
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium text-sm sm:text-base truncate block">{menu.label}</span>
+                            <span className="text-xs text-gray-500 hidden sm:inline">({menu.name})</span>
+                          </div>
+                          {!menu.isActive && <Badge variant="destructive" className="text-xs">Inactive</Badge>}
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(menu)}>
-                          <Edit className="h-4 w-4" />
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(menu)} className="h-8 w-8 p-0">
+                          <Edit className="h-3 w-3" />
                         </Button>
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => handleDelete(menu.id)}
-                          className="text-red-600"
+                          className="text-red-600 h-8 w-8 p-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
 
                     {expanded.has(menu.id) && menu.children.length > 0 && (
-                      <div className="pl-8 pb-2">
+                      <div className="pl-4 sm:pl-8 pb-2">
                         {menu.children.map(child => (
-                          <div key={child.id} className="p-2 flex items-center justify-between border-l">
-                            <div className="flex items-center space-x-3">
-                              <Badge variant="secondary">PLINK</Badge>
-                              {child.isSystemConfig && <Badge variant="outline">System</Badge>}
-                              <span className="font-medium">{child.label}</span>
-                              <span className="text-sm text-gray-500">({child.name})</span>
-                              {!child.isActive && <Badge variant="destructive">Inactive</Badge>}
+                          <div key={child.id} className="p-2 flex items-center justify-between border-l-2 border-gray-200">
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 min-w-0 flex-1">
+                              <Badge variant="secondary" className="text-xs">PLINK</Badge>
+                              {child.isSystemConfig && <Badge variant="outline" className="text-xs">System</Badge>}
+                              <div className="min-w-0 flex-1">
+                                <span className="font-medium text-sm truncate block">{child.label}</span>
+                                <span className="text-xs text-gray-500 hidden sm:inline">({child.name})</span>
+                              </div>
+                              {!child.isActive && <Badge variant="destructive" className="text-xs">Inactive</Badge>}
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Button variant="outline" size="sm" onClick={() => handleEdit(child)}>
-                                <Edit className="h-4 w-4" />
+                            <div className="flex items-center space-x-1 flex-shrink-0">
+                              <Button variant="outline" size="sm" onClick={() => handleEdit(child)} className="h-8 w-8 p-0">
+                                <Edit className="h-3 w-3" />
                               </Button>
                               <Button 
                                 variant="outline" 
                                 size="sm" 
                                 onClick={() => handleDelete(child.id)}
-                                className="text-red-600"
+                                className="text-red-600 h-8 w-8 p-0"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
                           </div>
