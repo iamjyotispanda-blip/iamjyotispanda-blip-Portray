@@ -13,39 +13,33 @@
   textarea,
   select {
     font-size: 16px !important;
-    transform: translateZ(0);
     -webkit-appearance: none;
   }
   
-  /* Stabilize mobile viewport */
-  html, body {
-    position: fixed;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-  }
-  
-  #root {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-  
-  /* Ensure sheet content is properly contained */
-  [data-radix-portal] {
-    position: fixed !important;
-    inset: 0;
-    z-index: 50;
-  }
-  
-  /* Prevent mobile viewport jumping */
+  /* Prevent mobile viewport jumping without breaking functionality */
   .touch-manipulation {
     touch-action: manipulation;
     -webkit-user-select: text;
     user-select: text;
+  }
+  
+  /* Better mobile input handling */
+  input:focus,
+  textarea:focus {
+    position: relative;
+    z-index: 1;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  /* Stable sheet positioning on mobile */
+  [data-radix-portal] [data-state="open"] {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
   }
 }
 

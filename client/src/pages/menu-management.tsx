@@ -730,10 +730,6 @@ export default function MenuManagementPage() {
           data-testid="input-name"
           className="touch-manipulation"
           autoComplete="off"
-          onFocus={(e) => {
-            // Prevent mobile viewport changes
-            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }}
         />
         <p className="text-xs text-gray-500">Used as the unique identifier (lowercase, no spaces)</p>
       </div>
@@ -748,10 +744,6 @@ export default function MenuManagementPage() {
           data-testid="input-label"
           className="touch-manipulation"
           autoComplete="off"
-          onFocus={(e) => {
-            // Prevent mobile viewport changes
-            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }}
         />
         <p className="text-xs text-gray-500">Display name shown in navigation</p>
       </div>
@@ -917,10 +909,6 @@ export default function MenuManagementPage() {
           data-testid="input-route"
           className="touch-manipulation"
           autoComplete="off"
-          onFocus={(e) => {
-            // Prevent mobile viewport changes
-            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }}
         />
         <p className="text-xs text-gray-500">URL path for this menu item</p>
       </div>
@@ -936,10 +924,6 @@ export default function MenuManagementPage() {
           data-testid="input-sort-order"
           className="touch-manipulation"
           autoComplete="off"
-          onFocus={(e) => {
-            // Prevent mobile viewport changes
-            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }}
         />
         <p className="text-xs text-gray-500">Display order in navigation (lower numbers appear first)</p>
       </div>
