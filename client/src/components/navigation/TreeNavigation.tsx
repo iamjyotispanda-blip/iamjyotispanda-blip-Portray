@@ -157,7 +157,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     );
     
     if (activeParent && !expandedNodes.has(activeParent.id)) {
-      setExpandedNodes(prev => new Set([...prev, activeParent.id]));
+      setExpandedNodes(prev => new Set([...Array.from(prev), activeParent.id]));
     }
   }, [activeSection]);
 

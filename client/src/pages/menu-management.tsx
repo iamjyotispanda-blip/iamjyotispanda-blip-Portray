@@ -665,7 +665,7 @@ export default function MenuManagementPage() {
           })}
           data-testid="select-menu-type"
         >
-          <SelectTrigger>
+          <SelectTrigger id="menuType">
             <SelectValue placeholder="Select menu type" />
           </SelectTrigger>
           <SelectContent>
@@ -690,7 +690,7 @@ export default function MenuManagementPage() {
             })}
             data-testid="select-parent-menu"
           >
-            <SelectTrigger>
+            <SelectTrigger id="parentId">
               <SelectValue placeholder="Select parent GLink menu" />
             </SelectTrigger>
             <SelectContent>
@@ -754,7 +754,7 @@ export default function MenuManagementPage() {
           value={formData.icon || "no-icon"}
           onValueChange={(value: string) => setFormData({ ...formData, icon: value === "no-icon" ? "" : value })}
         >
-          <SelectTrigger data-testid="select-icon">
+          <SelectTrigger id="icon" data-testid="select-icon">
             <SelectValue placeholder="Select an icon">
               {formData.icon && (
                 <div className="flex items-center space-x-2">
