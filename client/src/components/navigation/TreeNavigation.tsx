@@ -100,8 +100,8 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     return (IconComp as React.ComponentType<any>) || Home;
   };
 
-  // Build tree structure from database menus
-  const buildTreeFromMenus = (): TreeNodeData[] => {
+  // Build tree structure from database menus (memoized to prevent re-creation)
+  const buildTreeFromMenus = React.useMemo((): TreeNodeData[] => {
     if (!allMenus.length) return [];
 
     // Get parent menus (glink type) - include all active menus
@@ -147,26 +147,29 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
         level: 0
       };
     });
-  };
+  }, [allMenus, userRole, expandedNodes]);
 
-  // Update tree data when menus or expanded nodes change
+  // Update tree data when buildTreeFromMenus result changes
   useEffect(() => {
-    const newTreeData = buildTreeFromMenus();
-    setTreeData(newTreeData);
-  }, [allMenus, expandedNodes, userRole]);
+    setTreeData(buildTreeFromMenus);
+  }, [buildTreeFromMenus]);
 
-  // Auto-expand parent node if active section is a child
+  // Auto-expand parent node if active section is a child (only when activeSection changes)
   useEffect(() => {
-    if (activeSection && treeData.length > 0) {
-      const activeParent = treeData.find(node => 
+    if (activeSection && buildTreeFromMenus.length > 0) {
+      const activeParent = buildTreeFromMenus.find(node => 
         node.children.some(child => child.id === activeSection)
       );
       
       if (activeParent && !expandedNodes.has(activeParent.id)) {
-        setExpandedNodes(prev => new Set(Array.from(prev).concat([activeParent.id])));
+        setExpandedNodes(prev => {
+          const newSet = new Set(prev);
+          newSet.add(activeParent.id);
+          return newSet;
+        });
       }
     }
-  }, [activeSection, treeData]);
+  }, [activeSection]);
 
   // Toggle node expansion
   const toggleNode = (nodeId: string) => {

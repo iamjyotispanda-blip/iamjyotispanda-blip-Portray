@@ -42,10 +42,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
     };
 
     const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Prevent focus loss on keyup by ensuring the element stays focused
-      if (inputRef.current && document.activeElement !== inputRef.current) {
-        inputRef.current.focus();
-      }
+      // Call original onKeyUp handler if provided
       if (onKeyUp) onKeyUp(e);
     };
 
