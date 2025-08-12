@@ -688,27 +688,129 @@ export default function MenuManagementPage() {
             
             {/* All Available Icons Section */}
             <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b">
-              🎨 All Available Icons ({(() => {
-                const iconCount = getAllAvailableIcons().length;
-                console.log("[Menu Management] Loading all available icons:", iconCount);
-                return iconCount;
-              })()})
+              🎨 All Available Icons
             </div>
-            {(() => {
-              const allIcons = getAllAvailableIcons();
-              console.log("[Menu Management] All icons array:", allIcons.slice(0, 10), "...");
-              return allIcons.map((iconName) => {
-                const IconComponent = getIconComponent(iconName) as React.ComponentType<{ className?: string }>;
-                return (
-                  <SelectItem key={iconName} value={iconName}>
-                    <div className="flex items-center space-x-2">
-                      <IconComponent className="h-4 w-4" />
-                      <span>{iconName}</span>
-                    </div>
-                  </SelectItem>
-                );
-              });
-            })()}
+            {/* Popular Icons First */}
+            <SelectItem value="Home">
+              <div className="flex items-center space-x-2">
+                <Home className="h-4 w-4" />
+                <span>Home</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Settings">
+              <div className="flex items-center space-x-2">
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Users">
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4" />
+                <span>Users</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Building2">
+              <div className="flex items-center space-x-2">
+                <Building2 className="h-4 w-4" />
+                <span>Building2</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Ship">
+              <div className="flex items-center space-x-2">
+                <Ship className="h-4 w-4" />
+                <span>Ship</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Shield">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-4 w-4" />
+                <span>Shield</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Package">
+              <div className="flex items-center space-x-2">
+                <Package className="h-4 w-4" />
+                <span>Package</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Mail">
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4" />
+                <span>Mail</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Bell">
+              <div className="flex items-center space-x-2">
+                <Bell className="h-4 w-4" />
+                <span>Bell</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Zap">
+              <div className="flex items-center space-x-2">
+                <Zap className="h-4 w-4" />
+                <span>Zap</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="MapPin">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4" />
+                <span>MapPin</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="FileText">
+              <div className="flex items-center space-x-2">
+                <FileText className="h-4 w-4" />
+                <span>FileText</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Database">
+              <div className="flex items-center space-x-2">
+                <Database className="h-4 w-4" />
+                <span>Database</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Grid">
+              <div className="flex items-center space-x-2">
+                <Grid className="h-4 w-4" />
+                <span>Grid</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Calendar">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4" />
+                <span>Calendar</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Search">
+              <div className="flex items-center space-x-2">
+                <Search className="h-4 w-4" />
+                <span>Search</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Tag">
+              <div className="flex items-center space-x-2">
+                <Tag className="h-4 w-4" />
+                <span>Tag</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Truck">
+              <div className="flex items-center space-x-2">
+                <Truck className="h-4 w-4" />
+                <span>Truck</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="Globe">
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4" />
+                <span>Globe</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="BarChart">
+              <div className="flex items-center space-x-2">
+                <BarChart className="h-4 w-4" />
+                <span>BarChart</span>
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-gray-500">Choose an icon for the navigation menu</p>
