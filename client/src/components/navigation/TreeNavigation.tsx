@@ -81,7 +81,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       userRoleData: userRole
     });
     
-    // SystemAdmin has all permissions - check multiple conditions
+    // Check if user is SystemAdmin, but still respect role-based permissions
     const isSystemAdmin = (
       user?.role === "SystemAdmin" || 
       user?.isSystemAdmin === true || 
@@ -94,10 +94,10 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       ))
     );
     
-    if (isSystemAdmin) {
-      console.log('SystemAdmin detected - returning true for', menuName);
-      return true;
-    }
+    console.log('SystemAdmin check:', { isSystemAdmin, menuName, userRole: userRole?.name });
+    
+    // Even SystemAdmin users must follow role permissions
+    // This allows for granular permission control
 
     if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
       console.log('No permissions found for user role, checking fallback for non-system admin');
