@@ -17,6 +17,7 @@ import PortAdminVerificationPage from "@/pages/port-admin-verification";
 import PortAdminDashboard from "@/pages/port-admin-dashboard";
 import EmailConfigurationPage from "@/pages/email-configuration";
 import MenuManagement from "@/pages/menu-management";
+import AddMenu from "@/pages/add-menu";
 import PageManagementPage from "@/pages/page-management";
 import OrganizationsPage from "@/pages/organizations";
 import VerifyPage from "@/pages/verify";
@@ -127,6 +128,9 @@ function Router() {
       </Route>
       <Route path="/configuration/menu">
         {() => <ProtectedRoute component={MenuManagement} />}
+      </Route>
+      <Route path="/configuration/menu/add">
+        {() => <ProtectedRoute component={AddMenu} />}
       </Route>
       <Route path="/configuration/pages">
         {() => <ProtectedRoute component={PageManagementPage} />}

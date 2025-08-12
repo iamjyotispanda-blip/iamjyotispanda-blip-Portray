@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -127,6 +128,7 @@ interface HierarchicalMenu extends Menu {
 export default function MenuManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   // State management
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -708,24 +710,14 @@ export default function MenuManagement() {
                 {menus.length} total menu{menus.length !== 1 ? 's' : ''}
               </Badge>
               
-              {/* Add New Menu Dialog */}
-              <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                <DialogTrigger asChild>
-                  <Button onClick={resetForm} data-testid="button-add-menu">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Menu
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Add New Menu</DialogTitle>
-                    <DialogDescription>
-                      Create a new navigation menu item
-                    </DialogDescription>
-                  </DialogHeader>
-                  <MenuForm />
-                </DialogContent>
-              </Dialog>
+              {/* Add New Menu Button */}
+              <Button 
+                onClick={() => setLocation('/configuration/menu/add')}
+                data-testid="button-add-menu"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Menu
+              </Button>
             </div>
           </div>
 
