@@ -321,32 +321,45 @@ export default function RolesPage() {
 
   return (
     <AppLayout title="Roles">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            {/* Title removed as requested */}
-          </div>
-          {canWrite("roles", "user-access") && (
-            <Sheet open={showCreateForm} onOpenChange={(open) => {
-              setShowCreateForm(open);
-              if (!open) resetForm();
-            }}>
-              <SheetTrigger asChild>
-                <Button className="h-8" data-testid="button-add-role">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Role
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle>Create New Role</SheetTitle>
-                  <SheetDescription>
-                    Create a new role with specific permissions and access levels
-                  </SheetDescription>
-                </SheetHeader>
-                
-                <div className="space-y-4 mt-6 pb-6">
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Roles</span>
+        </div>
+        
+        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+          <div className="space-y-2">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search roles..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-search-roles"
+                />
+              </div>
+              {canWrite("roles", "user-access") && (
+                <Sheet open={showCreateForm} onOpenChange={(open) => {
+                  setShowCreateForm(open);
+                  if (!open) resetForm();
+                }}>
+                  <SheetTrigger asChild>
+                    <Button className="h-8" data-testid="button-add-role">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Role
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>Create New Role</SheetTitle>
+                      <SheetDescription>
+                        Create a new role with specific permissions and access levels
+                      </SheetDescription>
+                    </SheetHeader>
+                    
+                    <div className="space-y-4 mt-6 pb-6">
                   {/* Template Selection */}
                   <div className="space-y-2">
                     <Label>Role Template (Optional)</Label>
@@ -437,28 +450,14 @@ export default function RolesPage() {
                       {createRoleMutation.isPending ? "Creating..." : "Create Role"}
                     </Button>
                   </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
-        </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+            </div>
 
-        {/* Search Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <div className="relative w-full sm:flex-1 sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search roles..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full"
-              data-testid="input-search-roles"
-            />
-          </div>
-        </div>
-
-        {/* Roles Grid */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+            {/* Roles Grid */}
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
           {rolesLoading ? (
             Array.from({ length: 6 }).map((_, index) => (
               <Card key={index} className="animate-pulse">
@@ -588,9 +587,11 @@ export default function RolesPage() {
               </Card>
             ))
           )}
+          </div>
         </div>
+      </main>
 
-        {/* Edit Form Sheet */}
+      {/* Edit Form Sheet */}
         <Sheet open={showEditForm} onOpenChange={(open) => {
           setShowEditForm(open);
           if (!open) {
