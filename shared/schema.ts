@@ -34,21 +34,6 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
-export const userPreferences = pgTable("user_preferences", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  userId: varchar("user_id").notNull().references(() => users.id).unique(),
-  theme: text("theme").default("system"), // "light", "dark", "system"
-  notifications: boolean("notifications").default(true),
-  emailAlerts: boolean("email_alerts").default(true),
-  language: text("language").default("en"),
-  timezone: text("timezone"),
-  dateFormat: text("date_format").default("MM/dd/yyyy"),
-  timeFormat: text("time_format").default("12h"), // "12h" or "24h"
-  dashboardLayout: text("dashboard_layout").default("default"),
-  createdAt: timestamp("created_at").notNull().default(sql`now()`),
-  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
-});
-
 export const organizations = pgTable("organizations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   organizationName: text("organization_name").notNull().unique(),
@@ -1016,31 +1001,3 @@ export type InsertCountry = z.infer<typeof insertCountrySchema>;
 export type InsertState = z.infer<typeof insertStateSchema>;
 export type InsertCargoType = z.infer<typeof insertCargoTypeSchema>;
 export type InsertPlot = z.infer<typeof insertPlotSchema>;
-
-// User Preferences Schemas
-export const insertUserPreferencesSchema = createInsertSchema(userPreferences).pick({
-  userId: true,
-  theme: true,
-  notifications: true,
-  emailAlerts: true,
-  language: true,
-  timezone: true,
-  dateFormat: true,
-  timeFormat: true,
-  dashboardLayout: true,
-});
-
-export const updateUserPreferencesSchema = createInsertSchema(userPreferences).pick({
-  theme: true,
-  notifications: true,
-  emailAlerts: true,
-  language: true,
-  timezone: true,
-  dateFormat: true,
-  timeFormat: true,
-  dashboardLayout: true,
-}).partial();
-
-export type UserPreferences = typeof userPreferences.$inferSelect;
-export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
-export type UpdateUserPreferences = z.infer<typeof updateUserPreferencesSchema>;

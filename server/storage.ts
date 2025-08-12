@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot, type UserPreferences, type InsertUserPreferences, type UpdateUserPreferences } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots, userPreferences } from "@shared/schema";
+import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -197,11 +197,6 @@ export interface IStorage {
   getStatesByCountryId(countryId: number): Promise<State[]>;
   getAllCargoTypes(): Promise<CargoType[]>;
   getPlotsByTerminalId(terminalId: number): Promise<Plot[]>;
-
-  // User Preferences operations
-  getUserPreferences(userId: string): Promise<UserPreferences | undefined>;
-  createUserPreferences(preferences: InsertUserPreferences): Promise<UserPreferences>;
-  updateUserPreferences(userId: string, updates: UpdateUserPreferences): Promise<UserPreferences | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2371,29 +2366,6 @@ export class MemStorage implements IStorage {
 
   async getPlotsByTerminalId(terminalId: number): Promise<Plot[]> {
     return [];
-  }
-
-  // User Preferences operations - DatabaseStorage implementation
-  async getUserPreferences(userId: string): Promise<UserPreferences | undefined> {
-    const [preferences] = await db.select().from(userPreferences).where(eq(userPreferences.userId, userId));
-    return preferences || undefined;
-  }
-
-  async createUserPreferences(preferencesData: InsertUserPreferences): Promise<UserPreferences> {
-    const [preferences] = await db
-      .insert(userPreferences)
-      .values(preferencesData)
-      .returning();
-    return preferences;
-  }
-
-  async updateUserPreferences(userId: string, updates: UpdateUserPreferences): Promise<UserPreferences | undefined> {
-    const [preferences] = await db
-      .update(userPreferences)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(userPreferences.userId, userId))
-      .returning();
-    return preferences || undefined;
   }
 }
 

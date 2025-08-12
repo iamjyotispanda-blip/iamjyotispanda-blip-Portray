@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, insertUserSchema, updateUserSchema, insertRoleSchema, updateRoleSchema, insertCustomerSchema, insertCustomerContactSchema, insertCustomerAddressSchema, insertContractSchema, insertContractTariffSchema, insertContractCargoDetailSchema, insertContractStorageChargeSchema, insertContractSpecialConditionSchema, insertUserPreferencesSchema, updateUserPreferencesSchema, type InsertUser, type Menu } from "@shared/schema";
+import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdminContactSchema, updatePortAdminContactSchema, insertEmailConfigurationSchema, updateEmailConfigurationSchema, insertTerminalSchema, updateTerminalSchema, insertNotificationSchema, insertMenuSchema, updateMenuSchema, insertUserSchema, updateUserSchema, insertRoleSchema, updateRoleSchema, insertCustomerSchema, insertCustomerContactSchema, insertCustomerAddressSchema, insertContractSchema, insertContractTariffSchema, insertContractCargoDetailSchema, insertContractStorageChargeSchema, insertContractSpecialConditionSchema, type InsertUser, type Menu } from "@shared/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
@@ -2901,66 +2901,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error creating contract storage charge:", error);
       res.status(500).json({ message: "Failed to create contract storage charge" });
-    }
-  });
-
-  // User Preferences Routes
-  app.get("/api/user/preferences", authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      const preferences = await storage.getUserPreferences(userId);
-      res.json(preferences || {
-        theme: "system",
-        notifications: true,
-        emailAlerts: true,
-        language: "en",
-        dateFormat: "MM/dd/yyyy",
-        timeFormat: "12h",
-        dashboardLayout: "default"
-      });
-    } catch (error) {
-      console.error("Error fetching user preferences:", error);
-      res.status(500).json({ message: "Failed to fetch user preferences" });
-    }
-  });
-
-  app.patch("/api/user/preferences", authenticateToken, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      const validatedData = updateUserPreferencesSchema.parse(req.body);
-      
-      // Try to get existing preferences first
-      const existingPreferences = await storage.getUserPreferences(userId);
-      
-      if (existingPreferences) {
-        // Update existing preferences
-        const updatedPreferences = await storage.updateUserPreferences(userId, validatedData);
-        res.json(updatedPreferences);
-      } else {
-        // Create new preferences
-        const newPreferences = await storage.createUserPreferences({
-          userId,
-          ...validatedData
-        });
-        res.json(newPreferences);
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          errors: error.errors 
-        });
-      }
-      console.error("Error updating user preferences:", error);
-      res.status(500).json({ message: "Failed to update user preferences" });
     }
   });
 
