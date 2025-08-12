@@ -394,27 +394,27 @@ export default function MenuManagement() {
       <div
         ref={setNodeRef}
         style={style}
-        className={`bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow ${
+        className={`bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow ${
           isDragging ? 'ring-2 ring-blue-500' : ''
-        } ${menu.isChild ? 'ml-8 border-l-4 border-l-blue-200' : ''}`}
+        } ${menu.isChild ? 'ml-4 sm:ml-8 border-l-4 border-l-blue-200' : ''}`}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
             {/* Drag handle */}
             <div
               {...attributes}
               {...listeners}
-              className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
               data-testid={`drag-handle-${menu.id}`}
             >
-              <GripVertical className="h-5 w-5" />
+              <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
 
             {/* Expand/collapse button for parent menus */}
             {menu.isParent && (
               <button
                 onClick={() => toggleExpansion(menu.id)}
-                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors flex-shrink-0"
                 data-testid={`expand-toggle-${menu.id}`}
               >
                 {menu.isExpanded ? (
@@ -426,39 +426,41 @@ export default function MenuManagement() {
             )}
 
             {/* Icon */}
-            <div className="flex items-center justify-center w-10 h-10 border rounded-md bg-gray-50 dark:bg-gray-700">
-              <IconComponent className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 border rounded-md bg-gray-50 dark:bg-gray-700 flex-shrink-0">
+              <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
             </div>
 
             {/* Menu details */}
-            <div className="flex-1">
-              <div className="flex items-center space-x-2">
-                <h4 className="font-medium text-gray-900 dark:text-white" data-testid={`menu-label-${menu.id}`}>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                <h4 className="font-medium text-sm sm:text-base text-gray-900 dark:text-white truncate" data-testid={`menu-label-${menu.id}`}>
                   {menu.label}
                 </h4>
-                <Badge variant={menu.menuType === 'glink' ? 'default' : 'secondary'}>
+                <Badge variant={menu.menuType === 'glink' ? 'default' : 'secondary'} className="text-xs">
                   {menu.menuType.toUpperCase()}
                 </Badge>
                 {menu.isParent && (
                   <Badge variant="outline" className="text-xs">
-                    {menu.childCount} sub-menu{menu.childCount !== 1 ? 's' : ''}
+                    {menu.childCount} sub
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {menu.name} • Sort: {menu.sortOrder}
-              </p>
-              {menu.route && (
-                <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  {menu.route}
-                </code>
-              )}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-1">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+                  {menu.name} • Sort: {menu.sortOrder}
+                </p>
+                {menu.route && (
+                  <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 sm:px-2 py-1 rounded block sm:inline truncate">
+                    {menu.route}
+                  </code>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center space-x-2">
-            <Badge variant={menu.isActive ? 'default' : 'secondary'} data-testid={`status-${menu.id}`}>
+          <div className="flex items-center justify-end sm:justify-start space-x-1 sm:space-x-2 flex-shrink-0">
+            <Badge variant={menu.isActive ? 'default' : 'secondary'} data-testid={`status-${menu.id}`} className="text-xs">
               {menu.isActive ? 'Active' : 'Inactive'}
             </Badge>
             <Button
@@ -467,11 +469,12 @@ export default function MenuManagement() {
               onClick={() => toggleStatusMutation.mutate(menu.id)}
               disabled={toggleStatusMutation.isPending}
               data-testid={`toggle-status-${menu.id}`}
+              className="h-8 w-8 p-0"
             >
               {menu.isActive ? (
-                <ToggleRight className="h-4 w-4" />
+                <ToggleRight className="h-3 w-3 sm:h-4 sm:w-4" />
               ) : (
-                <ToggleLeft className="h-4 w-4" />
+                <ToggleLeft className="h-3 w-3 sm:h-4 sm:w-4" />
               )}
             </Button>
             <Button
@@ -479,32 +482,33 @@ export default function MenuManagement() {
               size="sm"
               onClick={() => handleEdit(menu)}
               data-testid={`edit-${menu.id}`}
+              className="h-8 w-8 p-0"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-600 hover:text-red-700"
+                  className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
                   data-testid={`delete-${menu.id}`}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="w-[95vw] sm:w-full max-w-md">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Menu</AlertDialogTitle>
                   <AlertDialogDescription>
                     Are you sure you want to delete "{menu.label}"? This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => deleteMenuMutation.mutate(menu.id)}
-                    className="bg-red-600 hover:bg-red-700"
+                    className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
                   >
                     Delete
                   </AlertDialogAction>
@@ -692,43 +696,46 @@ export default function MenuManagement() {
 
   return (
     <AppLayout title="Menu Management">
-      <div className="flex-1 space-y-6 p-4 md:p-6 pt-6">
-        <main className="max-w-7xl mx-auto space-y-6">
+      <div className="flex-1 space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
+        <main className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
             <div>
-              <h1 className="text-xl font-medium text-gray-900 dark:text-white">
+              <h1 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
                 Menu Management
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 Manage navigation menus with drag-and-drop hierarchy
               </p>
             </div>
             
-            <div className="flex items-center space-x-3">
-              <Badge variant="outline">
-                {menus.length} total menu{menus.length !== 1 ? 's' : ''}
+            <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
+              <Badge variant="outline" className="text-xs">
+                {menus.length} total
               </Badge>
               
               {/* Add New Menu Button */}
               <Button 
                 onClick={() => setLocation('/configuration/menu/add')}
                 data-testid="button-add-menu"
+                size="sm"
+                className="h-8 text-sm px-3"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Menu
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Add Menu</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </div>
 
           {/* Unsaved Changes Banner */}
           {hasUnsavedChanges && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
-                  <span className="text-sm text-amber-700 dark:text-amber-300">
-                    You have unsaved changes to the menu order
+                  <div className="w-2 h-2 bg-amber-500 rounded-full flex-shrink-0"></div>
+                  <span className="text-xs sm:text-sm text-amber-700 dark:text-amber-300">
+                    Unsaved menu order changes
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -737,6 +744,7 @@ export default function MenuManagement() {
                     size="sm"
                     onClick={handleDiscardChanges}
                     data-testid="button-discard"
+                    className="h-8 text-xs px-3"
                   >
                     Discard
                   </Button>
@@ -745,6 +753,7 @@ export default function MenuManagement() {
                     onClick={handleSaveOrder}
                     disabled={saveOrderMutation.isPending}
                     data-testid="button-save-order"
+                    className="h-8 text-xs px-3"
                   >
                     {saveOrderMutation.isPending ? 'Saving...' : 'Save Order'}
                   </Button>

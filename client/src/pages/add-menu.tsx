@@ -96,24 +96,25 @@ export default function AddMenu() {
 
   return (
     <AppLayout title="Add Menu">
-      <div className="flex-1 space-y-6 p-4 md:p-6 pt-6">
-        <main className="max-w-4xl mx-auto space-y-6">
+      <div className="flex-1 space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
+        <main className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
           {/* Header */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setLocation('/configuration/menu')}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 self-start"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Menu Management</span>
+              <span className="hidden sm:inline">Back to Menu Management</span>
+              <span className="sm:hidden">Back</span>
             </Button>
             <div>
-              <h1 className="text-xl font-medium text-gray-900 dark:text-white">
+              <h1 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
                 Add New Menu
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 Create a new navigation menu item
               </p>
             </div>
@@ -128,7 +129,7 @@ export default function AddMenu() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* Menu Type */}
                 <div className="space-y-2">
                   <Label htmlFor="menuType">Menu Type *</Label>
