@@ -41,21 +41,39 @@ export function UserProfileQuickSettings({ user, onLogout }: UserProfileQuickSet
   const [notifications, setNotifications] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const queryClient = useQueryClient();
+  
+  console.log('UserProfileQuickSettings rendering with user:', user?.email);
 
-  // Get user preferences
-  const { data: preferences = {} } = useQuery({
+  // Get user preferences with error handling
+  const { data: preferences = {}, error: preferencesError } = useQuery({
     queryKey: ["/api/user/preferences"],
     enabled: !!user,
+    retry: false,
   });
 
-  // Update user preferences
+  // Log any errors for debugging
+  React.useEffect(() => {
+    if (preferencesError) {
+      console.log('User preferences error:', preferencesError);
+    }
+  }, [preferencesError]);
+
+  // Update user preferences with error handling
   const updatePreferenceMutation = useMutation({
     mutationFn: async (updates: any) => {
-      return apiRequest("PATCH", "/api/user/preferences", updates);
+      try {
+        return await apiRequest("PATCH", "/api/user/preferences", updates);
+      } catch (error) {
+        console.error('Failed to update preferences:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/preferences"] });
     },
+    onError: (error) => {
+      console.error('Preference update error:', error);
+    }
   });
 
   const handleThemeChange = (newTheme: string) => {
