@@ -1,0 +1,461 @@
+Checking session, token exists: true
+App.tsx:66 Token found, validating session...
+App.tsx:68 Session validation result: true
+App.tsx:92 Session valid, rendering protected component
+AppLayout.tsx:150 AppLayout - User data: undefined
+AppLayout.tsx:151 AppLayout - User loading: true error: null
+AppLayout.tsx:152 AppLayout - User condition check: false
+TreeNavigation.tsx:133 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:141 TreeNavigation - No menus available
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+ports.tsx:103 === ADD PORT BUTTON DEBUG ===
+ports.tsx:104 canCreate("ports") result: false
+ports.tsx:105 Button should be visible: false
+ports.tsx:106 ==============================
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+AppLayout.tsx:140 Sidebar state changed - collapsed: false hovered: false
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+ports.tsx:103 === ADD PORT BUTTON DEBUG ===
+ports.tsx:104 canCreate("ports") result: false
+ports.tsx:105 Button should be visible: false
+ports.tsx:106 ==============================
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+ports.tsx:103 === ADD PORT BUTTON DEBUG ===
+ports.tsx:104 canCreate("ports") result: false
+ports.tsx:105 Button should be visible: false
+ports.tsx:106 ==============================
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "manage"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "port-contacts", subsection: "ports", level: "read"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "manage"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "port-contacts", subsection: "ports", level: "read"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: undefined userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+AppLayout.tsx:150 AppLayout - User data: Object
+AppLayout.tsx:151 AppLayout - User loading: false error: null
+AppLayout.tsx:152 AppLayout - User condition check: true
+TreeNavigation.tsx:133 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:141 TreeNavigation - No menus available
+AppLayout.tsx:52 SystemConfigDropdown rendering - allMenus: 0 isLoading: true error: null
+AppLayout.tsx:71 System config parent found: undefined
+AppLayout.tsx:79 System config menus found: 0 Array(0)
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+ports.tsx:103 === ADD PORT BUTTON DEBUG ===
+ports.tsx:104 canCreate("ports") result: false
+ports.tsx:105 Button should be visible: false
+ports.tsx:106 ==============================
+usePermissions.ts:173 === canCreate DEBUG ===
+usePermissions.ts:174 Full user data: undefined
+usePermissions.ts:175 userData.isSystemAdmin: undefined
+usePermissions.ts:176 userData.role: undefined
+usePermissions.ts:177 userData.userType: undefined
+usePermissions.ts:178 userData.roleId: undefined
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:196 canCreate("ports", "undefined") = false (permission check)
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "manage"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "port-contacts", subsection: "ports", level: "read"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "manage"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "port-contacts", subsection: "ports", level: "read"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+usePermissions.ts:56 === PERMISSION DEBUG START ===
+usePermissions.ts:57 getUserPermissions called - user: Object userRole: undefined
+usePermissions.ts:60 userData extracted: undefined
+usePermissions.ts:61 userData.role: undefined
+usePermissions.ts:62 userData.isSystemAdmin: undefined
+usePermissions.ts:65 No user or role found, returning empty permissions
+usePermissions.ts:105 hasPermission check for section: "ports", subsection: "undefined", level: "write"
+usePermissions.ts:106 Available permissions: Array(0)
+usePermissions.ts:145 Permission check result: false
+AppLayout.tsx:150 AppLayout - User data: Object
+AppLayout.tsx:151 AppLayout - User loading: false error: null
+AppLayout.tsx:152 AppLayout - User condition check: true
+TreeNavigation.tsx:133 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:141 TreeNavigation - No menus available
+AppLayout.tsx:52 SystemConfigDropdown rendering - allMenus: 0 isLoading: true error: null
+AppLayout.tsx:71 System config parent found: undefined
+AppLayout.tsx:79 System config menus found: 0 Array(0)
+TreeNavigation.tsx:133 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:141 TreeNavigation - No menus available
+AppLayout.tsx:52 SystemConfigDropdown rendering - allMenus: 0 isLoading: true error: null
+AppLayout.tsx:71 System config parent found: undefined
+AppLayout.tsx:79 System config menus found: 0 Array(0)
+AppLayout.tsx:150 AppLayout - User data: Object
+AppLayout.tsx:151 AppLayout - User loading: false error: null
+AppLayout.tsx:152 AppLayout - User condition check: true
+TreeNavigation.tsx:133 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:141 TreeNavigation - No menus available
+AppLayout.tsx:52 SystemConfigDropdown rendering - allMenus: 0 isLoading: true error: null
+AppLayout.tsx:71 System config parent found: undefined
+AppLayout.tsx:79 System config menus found: 0 Array(0)
+TreeNavigation.tsx:133 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for dashboard: true
+TreeNavigation.tsx:149 TreeNavigation - GLink dashboard: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for customers: true
+TreeNavigation.tsx:149 TreeNavigation - GLink customers: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for permission-assignment: false
+TreeNavigation.tsx:149 TreeNavigation - GLink permission-assignment: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for menu-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink menu-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for user-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink user-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for usera-csses: true
+TreeNavigation.tsx:149 TreeNavigation - GLink usera-csses: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for email-config: false
+TreeNavigation.tsx:149 TreeNavigation - GLink email-config: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for organizations: false
+TreeNavigation.tsx:149 TreeNavigation - GLink organizations: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for ports: false
+TreeNavigation.tsx:149 TreeNavigation - GLink ports: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for role-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink role-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for port-onboard: true
+TreeNavigation.tsx:149 TreeNavigation - GLink port-onboard: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for terminals: false
+TreeNavigation.tsx:149 TreeNavigation - GLink terminals: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for page-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink page-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for system-config: true
+TreeNavigation.tsx:149 TreeNavigation - GLink system-config: active=true, hasPermission=true, isSystemConfig=true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for port-admin-dashboard: false
+TreeNavigation.tsx:149 TreeNavigation - GLink port-admin-dashboard: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:162 TreeNavigation - Filtered menus: Object
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for permission-assignment: true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for user-management: true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for organizations: true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for ports: true
+AppLayout.tsx:52 SystemConfigDropdown rendering - allMenus: 15 isLoading: false error: null
+AppLayout.tsx:71 System config parent found: Object
+AppLayout.tsx:79 System config menus found: 4 Array(4)
+TreeNavigation.tsx:204 TreeNavigation - Auto-expand logic: Object
+TreeNavigation.tsx:232 TreeNavigation - Found active parent: Object
+TreeNavigation.tsx:238 TreeNavigation - Expanding parent: port-onboard
+TreeNavigation.tsx:133 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for dashboard: true
+TreeNavigation.tsx:149 TreeNavigation - GLink dashboard: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for customers: true
+TreeNavigation.tsx:149 TreeNavigation - GLink customers: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for permission-assignment: false
+TreeNavigation.tsx:149 TreeNavigation - GLink permission-assignment: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for menu-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink menu-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for user-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink user-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for usera-csses: true
+TreeNavigation.tsx:149 TreeNavigation - GLink usera-csses: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for email-config: false
+TreeNavigation.tsx:149 TreeNavigation - GLink email-config: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for organizations: false
+TreeNavigation.tsx:149 TreeNavigation - GLink organizations: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for ports: false
+TreeNavigation.tsx:149 TreeNavigation - GLink ports: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for role-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink role-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for port-onboard: true
+TreeNavigation.tsx:149 TreeNavigation - GLink port-onboard: active=true, hasPermission=true, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for terminals: false
+TreeNavigation.tsx:149 TreeNavigation - GLink terminals: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for page-management: false
+TreeNavigation.tsx:149 TreeNavigation - GLink page-management: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for system-config: true
+TreeNavigation.tsx:149 TreeNavigation - GLink system-config: active=true, hasPermission=true, isSystemConfig=true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for port-admin-dashboard: false
+TreeNavigation.tsx:149 TreeNavigation - GLink port-admin-dashboard: active=true, hasPermission=false, isSystemConfig=false
+TreeNavigation.tsx:162 TreeNavigation - Filtered menus: Object
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for permission-assignment: true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for user-management: true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for organizations: true
+TreeNavigation.tsx:75 hasMenuPermission check: Object
+TreeNavigation.tsx:97 SystemAdmin check: Object
+TreeNavigation.tsx:120 Permission check result for ports: true
+TreeNavigation.tsx:204 TreeNavigation - Auto-expand logic: Object
+TreeNavigation.tsx:232 TreeNavigation - Found active parent: Object
+AppLayout.tsx:150 AppLayout - User data: Object
+AppLayout.tsx:151 AppLayout - User loading: false error: null
+AppLayout.tsx:152 AppLayout - User condition check: true
+AppLayout.tsx:52 SystemConfigDropdown rendering - allMenus: 15 isLoading: false error: null
+AppLayout.tsx:71 System config parent found: Object
+AppLayout.tsx:79 System config menus found: 4 Array(4)
+AppLayout.tsx:140 Sidebar state changed - collapsed: false hovered: true
+AppLayout.tsx:150 AppLayout - User data: Object
+AppLayout.tsx:151 AppLayout - User loading: false error: null
+AppLayout.tsx:152 AppLayout - User condition check: true
+AppLayout.tsx:52 SystemConfigDropdown rendering - allMenus: 15 isLoading: false error: null
+AppLayout.tsx:71 System config parent found: Object
+AppLayout.tsx:79 System config menus found: 4 Array(4)
+AppLayout.tsx:140 Sidebar state changed - collapsed: false hovered: false

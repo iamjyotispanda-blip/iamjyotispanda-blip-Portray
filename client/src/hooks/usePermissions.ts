@@ -56,10 +56,20 @@ export function usePermissions() {
     console.log('=== PERMISSION DEBUG START ===');
     console.log('getUserPermissions called - user:', user, 'userRole:', userRole);
     
-    const userData = (user as any)?.user;
-    console.log('userData extracted:', userData);
+    // Extract user data properly - try multiple extraction methods
+    let userData = (user as any)?.user || user;
+    console.log('userData extracted (first attempt):', userData);
+    
+    // If still undefined, try direct extraction
+    if (!userData && user) {
+      userData = user;
+      console.log('userData extracted (direct):', userData);
+    }
+    
     console.log('userData.role:', userData?.role);
     console.log('userData.isSystemAdmin:', userData?.isSystemAdmin);
+    console.log('userData.userType:', userData?.userType);
+    console.log('userData.roleId:', userData?.roleId);
     
     if (!user || !userData?.role) {
       console.log('No user or role found, returning empty permissions');
@@ -168,7 +178,11 @@ export function usePermissions() {
   };
 
   const canCreate = (section: string, subsection?: string): boolean => {
-    const userData = (user as any)?.user;
+    // Use the same user data extraction as getUserPermissions
+    let userData = (user as any)?.user || user;
+    if (!userData && user) {
+      userData = user;
+    }
     
     console.log('=== canCreate DEBUG ===');
     console.log('Full user data:', userData);
