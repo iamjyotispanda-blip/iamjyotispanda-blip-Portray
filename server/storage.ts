@@ -57,6 +57,7 @@ export interface IStorage {
   deletePortAdminContact(id: number): Promise<void>;
   updatePortAdminContactVerification(id: number, token: string, expiresAt: Date): Promise<void>;
   verifyPortAdminContact(token: string, userId: string): Promise<PortAdminContact | undefined>;
+  activatePortAdminContact(userId: string): Promise<PortAdminContact | undefined>;
 
   // Email Configuration operations
   getAllEmailConfigurations(): Promise<EmailConfiguration[]>;
@@ -456,13 +457,25 @@ export class DatabaseStorage implements IStorage {
       .update(portAdminContacts)
       .set({ 
         isVerified: true, 
-        status: "active", 
+        status: "in progress", // Keep as "in progress" until password setup is completed
         userId: userId,
         verificationToken: null,
         verificationTokenExpires: null,
         updatedAt: new Date()
       })
       .where(eq(portAdminContacts.verificationToken, token))
+      .returning();
+    return contact || undefined;
+  }
+
+  async activatePortAdminContact(userId: string): Promise<PortAdminContact | undefined> {
+    const [contact] = await db
+      .update(portAdminContacts)
+      .set({ 
+        status: "active", // Change status to "active" after password setup is completed
+        updatedAt: new Date()
+      })
+      .where(eq(portAdminContacts.userId, userId))
       .returning();
     return contact || undefined;
   }

@@ -838,6 +838,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to update password" });
       }
       
+      // Activate the port admin contact (change status from "in progress" to "active")
+      if (updatedUser.role === "PortAdmin") {
+        const activatedContact = await storage.activatePortAdminContact(userId);
+        if (activatedContact) {
+          console.log(`Port admin contact status updated to active for user ${user.email}`);
+        }
+      }
+      
       // Create session for the user
       const session = await storage.createSession(user.id);
       
