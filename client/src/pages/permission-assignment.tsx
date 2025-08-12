@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Shield, Menu, ChevronDown, ChevronRight, Save } from "lucide-react";
+import { Shield, Menu, ChevronDown, ChevronRight, Save, Eye } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Role, Menu as MenuType } from "@shared/schema";
@@ -38,6 +40,7 @@ export default function PermissionAssignmentPage() {
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [permissionStates, setPermissionStates] = useState<Record<string, PermissionState>>({});
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -380,15 +383,56 @@ export default function PermissionAssignmentPage() {
                       </Select>
                     </div>
                     {selectedRoleId && (
-                      <Button 
-                        onClick={handleSavePermissions}
-                        disabled={savePermissionsMutation.isPending}
-                        className="h-8 w-full sm:w-auto"
-                        data-testid="button-save-permissions"
-                      >
-                        <Save className="h-4 w-4 mr-2" />
-                        {savePermissionsMutation.isPending ? "Saving..." : "Save Permissions"}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Dialog open={showPermissionsDialog} onOpenChange={setShowPermissionsDialog}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline"
+                              className="h-8 w-full sm:w-auto"
+                              data-testid="button-view-current-permissions"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Current Permissions
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Current Permissions - {selectedRole?.displayName}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 mt-4">
+                              {selectedRole?.permissions && selectedRole.permissions.length > 0 ? (
+                                <>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Total Permissions: {selectedRole.permissions.length}
+                                  </div>
+                                  <div className="grid gap-2">
+                                    {selectedRole.permissions.map((permission, index) => (
+                                      <div key={index} className="flex items-center space-x-2 p-2 border rounded">
+                                        <Badge variant="outline" className="font-mono text-xs">
+                                          {permission}
+                                        </Badge>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-center text-gray-500 py-8">
+                                  No permissions assigned to this role
+                                </div>
+                              )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        <Button 
+                          onClick={handleSavePermissions}
+                          disabled={savePermissionsMutation.isPending}
+                          className="h-8 w-full sm:w-auto"
+                          data-testid="button-save-permissions"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {savePermissionsMutation.isPending ? "Saving..." : "Save Permissions"}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
