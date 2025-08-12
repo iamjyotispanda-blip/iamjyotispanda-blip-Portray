@@ -57,6 +57,9 @@ export default function AddMenu() {
         title: 'Success',
         description: 'Menu created successfully',
       });
+      // Invalidate and refetch the menus before navigation
+      queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
+      queryClient.refetchQueries({ queryKey: ['/api/menus'] });
       setLocation('/configuration/menu');
     },
     onError: (error: any) => {

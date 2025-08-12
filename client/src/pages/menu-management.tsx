@@ -298,7 +298,9 @@ export default function MenuManagement() {
         title: 'Success',
         description: 'Menu deleted successfully',
       });
+      // Invalidate and refetch the menus
       queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
+      queryClient.refetchQueries({ queryKey: ['/api/menus'] });
     },
     onError: (error: any) => {
       toast({
@@ -320,6 +322,7 @@ export default function MenuManagement() {
         description: 'Menu status updated successfully',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
+      queryClient.refetchQueries({ queryKey: ['/api/menus'] });
     },
   });
 
@@ -334,6 +337,7 @@ export default function MenuManagement() {
         description: 'Menu order saved successfully',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
+      queryClient.refetchQueries({ queryKey: ['/api/menus'] });
       setHasUnsavedChanges(false);
     },
     onError: (error: any) => {
