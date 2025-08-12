@@ -53,17 +53,37 @@ export function usePermissions() {
 
   // Get user's permissions
   const getUserPermissions = (): Permission[] => {
+    console.log('=== PERMISSION DEBUG START ===');
     console.log('getUserPermissions called - user:', user, 'userRole:', userRole);
     
     const userData = (user as any)?.user;
+    console.log('userData extracted:', userData);
+    console.log('userData.role:', userData?.role);
+    console.log('userData.isSystemAdmin:', userData?.isSystemAdmin);
+    
     if (!user || !userData?.role) {
-      console.log('No user or role found');
+      console.log('No user or role found, returning empty permissions');
       return [];
     }
     
-    // System admin has all permissions
-    if (userData.isSystemAdmin || userData.role === "SystemAdmin" || userData.role === "System Admin") {
+    // System admin has all permissions - check multiple conditions
+    const isSystemAdmin = userData.isSystemAdmin || 
+                         userData.role === "SystemAdmin" || 
+                         userData.role === "System Admin" ||
+                         userData.userType === "SystemAdmin" ||
+                         userData.userType === "SuperAdmin";
+    
+    console.log('isSystemAdmin check result:', isSystemAdmin);
+    console.log('Individual checks:');
+    console.log('  userData.isSystemAdmin:', userData.isSystemAdmin);
+    console.log('  userData.role === "SystemAdmin":', userData.role === "SystemAdmin");
+    console.log('  userData.role === "System Admin":', userData.role === "System Admin");
+    console.log('  userData.userType === "SystemAdmin":', userData.userType === "SystemAdmin");
+    console.log('  userData.userType === "SuperAdmin":', userData.userType === "SuperAdmin");
+    
+    if (isSystemAdmin) {
       console.log('User is SystemAdmin, granting all permissions');
+      console.log('=== PERMISSION DEBUG END (SystemAdmin) ===');
       return [
         { section: "*", levels: ['read', 'write', 'manage'] }
       ];
@@ -73,16 +93,9 @@ export function usePermissions() {
     const rolePermissions = userRole?.permissions || [];
     console.log('Role permissions found:', rolePermissions);
     
-    // If no role permissions defined but user is System Admin, grant all permissions
-    if (rolePermissions.length === 0 && (userData.isSystemAdmin || userData.role === "SystemAdmin" || userData.role === "System Admin")) {
-      console.log('No role permissions but user is SystemAdmin, granting all permissions');
-      return [
-        { section: "*", levels: ['read', 'write', 'manage'] }
-      ];
-    }
-    
     const parsedPermissions = parsePermissions(rolePermissions);
     console.log('Parsed permissions:', parsedPermissions);
+    console.log('=== PERMISSION DEBUG END ===');
     return parsedPermissions;
   };
 
@@ -137,7 +150,9 @@ export function usePermissions() {
   };
 
   const canCreate = (section: string, subsection?: string): boolean => {
-    return canWrite(section, subsection);
+    const result = canWrite(section, subsection);
+    console.log(`canCreate("${section}", "${subsection}") = ${result}`);
+    return result;
   };
 
   // Check multiple permissions at once
