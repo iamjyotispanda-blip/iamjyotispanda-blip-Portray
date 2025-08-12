@@ -564,133 +564,19 @@ export default function MenuManagementPage() {
       <div className="space-y-2">
         <Label htmlFor="icon">Icon</Label>
         <Select
-          value={formData.icon || "no-icon"}
-          onValueChange={(value: string) => setFormData(prev => ({ ...prev, icon: value === "no-icon" ? "" : value }))}
+          value={formData.icon || ""}
+          onValueChange={(value: string) => setFormData(prev => ({ ...prev, icon: value }))}
         >
           <SelectTrigger id="icon" data-testid="select-icon">
-            <SelectValue placeholder="Select an icon">
-              {formData.icon && (
-                <div className="flex items-center space-x-2">
-                  {(() => {
-                    const IconComponent = getIconComponent(formData.icon) as React.ComponentType<{ className?: string }>;
-                    return <IconComponent className="h-4 w-4" />;
-                  })()}
-                  <span>{formData.icon}</span>
-                </div>
-              )}
-            </SelectValue>
+            <SelectValue placeholder="Select an icon" />
           </SelectTrigger>
           <SelectContent className="max-h-64 overflow-y-auto">
-            <SelectItem value="no-icon">
+            <SelectItem value="">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4"></div>
                 <span>No icon</span>
               </div>
             </SelectItem>
-            
-            {/* Enhanced Personalized Recommendations Section */}
-            {(() => {
-              if (!formData.name && !formData.label) return null;
-              
-              const parentMenu = formData.parentId ? safeGlinkMenus.find(m => m.id === formData.parentId) : undefined;
-              const detailedRecommendations = getIconRecommendations(
-                formData.name, 
-                formData.label, 
-                formData.menuType, 
-                formData.icon || undefined
-              );
-              
-              if (detailedRecommendations.length > 0) {
-                const exactRecommendations = detailedRecommendations.filter(rec => rec.category === 'exact');
-                const contextualRecommendations = detailedRecommendations.filter(rec => rec.category === 'contextual');
-                const fallbackRecommendations = detailedRecommendations.filter(rec => rec.category === 'fallback');
-                
-                return (
-                  <>
-                    {/* Exact Match Recommendations */}
-                    {exactRecommendations.length > 0 && (
-                      <>
-                        <div className="px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-b">
-                          🎯 Perfect Match for "{formData.name || formData.label}" ({formData.menuType === 'glink' ? 'Main Menu' : 'Sub Menu'})
-                        </div>
-                        {exactRecommendations.map((recommendation) => {
-                          const IconComponent = getIconComponent(recommendation.icon) as React.ComponentType<{ className?: string }>;
-                          
-                          return (
-                            <SelectItem key={`exact-${recommendation.icon}`} value={recommendation.icon}>
-                              <div className="flex items-center space-x-2">
-                                <IconComponent className="h-4 w-4 text-blue-600" />
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{recommendation.icon}</span>
-                                  <span className="text-xs text-gray-500">{recommendation.reason}</span>
-                                </div>
-                                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700">Exact</Badge>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </>
-                    )}
-                    
-                    {/* Contextual Recommendations */}
-                    {contextualRecommendations.length > 0 && (
-                      <>
-                        <div className="px-3 py-2 text-xs font-medium text-green-600 bg-green-50 dark:bg-green-900/20 border-b">
-                          💡 Contextual Suggestions
-                        </div>
-                        {contextualRecommendations.map((recommendation) => {
-                          const IconComponent = getIconComponent(recommendation.icon) as React.ComponentType<{ className?: string }>;
-                          
-                          return (
-                            <SelectItem key={`contextual-${recommendation.icon}`} value={recommendation.icon}>
-                              <div className="flex items-center space-x-2">
-                                <IconComponent className="h-4 w-4 text-green-600" />
-                                <div className="flex flex-col">
-                                  <span>{recommendation.icon}</span>
-                                  <span className="text-xs text-gray-500">{recommendation.reason}</span>
-                                </div>
-                                <Badge variant="outline" className="text-xs bg-green-100 text-green-700">Smart</Badge>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </>
-                    )}
-                    
-                    {/* Fallback Options */}
-                    {fallbackRecommendations.length > 0 && (
-                      <>
-                        <div className="px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 dark:bg-gray-800 border-b">
-                          📋 General Options
-                        </div>
-                        {fallbackRecommendations.map((recommendation) => {
-                          const IconComponent = getIconComponent(recommendation.icon) as React.ComponentType<{ className?: string }>;
-                          
-                          return (
-                            <SelectItem key={`fallback-${recommendation.icon}`} value={recommendation.icon}>
-                              <div className="flex items-center space-x-2">
-                                <IconComponent className="h-4 w-4" />
-                                <div className="flex flex-col">
-                                  <span>{recommendation.icon}</span>
-                                  <span className="text-xs text-gray-500">{recommendation.reason}</span>
-                                </div>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </>
-                    )}
-                  </>
-                );
-              }
-              return null;
-            })()}
-            
-            {/* All Available Icons Section */}
-            <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b">
-              🎨 All Available Icons
-            </div>
-            {/* Popular Icons First */}
             <SelectItem value="Home">
               <div className="flex items-center space-x-2">
                 <Home className="h-4 w-4" />
