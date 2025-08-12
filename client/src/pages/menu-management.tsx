@@ -765,12 +765,6 @@ export default function MenuManagement() {
 
           {/* Menu Tree */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <MenuIcon className="h-5 w-5" />
-                <span>Menu Hierarchy</span>
-              </CardTitle>
-            </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
