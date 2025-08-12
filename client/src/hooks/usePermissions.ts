@@ -102,30 +102,48 @@ export function usePermissions() {
   // Check if user has specific permission level
   const hasPermission = (section: string, subsection?: string, level: 'read' | 'write' | 'manage' = 'read'): boolean => {
     const permissions = getUserPermissions();
+    console.log(`hasPermission check for section: "${section}", subsection: "${subsection}", level: "${level}"`);
+    console.log('Available permissions:', permissions);
     
     // System admin check
     const hasWildcard = permissions.some(p => p.section === "*");
-    if (hasWildcard) return true;
+    if (hasWildcard) {
+      console.log('Found wildcard permission, granting access');
+      return true;
+    }
 
     // Level hierarchy: manage > write > read
     const levelHierarchy = { read: 0, write: 1, manage: 2 };
     const requiredLevel = levelHierarchy[level];
 
-    return permissions.some(permission => {
-      // Check section match
-      const sectionMatch = permission.section === section;
-      if (!sectionMatch) return false;
-
-      // Check subsection match if provided
-      if (subsection && permission.subsection !== subsection) {
-        return false;
+    // Check direct section match or nested permissions
+    const hasDirectPermission = permissions.some(permission => {
+      // Direct section match (e.g., "ports")
+      if (permission.section === section) {
+        console.log(`Direct section match found for "${section}"`);
+        // Check subsection match if provided
+        if (subsection && permission.subsection !== subsection) {
+          return false;
+        }
+        // Check if user has required level or higher
+        return permission.levels.some(userLevel => {
+          return levelHierarchy[userLevel] >= requiredLevel;
+        });
       }
-
-      // Check if user has required level or higher
-      return permission.levels.some(userLevel => {
-        return levelHierarchy[userLevel] >= requiredLevel;
-      });
+      
+      // Check nested permissions (e.g., "port-management:ports" or "port-onboard:ports")
+      if (permission.subsection === section) {
+        console.log(`Nested permission found: "${permission.section}:${permission.subsection}"`);
+        return permission.levels.some(userLevel => {
+          return levelHierarchy[userLevel] >= requiredLevel;
+        });
+      }
+      
+      return false;
     });
+
+    console.log(`Permission check result: ${hasDirectPermission}`);
+    return hasDirectPermission;
   };
 
   // Convenience functions for common permission checks
