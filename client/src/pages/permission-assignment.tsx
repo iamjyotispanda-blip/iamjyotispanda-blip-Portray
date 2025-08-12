@@ -93,18 +93,43 @@ export default function PermissionAssignmentPage() {
       return { read: false, write: false, manage: false };
     }
 
-    const targetPermission = selectedRole.permissions.find(permission => {
-      const parts = permission.split(':');
-      if (pLinkName) {
-        return parts[0] === gLinkName && parts[1] === pLinkName;
-      } else {
-        return parts[0] === gLinkName && parts.length === 2; // GLink only permission
-      }
-    });
+    let targetPermission: string | undefined;
+
+    if (pLinkName) {
+      // For PLink (child menu), look for "gLink:pLink:permissions" format
+      targetPermission = selectedRole.permissions.find(permission => {
+        const parts = permission.split(':');
+        return parts.length >= 3 && parts[0] === gLinkName && parts[1] === pLinkName;
+      });
+    } else {
+      // For GLink (parent menu), look for exact name match or "gLink:permissions" format
+      targetPermission = selectedRole.permissions.find(permission => {
+        // Check for simple name match (like "dashboard:manage")
+        if (permission === `${gLinkName}:manage` || 
+            permission === `${gLinkName}:read` || 
+            permission === `${gLinkName}:write` ||
+            permission === `${gLinkName}:read,write,manage`) {
+          return true;
+        }
+        
+        // Check for "gLink:permissions" format
+        const parts = permission.split(':');
+        return parts.length === 2 && parts[0] === gLinkName;
+      });
+    }
 
     if (targetPermission) {
       const parts = targetPermission.split(':');
-      const permissionLevels = parts[2] ? parts[2].split(',') : [];
+      let permissionLevels: string[] = [];
+      
+      if (pLinkName) {
+        // PLink format: "gLink:pLink:permissions"
+        permissionLevels = parts[2] ? parts[2].split(',') : [];
+      } else {
+        // GLink format: "gLink:permissions" or just the permission name
+        permissionLevels = parts[1] ? parts[1].split(',') : [];
+      }
+      
       return {
         read: permissionLevels.includes('read'),
         write: permissionLevels.includes('write'),
@@ -154,22 +179,40 @@ export default function PermissionAssignmentPage() {
     if (!selectedRole) return;
 
     const currentPermissions = [...(selectedRole.permissions || [])];
-    const targetKey = pLinkName ? `${gLinkName}:${pLinkName}` : gLinkName;
     
     // Find existing permission for this menu item
-    const existingPermissionIndex = currentPermissions.findIndex(permission => {
-      const parts = permission.split(':');
-      if (pLinkName) {
-        return parts[0] === gLinkName && parts[1] === pLinkName;
-      } else {
-        return parts[0] === gLinkName && parts.length === 2;
-      }
-    });
-
+    let existingPermissionIndex = -1;
     let permissionLevels: string[] = [];
+
+    if (pLinkName) {
+      // For PLink, look for "gLink:pLink:permissions" format
+      existingPermissionIndex = currentPermissions.findIndex(permission => {
+        const parts = permission.split(':');
+        return parts.length >= 3 && parts[0] === gLinkName && parts[1] === pLinkName;
+      });
+    } else {
+      // For GLink, look for various formats
+      existingPermissionIndex = currentPermissions.findIndex(permission => {
+        // Check for simple name match (like "dashboard:manage")
+        if (permission.startsWith(`${gLinkName}:`) && !permission.includes(':', permission.indexOf(':') + 1)) {
+          return true;
+        }
+        
+        // Check for "gLink:permissions" format
+        const parts = permission.split(':');
+        return parts.length === 2 && parts[0] === gLinkName;
+      });
+    }
+
     if (existingPermissionIndex >= 0) {
       const parts = currentPermissions[existingPermissionIndex].split(':');
-      permissionLevels = parts[2] ? parts[2].split(',') : [];
+      if (pLinkName) {
+        // PLink format: "gLink:pLink:permissions"
+        permissionLevels = parts[2] ? parts[2].split(',') : [];
+      } else {
+        // GLink format: "gLink:permissions"
+        permissionLevels = parts[1] ? parts[1].split(',') : [];
+      }
       currentPermissions.splice(existingPermissionIndex, 1);
     }
 
@@ -235,19 +278,38 @@ export default function PermissionAssignmentPage() {
 
     allMenuItems.forEach(({ gLink, pLink }) => {
       // Find existing permission for this menu item
-      const existingPermissionIndex = updatedPermissions.findIndex(permission => {
-        const parts = permission.split(':');
-        if (pLink) {
-          return parts[0] === gLink && parts[1] === pLink;
-        } else {
-          return parts[0] === gLink && parts.length === 2;
-        }
-      });
+      let existingPermissionIndex = -1;
+      
+      if (pLink) {
+        // For PLink, look for "gLink:pLink:permissions" format
+        existingPermissionIndex = updatedPermissions.findIndex(permission => {
+          const parts = permission.split(':');
+          return parts.length >= 3 && parts[0] === gLink && parts[1] === pLink;
+        });
+      } else {
+        // For GLink, look for various formats
+        existingPermissionIndex = updatedPermissions.findIndex(permission => {
+          // Check for simple name match (like "dashboard:manage")
+          if (permission.startsWith(`${gLink}:`) && !permission.includes(':', permission.indexOf(':') + 1)) {
+            return true;
+          }
+          
+          // Check for "gLink:permissions" format
+          const parts = permission.split(':');
+          return parts.length === 2 && parts[0] === gLink;
+        });
+      }
 
       let permissionLevels: string[] = [];
       if (existingPermissionIndex >= 0) {
         const parts = updatedPermissions[existingPermissionIndex].split(':');
-        permissionLevels = parts[2] ? parts[2].split(',') : [];
+        if (pLink) {
+          // PLink format: "gLink:pLink:permissions"
+          permissionLevels = parts[2] ? parts[2].split(',') : [];
+        } else {
+          // GLink format: "gLink:permissions"
+          permissionLevels = parts[1] ? parts[1].split(',') : [];
+        }
         updatedPermissions.splice(existingPermissionIndex, 1);
       }
 
