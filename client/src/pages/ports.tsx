@@ -80,78 +80,74 @@ export function PortsContent() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="px-6 py-4">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Port Management</h1>
-        </div>
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Ports</span>
       </div>
       
-      <main className="px-6 py-6 flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="relative w-full sm:w-80">
+      <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search ports..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full"
+                className="pl-10"
                 data-testid="input-search-ports"
               />
             </div>
-            {/* Temporarily force button to show while we fix permissions */}
-            <Button onClick={() => setLocation("/ports/new")} className="h-8" data-testid="button-add-port">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Port
-            </Button>
+            {/* Add debugging for permission check */}
+            {(() => {
+              const canCreatePorts = canCreate("ports");
+              console.log('=== ADD PORT BUTTON DEBUG ===');
+              console.log('canCreate("ports") result:', canCreatePorts);
+              console.log('Button should be visible:', canCreatePorts);
+              console.log('==============================');
+              return canCreatePorts;
+            })() && (
+              <Button onClick={() => setLocation("/ports/new")} className="h-8" data-testid="button-add-port">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Port
+              </Button>
+            )}
+            
+            {/* Temporary fallback button for debugging */}
+            {!canCreate("ports") && (
+              <div className="text-xs text-red-500 bg-red-50 p-2 rounded border">
+                Debug: Add Port button hidden - no "ports" create permission
+              </div>
+            )}
           </div>
 
           {/* Ports List */}
-          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4">
         {portsLoading ? (
-          Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-gray-200 rounded"></div>
-                    <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center text-gray-500">Loading ports...</div>
+            </CardContent>
+          </Card>
         ) : filteredPorts.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Ports Found</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {searchTerm ? "No ports match your search criteria." : "Get started by adding your first port."}
-            </p>
-            <Button onClick={() => setLocation("/ports/new")} className="h-10">
-              <Plus className="w-4 h-4 mr-2" />
-              Add First Port
-            </Button>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center text-gray-500">
+                {searchTerm ? "No ports found matching your search." : "No ports found. Add the first port to get started."}
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           filteredPorts.map((port: Port) => (
-            <Card key={port.id} className="hover:shadow-lg transition-all duration-200 border-0 shadow-sm" data-testid={`card-port-${port.id}`}>
+            <Card key={port.id} className="hover:shadow-md transition-shadow" data-testid={`card-port-${port.id}`}>
               <CardContent className="p-6">
-                <div className="space-y-4">
+                <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate" data-testid={`text-port-name-${port.id}`}>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white" data-testid={`text-port-name-${port.id}`}>
                           {port.portName}
                         </h3>
                         <Badge variant="outline" data-testid={`badge-port-display-${port.id}`}>
