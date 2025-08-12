@@ -206,6 +206,75 @@ export default function PermissionAssignmentPage() {
     savePermissionsMutation.mutate(selectedRole.permissions);
   };
 
+  // Bulk permission operations
+  const handleBulkSelect = (permissionType: 'read' | 'write' | 'manage', selectAll: boolean) => {
+    if (!selectedRole) return;
+
+    const currentPermissions = [...(selectedRole.permissions || [])];
+    const menuList = menus as MenuType[];
+    const allMenuItems: Array<{gLink: string, pLink?: string}> = [];
+    
+    // Build list of all menu items (GLinks and PLinks)
+    menuList.filter(menu => menu.menuType === 'glink' && menu.isActive).forEach(gLink => {
+      allMenuItems.push({ gLink: gLink.name });
+      menuList.filter(menu => menu.menuType === 'plink' && menu.isActive && menu.parentId === gLink.id)
+        .forEach(pLink => {
+          allMenuItems.push({ gLink: gLink.name, pLink: pLink.name });
+        });
+    });
+
+    const updatedPermissions = [...currentPermissions];
+
+    allMenuItems.forEach(({ gLink, pLink }) => {
+      // Find existing permission for this menu item
+      const existingPermissionIndex = updatedPermissions.findIndex(permission => {
+        const parts = permission.split(':');
+        if (pLink) {
+          return parts[0] === gLink && parts[1] === pLink;
+        } else {
+          return parts[0] === gLink && parts.length === 2;
+        }
+      });
+
+      let permissionLevels: string[] = [];
+      if (existingPermissionIndex >= 0) {
+        const parts = updatedPermissions[existingPermissionIndex].split(':');
+        permissionLevels = parts[2] ? parts[2].split(',') : [];
+        updatedPermissions.splice(existingPermissionIndex, 1);
+      }
+
+      // Update permission levels
+      if (selectAll) {
+        if (!permissionLevels.includes(permissionType)) {
+          permissionLevels.push(permissionType);
+        }
+      } else {
+        permissionLevels = permissionLevels.filter(level => level !== permissionType);
+      }
+
+      // Add back if there are any permission levels
+      if (permissionLevels.length > 0) {
+        const newPermission = pLink 
+          ? `${gLink}:${pLink}:${permissionLevels.join(',')}`
+          : `${gLink}:${permissionLevels.join(',')}`;
+        updatedPermissions.push(newPermission);
+      }
+    });
+
+    // Update the role with new permissions
+    queryClient.setQueryData(["/api/roles", selectedRoleId], {
+      ...selectedRole,
+      permissions: updatedPermissions,
+    });
+  };
+
+  const handleSelectAllRead = () => handleBulkSelect('read', true);
+  const handleUnselectAllRead = () => handleBulkSelect('read', false);
+  const handleSelectAllWrite = () => handleBulkSelect('write', true);
+  const handleUnselectAllWrite = () => handleBulkSelect('write', false);
+  const handleSelectAllManage = () => handleBulkSelect('manage', true);
+  const handleUnselectAllManage = () => handleBulkSelect('manage', false);
+
   const treeData = buildTree();
 
   return (
@@ -261,12 +330,77 @@ export default function PermissionAssignmentPage() {
               <Card>
                 <CardContent className="p-3 sm:p-6">
                   <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <h3 className="text-lg font-medium">Menu Permissions</h3>
-                      <div className="flex items-center space-x-4 sm:space-x-6 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
-                        <span>Read</span>
-                        <span>Write</span>
-                        <span>Manage</span>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <h3 className="text-lg font-medium">Menu Permissions</h3>
+                        <div className="flex items-center space-x-4 sm:space-x-6 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
+                          <span>Read</span>
+                          <span>Write</span>
+                          <span>Manage</span>
+                        </div>
+                      </div>
+                      
+                      {/* Bulk Selection Options */}
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Bulk Selection</h4>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleSelectAllRead}
+                              className="h-7 text-xs"
+                              data-testid="button-select-all-read"
+                            >
+                              Select All Read
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleUnselectAllRead}
+                              className="h-7 text-xs"
+                              data-testid="button-unselect-all-read"
+                            >
+                              Clear All Read
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleSelectAllWrite}
+                              className="h-7 text-xs"
+                              data-testid="button-select-all-write"
+                            >
+                              Select All Write
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleUnselectAllWrite}
+                              className="h-7 text-xs"
+                              data-testid="button-unselect-all-write"
+                            >
+                              Clear All Write
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleSelectAllManage}
+                              className="h-7 text-xs"
+                              data-testid="button-select-all-manage"
+                            >
+                              Select All Manage
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleUnselectAllManage}
+                              className="h-7 text-xs"
+                              data-testid="button-unselect-all-manage"
+                            >
+                              Clear All Manage
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
