@@ -708,9 +708,6 @@ export default function MenuManagement() {
               <h1 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
                 Menu Management
               </h1>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                Manage navigation menus with drag-and-drop hierarchy
-              </p>
             </div>
             
             <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
