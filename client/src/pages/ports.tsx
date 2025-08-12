@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { PortsLayout } from "@/components/layout/PortsLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -220,8 +220,8 @@ export function PortsContent() {
 // Full page component with AppLayout wrapper for standalone routing
 export default function PortsPage() {
   return (
-    <PortsLayout title="Ports" activeSection="ports">
+    <AppLayout title="Port Management" activeSection="ports">
       <PortsContent />
-    </PortsLayout>
+    </AppLayout>
   );
 }
