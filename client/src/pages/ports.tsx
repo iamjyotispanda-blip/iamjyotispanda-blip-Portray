@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PortsLayout } from "@/components/layout/PortsLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -19,7 +19,7 @@ export function PortsContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { canCreate, canEdit, canManage, canRead, isLoading: permissionsLoading } = usePermissions();
+  const { canCreate, canEdit, canManage, canRead } = usePermissions();
 
   // Get all ports
   const { data: ports = [], isLoading: portsLoading } = useQuery({
@@ -220,8 +220,8 @@ export function PortsContent() {
 // Full page component with AppLayout wrapper for standalone routing
 export default function PortsPage() {
   return (
-    <AppLayout title="Ports" activeSection="ports">
+    <PortsLayout title="Ports" activeSection="ports">
       <PortsContent />
-    </AppLayout>
+    </PortsLayout>
   );
 }
