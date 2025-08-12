@@ -438,7 +438,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deletePortAdminContact(id: number): Promise<void> {
+    // First get the contact to find the associated userId
+    const contact = await this.getPortAdminContactById(id);
+    
+    // Delete the contact
     await db.delete(portAdminContacts).where(eq(portAdminContacts.id, id));
+    
+    // If the contact had an associated user, deactivate that user
+    if (contact && contact.userId) {
+      await this.updateUser(contact.userId, { isActive: false });
+      console.log(`Deactivated user ${contact.userId} after deleting port contact ${contact.contactName}`);
+    }
   }
 
   async updatePortAdminContactVerification(id: number, token: string, expiresAt: Date): Promise<void> {
@@ -1126,7 +1136,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCustomerContact(id: number): Promise<void> {
+    // First get the contact to find the associated email
+    const [contact] = await db.select().from(customerContacts).where(eq(customerContacts.id, id));
+    
+    // Delete the contact
     await db.delete(customerContacts).where(eq(customerContacts.id, id));
+    
+    // If the contact exists, deactivate any user with the same email
+    if (contact && contact.email) {
+      const user = await this.getUserByEmail(contact.email);
+      if (user) {
+        await this.updateUser(user.id, { isActive: false });
+        console.log(`Deactivated user ${user.id} (${user.email}) after deleting customer contact ${contact.contactName}`);
+      }
+    }
   }
 
   // Customer addresses
