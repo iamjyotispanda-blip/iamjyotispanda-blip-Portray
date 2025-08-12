@@ -16,7 +16,7 @@ import PortContactsPage from "@/pages/port-contacts";
 import PortAdminVerificationPage from "@/pages/port-admin-verification";
 import PortAdminDashboard from "@/pages/port-admin-dashboard";
 import EmailConfigurationPage from "@/pages/email-configuration";
-import MenuSimple from "@/pages/menu-simple";
+import MenuManagement from "@/pages/menu-management";
 import PageManagementPage from "@/pages/page-management";
 import OrganizationsPage from "@/pages/organizations";
 import VerifyPage from "@/pages/verify";
@@ -126,7 +126,7 @@ function Router() {
         {() => <ProtectedRoute component={EmailConfigurationPage} />}
       </Route>
       <Route path="/configuration/menu">
-        {() => <ProtectedRoute component={MenuSimple} />}
+        {() => <ProtectedRoute component={MenuManagement} />}
       </Route>
       <Route path="/configuration/pages">
         {() => <ProtectedRoute component={PageManagementPage} />}
@@ -150,7 +150,7 @@ function Router() {
         {() => <ProtectedRoute component={NotificationsPage} />}
       </Route>
       <Route path="/menu-management">
-        {() => <ProtectedRoute component={MenuSimple} />}
+        {() => <ProtectedRoute component={MenuManagement} />}
       </Route>
       <Route path="/roles">
         {() => <ProtectedRoute component={RolesPage} />}

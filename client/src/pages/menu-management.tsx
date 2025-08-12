@@ -151,7 +151,8 @@ export default function MenuManagement() {
   const { data: menus = [], isLoading } = useQuery({
     queryKey: ['/api/menus'],
     queryFn: async () => {
-      return apiRequest('GET', '/api/menus') as Promise<Menu[]>;
+      const response = await apiRequest('GET', '/api/menus');
+      return response as Menu[];
     },
   });
 
