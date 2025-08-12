@@ -109,13 +109,14 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   }, [sidebarCollapsed, sidebarHovered]);
 
   // Get current user
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading, error: userError } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: AuthService.getCurrentUser,
   });
 
   // Debug user data
   console.log('AppLayout - User data:', user);
+  console.log('AppLayout - User loading:', userLoading, 'error:', userError);
   console.log('AppLayout - User condition check:', !!user);
 
   // Get notifications for authenticated users
