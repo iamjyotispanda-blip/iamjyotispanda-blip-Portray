@@ -73,7 +73,7 @@ export default function RolesPage() {
   // Create role mutation
   const createRoleMutation = useMutation({
     mutationFn: (data: Omit<RoleFormData, 'isActive'> & { isActive?: boolean }) => 
-      apiRequest("/api/roles", "POST", data),
+      apiRequest("POST", "/api/roles", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       setShowCreateForm(false);
@@ -96,7 +96,7 @@ export default function RolesPage() {
   // Update role mutation
   const updateRoleMutation = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Partial<RoleFormData> }) =>
-      apiRequest(`/api/roles/${id}`, "PUT", data),
+      apiRequest("PUT", `/api/roles/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       setShowEditForm(false);
@@ -119,7 +119,7 @@ export default function RolesPage() {
 
   // Toggle role status mutation
   const toggleStatusMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/roles/${id}/toggle-status`, "PATCH", {}),
+    mutationFn: (id: number) => apiRequest("PATCH", `/api/roles/${id}/toggle-status`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       toast({
@@ -139,7 +139,7 @@ export default function RolesPage() {
 
   // Delete role mutation
   const deleteRoleMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/roles/${id}`, "DELETE"),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/roles/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       toast({
