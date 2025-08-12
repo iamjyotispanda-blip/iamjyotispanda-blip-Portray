@@ -702,31 +702,23 @@ export default function MenuManagement() {
     <AppLayout title="Menu Management">
       <div className="flex-1 space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
         <main className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-            <div>
-              <h1 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
-                Menu Management
-              </h1>
-            </div>
+          {/* Action Bar */}
+          <div className="flex items-center justify-end space-x-2 sm:space-x-3">
+            <Badge variant="outline" className="text-xs">
+              {menus.length} total
+            </Badge>
             
-            <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
-              <Badge variant="outline" className="text-xs">
-                {menus.length} total
-              </Badge>
-              
-              {/* Add New Menu Button */}
-              <Button 
-                onClick={() => setLocation('/configuration/menu/add')}
-                data-testid="button-add-menu"
-                size="sm"
-                className="h-8 text-sm px-3"
-              >
-                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Add Menu</span>
-                <span className="sm:hidden">Add</span>
-              </Button>
-            </div>
+            {/* Add New Menu Button */}
+            <Button 
+              onClick={() => setLocation('/configuration/menu/add')}
+              data-testid="button-add-menu"
+              size="sm"
+              className="h-8 text-sm px-3"
+            >
+              <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Add Menu</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
           </div>
 
           {/* Unsaved Changes Banner */}
