@@ -43,80 +43,7 @@ interface RoleFormData {
   isActive: boolean;
 }
 
-interface RoleTemplate {
-  id: string;
-  name: string;
-  description: string;
-  permissions: string[];
-}
 
-// Default role templates
-const DEFAULT_ROLE_TEMPLATES: RoleTemplate[] = [
-  {
-    id: "system-admin",
-    name: "System Administrator",
-    description: "Full system access with all administrative privileges",
-    permissions: [
-      "dashboard:read,write,manage",
-      "users-access:users:read,write,manage",
-      "users-access:roles:read,write,manage",
-      "configuration:system:read,write,manage",
-      "configuration:email:read,write,manage",
-      "configuration:pages:read,write,manage",
-      "configuration:menu:read,write,manage",
-      "port-management:ports:read,write,manage",
-      "port-management:terminals:read,write,manage",
-      "customers:read,write,manage",
-      "contracts:read,write,manage",
-      "reports:read,write,manage"
-    ]
-  },
-  {
-    id: "port-admin",
-    name: "Port Administrator",
-    description: "Port-level administrative access",
-    permissions: [
-      "dashboard:read",
-      "port-management:terminals:read,write,manage",
-      "customers:read,write",
-      "contracts:read,write",
-      "reports:read"
-    ]
-  },
-  {
-    id: "terminal-operator",
-    name: "Terminal Operator",
-    description: "Terminal operations and basic access",
-    permissions: [
-      "dashboard:read",
-      "port-management:terminals:read,write",
-      "customers:read",
-      "contracts:read"
-    ]
-  },
-  {
-    id: "customer-user",
-    name: "Customer User",
-    description: "Customer portal access with limited permissions",
-    permissions: [
-      "dashboard:read",
-      "customers:read",
-      "contracts:read"
-    ]
-  },
-  {
-    id: "supervisor",
-    name: "Supervisor",
-    description: "Supervisory access with monitoring capabilities",
-    permissions: [
-      "dashboard:read,write",
-      "port-management:terminals:read",
-      "customers:read",
-      "contracts:read",
-      "reports:read"
-    ]
-  }
-];
 
 export default function RolesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -234,21 +161,6 @@ export default function RolesPage() {
       permissions: [],
       isActive: true
     });
-    setSelectedTemplate("");
-  };
-
-  const handleTemplateChange = (templateId: string) => {
-    setSelectedTemplate(templateId);
-    const template = DEFAULT_ROLE_TEMPLATES.find(t => t.id === templateId);
-    if (template) {
-      setFormData(prev => ({
-        ...prev,
-        name: template.name.replace(/\s+/g, ''),
-        displayName: template.name,
-        description: template.description,
-        permissions: [...template.permissions]
-      }));
-    }
   };
 
   const handleCreateRole = () => {
@@ -360,23 +272,6 @@ export default function RolesPage() {
                     </SheetHeader>
                     
                     <div className="space-y-4 mt-6 pb-6">
-                  {/* Template Selection */}
-                  <div className="space-y-2">
-                    <Label>Role Template (Optional)</Label>
-                    <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-                      <SelectTrigger data-testid="select-role-template">
-                        <SelectValue placeholder="Select a template..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DEFAULT_ROLE_TEMPLATES.map((template) => (
-                          <SelectItem key={template.id} value={template.id}>
-                            {template.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="name">Role Name *</Label>
                     <Input
@@ -409,20 +304,6 @@ export default function RolesPage() {
                       data-testid="textarea-role-description"
                     />
                   </div>
-
-                  {/* Permissions Display */}
-                  {formData.permissions.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Permissions ({formData.permissions.length})</Label>
-                      <div className="bg-gray-50 rounded-md p-3 max-h-40 overflow-y-auto">
-                        {formData.permissions.map((permission, index) => (
-                          <Badge key={index} variant="secondary" className="mr-1 mb-1">
-                            {permission}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -499,26 +380,7 @@ export default function RolesPage() {
                     </Badge>
                   </div>
 
-                  {/* Permissions Count */}
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-2">
-                      Permissions: {role.permissions?.length || 0}
-                    </p>
-                    {role.permissions && role.permissions.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {role.permissions.slice(0, 3).map((permission, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {permission.split(':')[0]}
-                          </Badge>
-                        ))}
-                        {role.permissions.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{role.permissions.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </div>
+
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t gap-2">
@@ -642,19 +504,7 @@ export default function RolesPage() {
                 />
               </div>
 
-              {/* Permissions Display */}
-              {formData.permissions.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Permissions ({formData.permissions.length})</Label>
-                  <div className="bg-gray-50 rounded-md p-3 max-h-40 overflow-y-auto">
-                    {formData.permissions.map((permission, index) => (
-                      <Badge key={index} variant="secondary" className="mr-1 mb-1">
-                        {permission}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
+
 
               <div className="flex items-center space-x-2">
                 <Switch
