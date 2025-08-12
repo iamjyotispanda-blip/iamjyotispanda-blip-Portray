@@ -27,14 +27,16 @@ export default function AddMenu() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Simple form state
-  const [name, setName] = useState('');
-  const [label, setLabel] = useState('');
-  const [menuType, setMenuType] = useState('glink');
-  const [parentId, setParentId] = useState('');
-  const [icon, setIcon] = useState('');
-  const [route, setRoute] = useState('');
-  const [sortOrder, setSortOrder] = useState('0');
+  // Simplified form state - single object
+  const [formData, setFormData] = useState({
+    name: '',
+    label: '',
+    menuType: 'glink' as 'glink' | 'plink',
+    parentId: '',
+    icon: '',
+    route: '',
+    sortOrder: '0'
+  });
 
   // Get existing menus for parent selection
   const { data: menus = [] } = useQuery({
@@ -74,7 +76,7 @@ export default function AddMenu() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name.trim() || !label.trim()) {
+    if (!formData.name.trim() || !formData.label.trim()) {
       toast({
         title: 'Error',
         description: 'Name and Label are required',
@@ -84,13 +86,13 @@ export default function AddMenu() {
     }
 
     const menuData = {
-      name: name.trim(),
-      label: label.trim(),
-      menuType,
-      parentId: menuType === 'plink' && parentId ? parseInt(parentId) : null,
-      icon: icon || null,
-      route: route.trim() || null,
-      sortOrder: parseInt(sortOrder) || 0,
+      name: formData.name.trim(),
+      label: formData.label.trim(),
+      menuType: formData.menuType,
+      parentId: formData.menuType === 'plink' && formData.parentId ? parseInt(formData.parentId) : null,
+      icon: formData.icon || null,
+      route: formData.route.trim() || null,
+      sortOrder: parseInt(formData.sortOrder) || 0,
       isActive: true,
     };
 
@@ -139,8 +141,8 @@ export default function AddMenu() {
                   <select
                     id="menuType"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={menuType}
-                    onChange={(e) => setMenuType(e.target.value)}
+                    value={formData.menuType}
+                    onChange={(e) => setFormData(prev => ({ ...prev, menuType: e.target.value as 'glink' | 'plink' }))}
                   >
                     <option value="glink">GLink (Main Menu)</option>
                     <option value="plink">PLink (Sub Menu)</option>
@@ -151,14 +153,14 @@ export default function AddMenu() {
                 </div>
 
                 {/* Parent Menu - Only for PLink */}
-                {menuType === 'plink' && (
+                {formData.menuType === 'plink' && (
                   <div className="space-y-2">
                     <Label htmlFor="parentId">Parent GLink Menu *</Label>
                     <select
                       id="parentId"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      value={parentId}
-                      onChange={(e) => setParentId(e.target.value)}
+                      value={formData.parentId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value }))}
                     >
                       <option value="">Select parent menu</option>
                       {glinkMenus.map(menu => (
@@ -176,8 +178,8 @@ export default function AddMenu() {
                   <Input
                     id="name"
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="dashboard"
                     autoComplete="off"
                   />
@@ -190,8 +192,8 @@ export default function AddMenu() {
                   <Input
                     id="label"
                     type="text"
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
+                    value={formData.label}
+                    onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
                     placeholder="Dashboard"
                     autoComplete="off"
                   />
@@ -204,8 +206,8 @@ export default function AddMenu() {
                   <select
                     id="icon"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={icon}
-                    onChange={(e) => setIcon(e.target.value)}
+                    value={formData.icon}
+                    onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
                   >
                     <option value="">No icon</option>
                     <option value="Home">🏠 Home</option>
@@ -240,8 +242,8 @@ export default function AddMenu() {
                   <Input
                     id="route"
                     type="text"
-                    value={route}
-                    onChange={(e) => setRoute(e.target.value)}
+                    value={formData.route}
+                    onChange={(e) => setFormData(prev => ({ ...prev, route: e.target.value }))}
                     placeholder="/dashboard"
                     autoComplete="off"
                   />
@@ -254,8 +256,8 @@ export default function AddMenu() {
                   <Input
                     id="sortOrder"
                     type="number"
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value)}
+                    value={formData.sortOrder}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sortOrder: e.target.value }))}
                     placeholder="0"
                     autoComplete="off"
                   />
@@ -273,7 +275,7 @@ export default function AddMenu() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={saveMutation.isPending || !name.trim() || !label.trim()}
+                    disabled={saveMutation.isPending || !formData.name.trim() || !formData.label.trim()}
                   >
                     {saveMutation.isPending ? 'Creating...' : 'Create Menu'}
                   </Button>
