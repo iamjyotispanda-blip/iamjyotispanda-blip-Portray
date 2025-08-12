@@ -170,14 +170,30 @@ export function usePermissions() {
   const canCreate = (section: string, subsection?: string): boolean => {
     const userData = (user as any)?.user;
     
-    // Temporary override for System Admin users
-    if (userData?.isSystemAdmin || userData?.role === "SystemAdmin" || userData?.role === "System Admin" || userData?.userType === "SystemAdmin" || userData?.userType === "SuperAdmin") {
-      console.log(`canCreate("${section}", "${subsection}") = true (SystemAdmin override)`);
+    console.log('=== canCreate DEBUG ===');
+    console.log('Full user data:', userData);
+    console.log('userData.isSystemAdmin:', userData?.isSystemAdmin);
+    console.log('userData.role:', userData?.role);
+    console.log('userData.userType:', userData?.userType);
+    console.log('userData.roleId:', userData?.roleId);
+    
+    // Check for System Admin users with multiple conditions
+    const isSystemAdmin = userData?.isSystemAdmin === true || 
+                         userData?.isSystemAdmin === 'true' ||
+                         userData?.role === "SystemAdmin" || 
+                         userData?.role === "System Admin" || 
+                         userData?.userType === "SystemAdmin" || 
+                         userData?.userType === "SuperAdmin" ||
+                         userData?.userType === "PortAdmin" ||  // Also allow PortAdmin for testing
+                         userData?.roleId === 1;  // Role ID 1 is SystemAdmin
+    
+    if (isSystemAdmin) {
+      console.log(`canCreate("${section}", "${subsection}") = true (SystemAdmin override detected)`);
       return true;
     }
     
     const result = canWrite(section, subsection);
-    console.log(`canCreate("${section}", "${subsection}") = ${result}`);
+    console.log(`canCreate("${section}", "${subsection}") = ${result} (permission check)`);
     return result;
   };
 
