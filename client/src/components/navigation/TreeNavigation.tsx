@@ -104,20 +104,38 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
 
   // Get tree data directly without complex state management
   const treeData = React.useMemo((): TreeNodeData[] => {
-    if (!allMenus.length) return [];
+    console.log('TreeNavigation - Building tree data:', {
+      allMenusCount: allMenus.length,
+      user: user,
+      userRole: userRole,
+      userRolePermissions: userRole?.permissions
+    });
+
+    if (!allMenus.length) {
+      console.log('TreeNavigation - No menus available');
+      return [];
+    }
 
     // Get parent menus (glink type) - include all active menus
-    const parentMenus = allMenus.filter((menu: Menu) => 
-      menu.menuType === 'glink' && 
-      menu.isActive && 
-      hasMenuPermission(menu.name)
-    ).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
+    const parentMenus = allMenus.filter((menu: Menu) => {
+      const hasPermission = hasMenuPermission(menu.name);
+      console.log(`TreeNavigation - GLink ${menu.name}: active=${menu.isActive}, hasPermission=${hasPermission}`);
+      return menu.menuType === 'glink' && 
+        menu.isActive && 
+        hasPermission;
+    }).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
 
     // Get child menus (plink type) - include all active menus
     const childMenus = allMenus.filter((menu: Menu) => 
       menu.menuType === 'plink' && 
       menu.isActive
     );
+
+    console.log('TreeNavigation - Filtered menus:', {
+      parentMenusCount: parentMenus.length,
+      childMenusCount: childMenus.length,
+      parentMenus: parentMenus.map(m => m.name)
+    });
 
     return parentMenus.map((parentMenu: Menu): TreeNodeData => {
       // Find children for this parent
