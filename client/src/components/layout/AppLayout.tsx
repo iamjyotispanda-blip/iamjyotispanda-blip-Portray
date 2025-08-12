@@ -564,7 +564,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         <main className="flex-1 overflow-y-auto">
           {/* Page Title Section */}
           <div className="bg-transparent border-b border-gray-100 dark:border-gray-700 px-6 py-2">
-            <h1 className="text-xl font-medium text-gray-700 dark:text-gray-300" data-testid="page-title">
+            <h1 className="text-lg font-medium text-gray-700 dark:text-gray-300" data-testid="page-title">
               {title}
             </h1>
           </div>
