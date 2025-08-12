@@ -32,20 +32,21 @@ Contract Reference System: Contract numbers serve as reference keys for all asso
 - **Navigation**: Port forms use dedicated pages (/ports/new, /ports/edit/:id) with complete application layout
 
 ## Backend Architecture
-- **Framework**: ASP.NET Core 8.0 with C#
-- **Database ORM**: Entity Framework Core with PostgreSQL (Npgsql provider)
-- **Authentication**: ASP.NET Core Identity with JWT Bearer tokens
-- **Email Service**: MailKit/MimeKit for email verification and password reset
-- **API Structure**: RESTful API endpoints under `/api` prefix with controllers
-- **Security**: BCrypt password hashing, JWT tokens, CORS configured for frontend
-- **Database**: PostgreSQL with automatic migrations and connection string handling
+- **Framework**: Node.js/Express with TypeScript
+- **Database ORM**: Drizzle ORM with PostgreSQL (@neondatabase/serverless)
+- **Authentication**: Session-based authentication with custom tokens and passport.js
+- **Email Service**: Nodemailer and SendGrid for email verification and password reset
+- **API Structure**: RESTful API endpoints under `/api` prefix with Express routes
+- **Security**: BCrypt password hashing, session tokens, CORS configured for frontend
+- **Database**: PostgreSQL with Drizzle schema and migrations
 
 ## Database Design
-- **ApplicationUser Table**: Entity Framework Identity table with custom fields:
-  - `Id`, `Name`, `Email`, `PasswordHash`, `Role`, `IsVerified`, `VerificationToken`
+- **Users Table**: Drizzle schema with custom fields:
+  - `id`, `userType`, `email`, `password`, `firstName`, `lastName`, `role`, `roleId`, `portId`, `terminalIds`
+  - `isActive`, `isVerified`, `verificationToken`, `passwordSetupToken`, `isSystemAdmin`
   - Includes predefined SystemAdmin user (superadmin@Portray.com / Csmpl@123)
-- **Identity Tables**: Standard ASP.NET Core Identity tables for roles, claims, tokens
-- **Schema**: C# models with Entity Framework annotations and data seeding
+- **Core Tables**: users, sessions, organizations, ports, portAdminContacts, emailConfigurations
+- **Schema**: TypeScript models with Drizzle ORM and Zod validation schemas
 
 ## Authentication System
 - **Strategy**: Session-based authentication with JWT-like tokens
@@ -74,8 +75,8 @@ Contract Reference System: Contract numbers serve as reference keys for all asso
 
 ## Database
 - **PostgreSQL**: Primary database using Neon serverless PostgreSQL
-- **Entity Framework Core**: Object-relational mapping with migrations and Identity integration
-- **Npgsql**: PostgreSQL provider for .NET with SSL/TLS support
+- **Drizzle ORM**: Object-relational mapping with PostgreSQL and type-safe queries
+- **@neondatabase/serverless**: PostgreSQL serverless driver with SSL/TLS support
 - **Connection**: Environment-based DATABASE_URL with automatic SSL configuration
 
 ## UI and Styling
@@ -85,10 +86,10 @@ Contract Reference System: Contract numbers serve as reference keys for all asso
 - **shadcn/ui**: Pre-built component library for rapid development
 
 ## Authentication and Security
-- **ASP.NET Core Identity**: Complete authentication and user management system
-- **JWT Bearer Tokens**: Secure token-based authentication with configurable expiration
-- **MailKit/MimeKit**: Professional email services for verification and password reset
-- **BCrypt.NET**: Secure password hashing compatible with ASP.NET Core Identity
+- **Passport.js**: Complete authentication and user management system
+- **Session Tokens**: Secure token-based authentication with configurable expiration
+- **Nodemailer/SendGrid**: Professional email services for verification and password reset
+- **BCrypt**: Secure password hashing for Node.js applications
 
 ## Development Tools
 - **Vite**: Frontend build tool and development server
@@ -99,6 +100,6 @@ Contract Reference System: Contract numbers serve as reference keys for all asso
 
 ## Hosting and Deployment
 - **Replit**: Development environment with integrated deployment
-- **.NET Core Runtime**: Cross-platform runtime for the ASP.NET Core backend
+- **Node.js Runtime**: Cross-platform runtime for the Express backend
 - **Static Assets**: Frontend built and served as static files in production
-- **Environment Variables**: Secure configuration for database, JWT secrets, and email credentials
+- **Environment Variables**: Secure configuration for database, session secrets, and email credentials
