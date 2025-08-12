@@ -31,6 +31,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     password: z.string().min(8, "Password must be at least 8 characters")
   });
   
+  // Helper function to check if user is system admin
+  const isSystemAdmin = (user: any): boolean => {
+    return !!(
+      user?.isSystemAdmin || 
+      user?.role === "SystemAdmin" || 
+      user?.role === "System Admin" ||
+      user?.userType === "SuperAdmin" ||
+      user?.userType === "SystemAdmin"
+    );
+  };
+
   // Authentication middleware
   const authenticateToken = async (req: Request, res: Response, next: any) => {
     const authHeader = req.headers.authorization;
@@ -41,18 +52,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // Check for admin token first
-      if (token.length > 30) { // Admin session tokens are longer
-        const session = await storage.getSessionByToken(token);
-        if (session) {
-          const user = await storage.getUser(session.userId);
-          if (user && user.isSystemAdmin) {
-            req.user = { ...user, password: undefined };
-            return next();
-          }
-        }
-      }
-
       const session = await storage.getSessionByToken(token);
       if (!session) {
         return res.status(401).json({ message: "Invalid or expired token" });
@@ -63,7 +62,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found or inactive" });
       }
 
-      req.user = { ...user, password: undefined }; // Remove password from user object
+      // Add system admin flag for easy checking
+      const userWithAdminFlag = { 
+        ...user, 
+        password: undefined,
+        isSystemAdminUser: isSystemAdmin(user)
+      };
+      
+      req.user = userWithAdminFlag;
       next();
     } catch (error) {
       return res.status(401).json({ message: "Invalid token" });
@@ -94,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Determine redirect path based on system admin flag and role
       let redirectPath = "/dashboard";
-      if (user.isSystemAdmin) {
+      if (isSystemAdmin(user)) {
         redirectPath = "/dashboard";
       } else if (user.role === "PortAdmin") {
         redirectPath = "/port-admin-dashboard";
@@ -1000,7 +1006,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         logs = await storage.getUserAuditLogsByPerformedBy(performedBy as string);
       } else {
         // Only system admins can view all audit logs
-        if (req.user?.role !== "SystemAdmin") {
+        if (!isSystemAdmin(req.user)) {
           return res.status(403).json({ message: "Access denied. Only System Administrators can view all audit logs." });
         }
         logs = await storage.getAllUserAuditLogs();
@@ -1036,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // If user is system admin, return all menus
-      if (user.is_system_admin || user.role === "SystemAdmin" || user.role === "System Admin") {
+      if (isSystemAdmin(user)) {
         return res.json(menus);
       }
 
@@ -1298,7 +1304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/roles", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can create roles
-      if (req.user?.role !== "SystemAdmin" && req.user?.role !== "System Admin" && !req.user?.isSystemAdmin) {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can create roles." });
       }
 
@@ -1327,7 +1333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/roles/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can update roles
-      if (req.user?.role !== "SystemAdmin" && req.user?.role !== "System Admin" && !req.user?.isSystemAdmin) {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can update roles." });
       }
 
@@ -1364,7 +1370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/roles/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can toggle role status
-      if (req.user?.role !== "SystemAdmin") {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can toggle role status." });
       }
 
@@ -1385,7 +1391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/roles/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can delete roles
-      if (req.user?.role !== "SystemAdmin" && req.user?.role !== "System Admin" && !req.user?.isSystemAdmin) {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can delete roles." });
       }
 
@@ -1414,7 +1420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can view all users
-      if (req.user?.role !== "SystemAdmin") {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can view users." });
       }
 
@@ -1431,7 +1437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can view user details
-      if (req.user?.role !== "SystemAdmin") {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can view user details." });
       }
 
@@ -1454,7 +1460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can create users
-      if (req.user?.role !== "SystemAdmin") {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can create users." });
       }
 
@@ -1516,7 +1522,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/users/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can update users
-      if (req.user?.role !== "SystemAdmin") {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can update users." });
       }
 
@@ -1587,7 +1593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/users/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only system admins can toggle user status
-      if (req.user?.role !== "SystemAdmin") {
+      if (!isSystemAdmin(req.user)) {
         return res.status(403).json({ message: "Access denied. Only System Administrators can toggle user status." });
       }
 
