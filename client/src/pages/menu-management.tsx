@@ -563,142 +563,38 @@ export default function MenuManagementPage() {
 
       <div className="space-y-2">
         <Label htmlFor="icon">Icon</Label>
-        <Select
+        <select
+          id="icon"
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           value={formData.icon || ""}
-          onValueChange={(value: string) => setFormData(prev => ({ ...prev, icon: value }))}
+          onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+          data-testid="select-icon"
         >
-          <SelectTrigger id="icon" data-testid="select-icon">
-            <SelectValue placeholder="Select an icon" />
-          </SelectTrigger>
-          <SelectContent className="max-h-64 overflow-y-auto">
-            <SelectItem value="">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4"></div>
-                <span>No icon</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Home">
-              <div className="flex items-center space-x-2">
-                <Home className="h-4 w-4" />
-                <span>Home</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Settings">
-              <div className="flex items-center space-x-2">
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Users">
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4" />
-                <span>Users</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Building2">
-              <div className="flex items-center space-x-2">
-                <Building2 className="h-4 w-4" />
-                <span>Building2</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Ship">
-              <div className="flex items-center space-x-2">
-                <Ship className="h-4 w-4" />
-                <span>Ship</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Shield">
-              <div className="flex items-center space-x-2">
-                <Shield className="h-4 w-4" />
-                <span>Shield</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Package">
-              <div className="flex items-center space-x-2">
-                <Package className="h-4 w-4" />
-                <span>Package</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Mail">
-              <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4" />
-                <span>Mail</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Bell">
-              <div className="flex items-center space-x-2">
-                <Bell className="h-4 w-4" />
-                <span>Bell</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Zap">
-              <div className="flex items-center space-x-2">
-                <Zap className="h-4 w-4" />
-                <span>Zap</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="MapPin">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4" />
-                <span>MapPin</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="FileText">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-4 w-4" />
-                <span>FileText</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Database">
-              <div className="flex items-center space-x-2">
-                <Database className="h-4 w-4" />
-                <span>Database</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Grid">
-              <div className="flex items-center space-x-2">
-                <Grid className="h-4 w-4" />
-                <span>Grid</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Calendar">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4" />
-                <span>Calendar</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Search">
-              <div className="flex items-center space-x-2">
-                <Search className="h-4 w-4" />
-                <span>Search</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Tag">
-              <div className="flex items-center space-x-2">
-                <Tag className="h-4 w-4" />
-                <span>Tag</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Truck">
-              <div className="flex items-center space-x-2">
-                <Truck className="h-4 w-4" />
-                <span>Truck</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="Globe">
-              <div className="flex items-center space-x-2">
-                <Globe className="h-4 w-4" />
-                <span>Globe</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="BarChart">
-              <div className="flex items-center space-x-2">
-                <BarChart className="h-4 w-4" />
-                <span>BarChart</span>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+          <option value="">No icon</option>
+          <option value="Home">🏠 Home</option>
+          <option value="Settings">⚙️ Settings</option>
+          <option value="Users">👥 Users</option>
+          <option value="Building2">🏢 Building2</option>
+          <option value="Ship">🚢 Ship</option>
+          <option value="Shield">🛡️ Shield</option>
+          <option value="Package">📦 Package</option>
+          <option value="Mail">📧 Mail</option>
+          <option value="Bell">🔔 Bell</option>
+          <option value="Zap">⚡ Zap</option>
+          <option value="MapPin">📍 MapPin</option>
+          <option value="FileText">📄 FileText</option>
+          <option value="Database">🗄️ Database</option>
+          <option value="Grid">▦ Grid</option>
+          <option value="Calendar">📅 Calendar</option>
+          <option value="Search">🔍 Search</option>
+          <option value="Tag">🏷️ Tag</option>
+          <option value="Truck">🚛 Truck</option>
+          <option value="Globe">🌐 Globe</option>
+          <option value="BarChart">📊 BarChart</option>
+          <option value="MenuIcon">☰ Menu</option>
+          <option value="Key">🔑 Key</option>
+          <option value="Lock">🔒 Lock</option>
+        </select>
         <p className="text-xs text-gray-500">Choose an icon for the navigation menu</p>
       </div>
 
