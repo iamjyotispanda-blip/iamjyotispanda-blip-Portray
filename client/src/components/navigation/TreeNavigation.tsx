@@ -72,16 +72,26 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
 
   // Helper function to check if user has permission for a menu item
   const hasMenuPermission = (menuName: string, parentMenuName?: string): boolean => {
-    // SystemAdmin has all permissions
-    if (user?.role === "SystemAdmin") {
+    console.log('hasMenuPermission check:', { 
+      menuName, 
+      parentMenuName, 
+      userRole: user?.role, 
+      isSystemAdmin: user?.isSystemAdmin,
+      roleFromUserData: user?.role 
+    });
+    
+    // SystemAdmin has all permissions - check both role name and isSystemAdmin flag
+    if (user?.role === "SystemAdmin" || user?.isSystemAdmin === true || user?.role === "System Admin") {
+      console.log('SystemAdmin detected - returning true for', menuName);
       return true;
     }
 
     if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
+      console.log('No permissions found for user role');
       return false;
     }
 
-    return userRole.permissions.some((permission: string) => {
+    const hasPermission = userRole.permissions.some((permission: string) => {
       const parts = permission.split(':');
       if (parts.length >= 2) {
         const [gLink, pLink] = parts;
@@ -93,6 +103,9 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       }
       return false;
     });
+    
+    console.log(`Permission check result for ${menuName}:`, hasPermission);
+    return hasPermission;
   };
 
   // Use enhanced icon component helper with fallback to Home

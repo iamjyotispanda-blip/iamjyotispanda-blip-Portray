@@ -1,0 +1,74 @@
+Checking session, token exists: true
+App.tsx:66 Token found, validating session...
+App.tsx:68 Session validation result: true
+App.tsx:92 Session valid, rendering protected component
+AppLayout.tsx:118 AppLayout - User data: undefined
+AppLayout.tsx:119 AppLayout - User loading: true error: null
+AppLayout.tsx:120 AppLayout - User condition check: false
+TreeNavigation.tsx:107 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:115 TreeNavigation - No menus available
+AppLayout.tsx:108 Sidebar state changed - collapsed: false hovered: false
+AppLayout.tsx:118 AppLayout - User data: Object
+AppLayout.tsx:119 AppLayout - User loading: false error: null
+AppLayout.tsx:120 AppLayout - User condition check: true
+TreeNavigation.tsx:107 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:115 TreeNavigation - No menus available
+AppLayout.tsx:41 SystemConfigDropdown rendering - allMenus: 0 isLoading: true error: null
+AppLayout.tsx:45 System config parent found: undefined
+AppLayout.tsx:52 System config menus found: 0 Array(0)
+AppLayout.tsx:118 AppLayout - User data: Object
+AppLayout.tsx:119 AppLayout - User loading: false error: null
+AppLayout.tsx:120 AppLayout - User condition check: true
+TreeNavigation.tsx:107 TreeNavigation - Building tree data: Object
+TreeNavigation.tsx:122 TreeNavigation - GLink usera-csses: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink terminals: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink user-management: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink audit-logs: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink permission-assignment: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink dashboard: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink page-management: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink system-config: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink port-admin-dashboard: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink menu-management: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink organizations: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink ports: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink port-onboard: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink email-config: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink customers: active=true, hasPermission=false
+TreeNavigation.tsx:122 TreeNavigation - GLink role-management: active=true, hasPermission=false
+TreeNavigation.tsx:134 TreeNavigation - Filtered menus: Object
+AppLayout.tsx:41 SystemConfigDropdown rendering - allMenus: 16 isLoading: false error: null
+AppLayout.tsx:45 System config parent found: Object
+AppLayout.tsx:52 System config menus found: 4 Array(4)
+AppLayout.tsx:118 AppLayout - User data: Object
+AppLayout.tsx:119 AppLayout - User loading: false error: null
+AppLayout.tsx:120 AppLayout - User condition check: true
+AppLayout.tsx:41 SystemConfigDropdown rendering - allMenus: 16 isLoading: false error: null
+AppLayout.tsx:45 System config parent found: Object
+AppLayout.tsx:52 System config menus found: 4 Array(4)
+AppLayout.tsx:118 AppLayout - User data: Object
+AppLayout.tsx:119 AppLayout - User loading: false error: null
+AppLayout.tsx:120 AppLayout - User condition check: true
+AppLayout.tsx:41 SystemConfigDropdown rendering - allMenus: 16 isLoading: false error: null
+AppLayout.tsx:45 System config parent found: Object
+AppLayout.tsx:52 System config menus found: 4 Array(4)
+AppLayout.tsx:118 AppLayout - User data: Object
+AppLayout.tsx:119 AppLayout - User loading: false error: null
+AppLayout.tsx:120 AppLayout - User condition check: true
+AppLayout.tsx:41 SystemConfigDropdown rendering - allMenus: 16 isLoading: false error: null
+AppLayout.tsx:45 System config parent found: Object
+AppLayout.tsx:52 System config menus found: 4 Array(4)
+AppLayout.tsx:118 AppLayout - User data: Object
+AppLayout.tsx:119 AppLayout - User loading: false error: null
+AppLayout.tsx:120 AppLayout - User condition check: true
+AppLayout.tsx:41 SystemConfigDropdown rendering - allMenus: 16 isLoading: false error: null
+AppLayout.tsx:45 System config parent found: Object
+AppLayout.tsx:52 System config menus found: 4 Array(4)
+AppLayout.tsx:108 Sidebar state changed - collapsed: false hovered: true
+AppLayout.tsx:118 AppLayout - User data: Object
+AppLayout.tsx:119 AppLayout - User loading: false error: null
+AppLayout.tsx:120 AppLayout - User condition check: true
+AppLayout.tsx:41 SystemConfigDropdown rendering - allMenus: 16 isLoading: false error: null
+AppLayout.tsx:45 System config parent found: Object
+AppLayout.tsx:52 System config menus found: 4 Array(4)
+AppLayout.tsx:108 Sidebar state changed - collapsed: false hovered: false
