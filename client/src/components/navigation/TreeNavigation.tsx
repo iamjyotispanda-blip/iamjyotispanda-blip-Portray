@@ -195,18 +195,48 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     });
   }, [allMenus, userRole, expandedNodes]);
 
-  // Auto-expand parent node if active section is a child
+  // Auto-expand parent node if active section is a child or matches any route patterns
   React.useEffect(() => {
     if (!activeSection || !treeData.length) return;
     
-    const activeParent = treeData.find(node => 
-      node.children.some(child => child.id === activeSection)
+    console.log('TreeNavigation - Auto-expand logic:', { activeSection, treeDataLength: treeData.length });
+    
+    // Check if activeSection matches any child directly
+    let activeParent = treeData.find(node => 
+      node.children.some(child => child.id === activeSection || child.name === activeSection)
     );
     
+    // If not found, check for route-based matching
+    if (!activeParent) {
+      activeParent = treeData.find(node => {
+        return node.children.some(child => {
+          // Check if current URL contains the child route or name
+          const currentUrl = window.location.pathname;
+          return (child.route && currentUrl.includes(child.route)) ||
+                 (child.name && currentUrl.includes(child.name)) ||
+                 (child.id && currentUrl.includes(child.id));
+        });
+      });
+    }
+    
+    // Also check if activeSection is a parent node itself
+    if (!activeParent) {
+      activeParent = treeData.find(node => 
+        node.id === activeSection || node.name === activeSection ||
+        (node.route && window.location.pathname.includes(node.route))
+      );
+    }
+    
+    console.log('TreeNavigation - Found active parent:', { 
+      activeParent: activeParent?.name, 
+      currentExpandedNodes: Array.from(expandedNodes)
+    });
+    
     if (activeParent && !expandedNodes.has(activeParent.id)) {
+      console.log('TreeNavigation - Expanding parent:', activeParent.name);
       setExpandedNodes(prev => new Set([...Array.from(prev), activeParent.id]));
     }
-  }, [activeSection]);
+  }, [activeSection, treeData]);
 
   // Toggle node expansion
   const toggleNode = (nodeId: string) => {
@@ -252,8 +282,22 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
 
   // Check if node or any of its children is active
   const isNodeActive = (node: TreeNodeData): boolean => {
-    if (node.id === activeSection) return true;
-    return node.children.some(child => child.id === activeSection);
+    const currentUrl = window.location.pathname;
+    
+    // Direct match with activeSection
+    if (node.id === activeSection || node.name === activeSection) return true;
+    
+    // Route-based matching for the node itself
+    if (node.route && currentUrl.includes(node.route)) return true;
+    
+    // Check if any child is active
+    return node.children.some(child => {
+      return child.id === activeSection || 
+             child.name === activeSection ||
+             (child.route && currentUrl.includes(child.route)) ||
+             currentUrl.includes(child.name) ||
+             currentUrl.includes(child.id);
+    });
   };
 
   // Render tree node
@@ -363,7 +407,10 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
                 <div
                   key={child.id}
                   className={`flex items-center space-x-3 px-4 py-1.5 text-sm rounded-lg mx-2 cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.01] ${
-                    child.id === activeSection
+                    child.id === activeSection || child.name === activeSection || 
+                    (child.route && window.location.pathname.includes(child.route)) ||
+                    window.location.pathname.includes(child.name) || 
+                    window.location.pathname.includes(child.id)
                       ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/20'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/30 hover:text-gray-900 dark:hover:text-white'
                   }`}
@@ -371,7 +418,10 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
                 >
                   {/* Child Icon */}
                   <div className={`flex items-center justify-center w-6 h-6 rounded-md transition-all duration-300 ${
-                    child.id === activeSection
+                    child.id === activeSection || child.name === activeSection || 
+                    (child.route && window.location.pathname.includes(child.route)) ||
+                    window.location.pathname.includes(child.name) || 
+                    window.location.pathname.includes(child.id)
                       ? 'bg-white/20 text-white'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                   }`}>
@@ -380,7 +430,10 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
                   
                   {/* Child Label */}
                   <span className={`transition-all duration-300 ${
-                    child.id === activeSection
+                    child.id === activeSection || child.name === activeSection || 
+                    (child.route && window.location.pathname.includes(child.route)) ||
+                    window.location.pathname.includes(child.name) || 
+                    window.location.pathname.includes(child.id)
                       ? 'text-white font-medium'
                       : 'hover:font-medium'
                   }`}>
