@@ -531,9 +531,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const portId = parseInt(req.params.portId);
       const contactData = insertPortAdminContactSchema.parse({ ...req.body, portId });
       
-      // Check if email already exists
+      // Check if email already exists among active contacts
       const existingContact = await storage.getPortAdminContactByEmail(contactData.email);
       if (existingContact) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+
+      // Check if email exists among active users
+      const existingUser = await storage.getUserByEmail(contactData.email);
+      if (existingUser && existingUser.isActive) {
         return res.status(400).json({ message: "Email already exists" });
       }
       

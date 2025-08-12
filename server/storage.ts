@@ -444,10 +444,10 @@ export class DatabaseStorage implements IStorage {
     // Delete the contact
     await db.delete(portAdminContacts).where(eq(portAdminContacts.id, id));
     
-    // If the contact had an associated user, deactivate that user
+    // If the contact had an associated user, delete that user completely to free up the email
     if (contact && contact.userId) {
-      await this.updateUser(contact.userId, { isActive: false });
-      console.log(`Deactivated user ${contact.userId} after deleting port contact ${contact.contactName}`);
+      await this.deleteUser(contact.userId);
+      console.log(`Deleted user ${contact.userId} after deleting port contact ${contact.contactName}`);
     }
   }
 
@@ -1142,12 +1142,12 @@ export class DatabaseStorage implements IStorage {
     // Delete the contact
     await db.delete(customerContacts).where(eq(customerContacts.id, id));
     
-    // If the contact exists, deactivate any user with the same email
+    // If the contact exists, delete any user with the same email to free up the email
     if (contact && contact.email) {
       const user = await this.getUserByEmail(contact.email);
       if (user) {
-        await this.updateUser(user.id, { isActive: false });
-        console.log(`Deactivated user ${user.id} (${user.email}) after deleting customer contact ${contact.contactName}`);
+        await this.deleteUser(user.id);
+        console.log(`Deleted user ${user.id} (${user.email}) after deleting customer contact ${contact.contactName}`);
       }
     }
   }
