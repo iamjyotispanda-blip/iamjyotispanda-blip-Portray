@@ -17,25 +17,33 @@ export default function SetupPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"form" | "success" | "error" | "expired">("form");
   const [message, setMessage] = useState("");
-  const [token, setToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [contactName, setContactName] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     // Get the full URL including query parameters
     const fullUrl = window.location.href;
     const url = new URL(fullUrl);
-    const tokenParam = url.searchParams.get('token');
+    const userIdParam = url.searchParams.get('userId');
+    const emailParam = url.searchParams.get('email');
+    const contactNameParam = url.searchParams.get('contactName');
     
     console.log("SetupPasswordPage: Full URL:", fullUrl);
-    console.log("SetupPasswordPage: Token from URL:", tokenParam);
+    console.log("SetupPasswordPage: UserID from URL:", userIdParam);
+    console.log("SetupPasswordPage: Email from URL:", emailParam);
+    console.log("SetupPasswordPage: ContactName from URL:", contactNameParam);
 
-    if (!tokenParam) {
+    if (!userIdParam) {
       setStatus("error");
-      setMessage("Invalid password setup link - no token provided");
+      setMessage("Invalid password setup link - no user ID provided");
       return;
     }
 
-    setToken(tokenParam);
+    setUserId(userIdParam);
+    setEmail(emailParam);
+    setContactName(contactNameParam);
   }, [location]);
 
   const validatePassword = (password: string): string[] => {
@@ -63,7 +71,7 @@ export default function SetupPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!token) {
+    if (!userId) {
       toast({
         title: "Error",
         description: "Invalid setup link",
@@ -96,8 +104,8 @@ export default function SetupPasswordPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await apiRequest("POST", "/api/auth/setup-password", { 
-        token, 
+      const response = await apiRequest("POST", "/api/setup-password", { 
+        userId, 
         password 
       });
       
@@ -146,7 +154,8 @@ export default function SetupPasswordPage() {
             <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm text-left">
               <strong>Debug Info:</strong><br/>
               Current URL: {window.location.href}<br/>
-              Token: {token || 'null'}<br/>
+              UserID: {userId || 'null'}<br/>
+              Email: {email || 'null'}<br/>
               Location: {location}
             </div>
           </CardHeader>
