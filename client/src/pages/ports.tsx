@@ -97,11 +97,26 @@ export function PortsContent() {
                 data-testid="input-search-ports"
               />
             </div>
-            {canCreate("ports") && (
+            {/* Add debugging for permission check */}
+            {(() => {
+              const canCreatePorts = canCreate("ports");
+              console.log('=== ADD PORT BUTTON DEBUG ===');
+              console.log('canCreate("ports") result:', canCreatePorts);
+              console.log('Button should be visible:', canCreatePorts);
+              console.log('==============================');
+              return canCreatePorts;
+            })() && (
               <Button onClick={() => setLocation("/ports/new")} className="h-8" data-testid="button-add-port">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Port
               </Button>
+            )}
+            
+            {/* Temporary fallback button for debugging */}
+            {!canCreate("ports") && (
+              <div className="text-xs text-red-500 bg-red-50 p-2 rounded border">
+                Debug: Add Port button hidden - no "ports" create permission
+              </div>
             )}
           </div>
 

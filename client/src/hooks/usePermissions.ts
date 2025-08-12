@@ -168,6 +168,14 @@ export function usePermissions() {
   };
 
   const canCreate = (section: string, subsection?: string): boolean => {
+    const userData = (user as any)?.user;
+    
+    // Temporary override for System Admin users
+    if (userData?.isSystemAdmin || userData?.role === "SystemAdmin" || userData?.role === "System Admin" || userData?.userType === "SystemAdmin" || userData?.userType === "SuperAdmin") {
+      console.log(`canCreate("${section}", "${subsection}") = true (SystemAdmin override)`);
+      return true;
+    }
+    
     const result = canWrite(section, subsection);
     console.log(`canCreate("${section}", "${subsection}") = ${result}`);
     return result;
