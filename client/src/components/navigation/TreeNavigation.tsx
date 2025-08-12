@@ -142,13 +142,15 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       return [];
     }
 
-    // Get parent menus (glink type) - include all active menus
+    // Get parent menus (glink type) - include all active menus except system-config
     const parentMenus = allMenus.filter((menu: Menu) => {
       const hasPermission = hasMenuPermission(menu.name);
-      console.log(`TreeNavigation - GLink ${menu.name}: active=${menu.isActive}, hasPermission=${hasPermission}`);
+      const isSystemConfig = menu.name === 'system-config';
+      console.log(`TreeNavigation - GLink ${menu.name}: active=${menu.isActive}, hasPermission=${hasPermission}, isSystemConfig=${isSystemConfig}`);
       return menu.menuType === 'glink' && 
         menu.isActive && 
-        hasPermission;
+        hasPermission &&
+        !isSystemConfig; // Exclude system-config from left navigation
     }).sort((a: Menu, b: Menu) => a.sortOrder - b.sortOrder);
 
     // Get child menus (plink type) - include all active menus

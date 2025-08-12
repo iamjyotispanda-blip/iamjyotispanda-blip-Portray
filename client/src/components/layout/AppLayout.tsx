@@ -18,7 +18,7 @@ import { PortrayLogo } from "@/components/portray-logo";
 import { TreeNavigation } from "@/components/navigation/TreeNavigation";
 import { AuthService } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
-import type { Notification, Menu as MenuType } from "@shared/schema";
+import type { Notification, Menu as MenuType, Role } from "@shared/schema";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -38,7 +38,33 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       queryKey: ["/api/menus"],
     });
 
+    // Get user role for permission checking
+    const { data: userRole } = useQuery<Role>({
+      queryKey: ["/api/roles", user?.roleId],
+      queryFn: async () => {
+        if (!user?.roleId) return null;
+        const response = await apiRequest("GET", `/api/roles/${user.roleId}`);
+        return await response.json();
+      },
+      enabled: !!user?.roleId,
+    });
+
     console.log('SystemConfigDropdown rendering - allMenus:', allMenus.length, 'isLoading:', isLoading, 'error:', error);
+
+    // Helper function to check if user has permission for a menu item
+    const hasSystemConfigPermission = (menuName: string): boolean => {
+      if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
+        return false;
+      }
+
+      return userRole.permissions.some((permission: string) => {
+        const parts = permission.split(':');
+        if (parts.length >= 2) {
+          return parts[0] === 'system-config' && parts[1] === menuName;
+        }
+        return false;
+      });
+    };
 
     // Get system configuration menus
     const systemConfigParent = allMenus.find(menu => menu.name === 'system-config');
@@ -46,10 +72,16 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     
     const systemConfigMenus = allMenus.filter(menu => 
       menu.parentId === systemConfigParent?.id &&
-      menu.isActive
+      menu.isActive &&
+      hasSystemConfigPermission(menu.name)
     ).sort((a, b) => a.sortOrder - b.sortOrder);
     
     console.log('System config menus found:', systemConfigMenus.length, systemConfigMenus);
+
+    // Don't show dropdown if no system config menus available
+    if (!systemConfigMenus.length && !isLoading) {
+      return null;
+    }
 
     const getIconComponent = (iconName: string | null) => {
       switch (iconName) {
