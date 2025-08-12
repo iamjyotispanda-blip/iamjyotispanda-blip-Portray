@@ -457,6 +457,7 @@ export const insertMenuSchema = createInsertSchema(menus).pick({
   sortOrder: true,
   menuType: true,
   isSystemConfig: true,
+  isActive: true,
 });
 
 export const updateMenuSchema = createInsertSchema(menus).pick({
@@ -468,6 +469,7 @@ export const updateMenuSchema = createInsertSchema(menus).pick({
   sortOrder: true,
   menuType: true,
   isSystemConfig: true,
+  isActive: true,
 }).partial();
 
 export type Menu = typeof menus.$inferSelect;

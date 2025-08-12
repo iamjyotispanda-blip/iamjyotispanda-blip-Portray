@@ -1457,6 +1457,7 @@ export class MemStorage implements IStorage {
       sortOrder: 1,
       menuType: "glink",
       isActive: true,
+      isSystemConfig: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1472,6 +1473,7 @@ export class MemStorage implements IStorage {
       sortOrder: 2,
       menuType: "glink",
       isActive: true,
+      isSystemConfig: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1487,6 +1489,7 @@ export class MemStorage implements IStorage {
       sortOrder: 3,
       menuType: "glink",
       isActive: true,
+      isSystemConfig: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1502,6 +1505,7 @@ export class MemStorage implements IStorage {
       sortOrder: 4,
       menuType: "glink",
       isActive: true,
+      isSystemConfig: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -2139,7 +2143,8 @@ export class MemStorage implements IStorage {
       route: menuData.route ?? null,
       parentId: menuData.parentId ?? null,
       sortOrder: menuData.sortOrder ?? 0,
-      isActive: true,
+      isActive: menuData.isActive ?? true,
+      isSystemConfig: menuData.isSystemConfig ?? false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
