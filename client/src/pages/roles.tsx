@@ -323,9 +323,9 @@ export default function RolesPage() {
     <AppLayout title="Roles">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Roles</h1>
+            {/* Title removed as requested */}
           </div>
           {canWrite("roles", "user-access") && (
             <Sheet open={showCreateForm} onOpenChange={(open) => {
@@ -338,7 +338,7 @@ export default function RolesPage() {
                   Add Role
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-[95vw] sm:w-[500px] lg:w-[600px] overflow-y-auto">
+              <SheetContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create New Role</SheetTitle>
                   <SheetDescription>
@@ -444,21 +444,21 @@ export default function RolesPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+          <div className="relative w-full sm:flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder="Search roles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
               data-testid="input-search-roles"
             />
           </div>
         </div>
 
         {/* Roles Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
           {rolesLoading ? (
             Array.from({ length: 6 }).map((_, index) => (
               <Card key={index} className="animate-pulse">
@@ -522,11 +522,11 @@ export default function RolesPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="text-xs text-gray-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t gap-2">
+                    <div className="text-xs text-gray-500 order-2 sm:order-1">
                       Created: {format(new Date(role.createdAt), "MMM dd, yyyy")}
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 order-1 sm:order-2">
                       {canWrite("roles", "user-access") && (
                         <Button
                           variant="outline"
@@ -598,7 +598,7 @@ export default function RolesPage() {
             resetForm();
           }
         }}>
-          <SheetContent className="w-[95vw] sm:w-[500px] lg:w-[600px] overflow-y-auto">
+          <SheetContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Edit Role</SheetTitle>
               <SheetDescription>
