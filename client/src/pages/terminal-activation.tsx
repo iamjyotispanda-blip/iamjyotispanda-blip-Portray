@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle, XCircle, Clock, Search, Building, MapPin, Phone, Calendar, Ship, X, FileText } from "lucide-react";
+import { CheckCircle, Clock, Search, Building, MapPin, Phone, Calendar, Ship, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -157,28 +157,28 @@ export default function TerminalActivationPage() {
     },
   });
 
-  // Reject terminal mutation
-  const rejectTerminalMutation = useMutation({
-    mutationFn: async (terminalId: number) => {
-      return apiRequest("PUT", `/api/terminals/${terminalId}/status`, { status: "Rejected" });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/terminals/pending-activation"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
-      toast({
-        title: "Success",
-        description: "Terminal rejected successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to reject terminal",
-        variant: "destructive",
-      });
-    },
-  });
+  // Reject terminal mutation - INACTIVE
+  // const rejectTerminalMutation = useMutation({
+  //   mutationFn: async (terminalId: number) => {
+  //     return apiRequest("PUT", `/api/terminals/${terminalId}/status`, { status: "Rejected" });
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["/api/terminals/pending-activation"] });
+  //     queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+  //     queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+  //     toast({
+  //       title: "Success",
+  //       description: "Terminal rejected successfully",
+  //     });
+  //   },
+  //   onError: (error: any) => {
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "Failed to reject terminal",
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
 
   const filteredTerminals = terminals.filter((terminal: TerminalWithDetails) =>
     terminal.terminalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -197,9 +197,9 @@ export default function TerminalActivationPage() {
     });
   };
 
-  const handleReject = (terminalId: number) => {
-    rejectTerminalMutation.mutate(terminalId);
-  };
+  // const handleReject = (terminalId: number) => {
+  //   rejectTerminalMutation.mutate(terminalId);
+  // };
 
   const onActivationSubmit = (data: ActivationFormData) => {
     if (activationDialog.terminal) {
@@ -389,16 +389,7 @@ export default function TerminalActivationPage() {
                             <CheckCircle className="w-4 h-4 mr-2" />
                             Activate
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleReject(terminal.id)}
-                            disabled={rejectTerminalMutation.isPending}
-                            className="h-8"
-                          >
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Reject
-                          </Button>
+
                         </div>
                       </div>
                     </CardContent>

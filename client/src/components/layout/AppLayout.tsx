@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
-  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings, User, Mail, ChevronDown, Menu, Shield, Users
+  LogOut, Menu as MenuIcon, PanelLeftClose, Bell, Check, Trash2, CheckCircle, Settings, User, Mail, ChevronDown, Menu, Shield, Users, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -386,87 +386,139 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <div className="flex items-center justify-between p-2">
-                    <span className="font-medium">Notifications</span>
-                    {unreadCount.count > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => markAllAsReadMutation.mutate()}
-                        className="text-xs"
-                      >
-                        Mark all read
-                      </Button>
-                    )}
+                <DropdownMenuContent align="end" className="w-96 p-0 shadow-xl border-0">
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        <span className="font-semibold text-gray-900 dark:text-white">Notifications</span>
+                        {unreadCount.count > 0 && (
+                          <Badge className="bg-red-500 text-white text-xs px-2 py-1">
+                            {unreadCount.count} new
+                          </Badge>
+                        )}
+                      </div>
+                      {unreadCount.count > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => markAllAsReadMutation.mutate()}
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Mark all read
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <DropdownMenuSeparator />
-                  <div className="max-h-64 overflow-y-auto">
+
+                  {/* Notifications List */}
+                  <div className="max-h-96 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        No notifications
+                      <div className="p-8 text-center">
+                        <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">No notifications yet</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">You'll see updates and alerts here</p>
                       </div>
                     ) : (
-                      notifications.slice(0, 5).map((notification) => (
-                        <DropdownMenuItem
-                          key={notification.id}
-                          className={`p-3 cursor-pointer ${
-                            !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                          }`}
-                          onClick={() => handleNotificationClick(notification)}
-                        >
-                          <div className="flex items-start space-x-3 w-full">
-                            <div className={`w-2 h-2 rounded-full mt-2 ${
-                              !notification.isRead ? 'bg-blue-500' : 'bg-gray-300'
-                            }`} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                {notification.title}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {notification.message}
-                              </p>
-                            </div>
-                            <div className="flex space-x-1">
-                              {!notification.isRead && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    markAsReadMutation.mutate(notification.id);
-                                  }}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Check className="h-3 w-3" />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteNotificationMutation.mutate(notification.id);
-                                }}
-                                className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {notifications.slice(0, 5).map((notification, index) => (
+                          <div
+                            key={notification.id}
+                            className={`group relative p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${
+                              !notification.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-blue-500' : ''
+                            }`}
+                            onClick={() => handleNotificationClick(notification)}
+                          >
+                            <div className="flex items-start space-x-3">
+                              {/* Notification Icon */}
+                              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                                notification.type === 'terminal_activation' ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400' :
+                                notification.type === 'port_contact_verified' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' :
+                                notification.type === 'system_alert' ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                                'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                              }`}>
+                                {notification.type === 'terminal_activation' ? <CheckCircle className="h-5 w-5" /> :
+                                 notification.type === 'port_contact_verified' ? <User className="h-5 w-5" /> :
+                                 notification.type === 'system_alert' ? <AlertCircle className="h-5 w-5" /> :
+                                 <Bell className="h-5 w-5" />}
+                              </div>
+
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+                                      {notification.title}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
+                                      {notification.message}
+                                    </p>
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                                      {new Date(notification.createdAt).toLocaleDateString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </div>
+
+                                  {/* Action Buttons */}
+                                  <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2">
+                                    {!notification.isRead && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          markAsReadMutation.mutate(notification.id);
+                                        }}
+                                        className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                        title="Mark as read"
+                                      >
+                                        <Check className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteNotificationMutation.mutate(notification.id);
+                                      }}
+                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                      title="Delete notification"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                {/* Unread indicator */}
+                                {!notification.isRead && (
+                                  <div className="absolute top-4 left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </DropdownMenuItem>
-                      ))
+                        ))}
+                      </div>
                     )}
                   </div>
+
+                  {/* Footer */}
                   {notifications.length > 5 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setLocation('/notifications')}>
-                        <span className="text-sm text-blue-600 dark:text-blue-400">
-                          View all notifications
-                        </span>
-                      </DropdownMenuItem>
-                    </>
+                    <div className="border-t border-gray-100 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-800/50">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setLocation('/notifications')}
+                        className="w-full text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                      >
+                        View all {notifications.length} notifications
+                      </Button>
+                    </div>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
