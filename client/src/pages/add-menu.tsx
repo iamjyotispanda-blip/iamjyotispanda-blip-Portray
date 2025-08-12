@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
@@ -22,10 +22,16 @@ interface Menu {
   isActive: boolean;
 }
 
-export default function AddMenu() {
+interface AddMenuProps {
+  params?: { id: string };
+}
+
+export default function AddMenu({ params }: AddMenuProps = {}) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const menuId = params?.id;
+  const isEdit = !!menuId;
 
   // Simplified form state - single object
   const [formData, setFormData] = useState({
@@ -47,17 +53,46 @@ export default function AddMenu() {
     },
   });
 
+  // Get menu data for editing
+  const { data: editingMenu } = useQuery({
+    queryKey: ['/api/menus', menuId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/menus/${menuId}`);
+      return await response.json() as Menu;
+    },
+    enabled: isEdit && !!menuId,
+  });
+
+  // Update form data when editing menu is loaded
+  useEffect(() => {
+    if (editingMenu && isEdit) {
+      setFormData({
+        name: editingMenu.name,
+        label: editingMenu.label,
+        menuType: editingMenu.menuType,
+        parentId: editingMenu.parentId?.toString() || '',
+        icon: editingMenu.icon || '',
+        route: editingMenu.route || '',
+        sortOrder: editingMenu.sortOrder.toString(),
+      });
+    }
+  }, [editingMenu, isEdit]);
+
   const glinkMenus = menus.filter(menu => menu.menuType === 'glink');
 
   // Save menu mutation
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('POST', '/api/menus', data);
+      if (isEdit) {
+        return apiRequest('PUT', `/api/menus/${menuId}`, data);
+      } else {
+        return apiRequest('POST', '/api/menus', data);
+      }
     },
     onSuccess: () => {
       toast({
         title: 'Success',
-        description: 'Menu created successfully',
+        description: `Menu ${isEdit ? 'updated' : 'created'} successfully`,
       });
       // Invalidate and refetch the menus before navigation
       queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
@@ -67,7 +102,7 @@ export default function AddMenu() {
     onError: (error: any) => {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create menu',
+        description: error.message || `Failed to ${isEdit ? 'update' : 'create'} menu`,
         variant: 'destructive',
       });
     },
@@ -117,10 +152,10 @@ export default function AddMenu() {
             </Button>
             <div>
               <h1 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
-                Add New Menu
+                {isEdit ? 'Edit Menu' : 'Add New Menu'}
               </h1>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                Create a new navigation menu item
+                {isEdit ? 'Update navigation menu item' : 'Create a new navigation menu item'}
               </p>
             </div>
           </div>
@@ -277,7 +312,7 @@ export default function AddMenu() {
                     type="submit"
                     disabled={saveMutation.isPending || !formData.name.trim() || !formData.label.trim()}
                   >
-                    {saveMutation.isPending ? 'Creating...' : 'Create Menu'}
+                    {saveMutation.isPending ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Menu' : 'Create Menu')}
                   </Button>
                 </div>
               </form>

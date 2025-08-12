@@ -131,23 +131,8 @@ export default function MenuManagement() {
   const [, setLocation] = useLocation();
   
   // State management
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<Set<number>>(new Set());
   const [menuOrder, setMenuOrder] = useState<Menu[]>([]);
-
-  
-  // Form data
-  const [formData, setFormData] = useState<MenuFormData>({
-    name: '',
-    label: '',
-    icon: '',
-    route: '',
-    menuType: 'glink',
-    parentId: null,
-    sortOrder: 0,
-  });
 
   // Fetch menus
   const { data: menus = [], isLoading } = useQuery({
@@ -165,18 +150,7 @@ export default function MenuManagement() {
     }
   }, [menus, menuOrder.length]);
 
-  // Reset form
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      label: '',
-      icon: '',
-      route: '',
-      menuType: 'glink',
-      parentId: null,
-      sortOrder: 0,
-    });
-  };
+  // Removed form-related functions - now using separate page for add/edit
 
   // Organize menus into hierarchy
   const organizeMenusHierarchically = (): HierarchicalMenu[] => {
@@ -261,34 +235,7 @@ export default function MenuManagement() {
     });
   };
 
-  // Save menu mutation
-  const saveMenuMutation = useMutation({
-    mutationFn: async (data: MenuFormData) => {
-      if (editingMenu) {
-        return apiRequest('PUT', `/api/menus/${editingMenu.id}`, data);
-      } else {
-        return apiRequest('POST', '/api/menus', data);
-      }
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: `Menu ${editingMenu ? 'updated' : 'created'} successfully`,
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
-      setShowAddDialog(false);
-      setShowEditDialog(false);
-      setEditingMenu(null);
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to save menu',
-        variant: 'destructive',
-      });
-    },
-  });
+  // Removed save menu mutation - now handled in separate add/edit page
 
   // Delete menu mutation
   const deleteMenuMutation = useMutation({
@@ -350,19 +297,9 @@ export default function MenuManagement() {
     },
   });
 
-  // Handle edit
+  // Handle edit - redirect to edit page
   const handleEdit = (menu: Menu) => {
-    setEditingMenu(menu);
-    setFormData({
-      name: menu.name,
-      label: menu.label,
-      icon: menu.icon || '',
-      route: menu.route || '',
-      menuType: menu.menuType,
-      parentId: menu.parentId,
-      sortOrder: menu.sortOrder,
-    });
-    setShowEditDialog(true);
+    setLocation(`/configuration/menu/edit/${menu.id}`);
   };
 
 
@@ -517,178 +454,7 @@ export default function MenuManagement() {
     );
   };
 
-  // Menu form component
-  const MenuForm = () => {
-    const glinkMenus = menus.filter(menu => menu.menuType === 'glink');
-
-    return (
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-        {/* Menu Type */}
-        <div className="space-y-2">
-          <Label htmlFor="menuType">Menu Type *</Label>
-          <Select
-            value={formData.menuType}
-            onValueChange={(value: 'glink' | 'plink') => 
-              setFormData(prev => ({ 
-                ...prev, 
-                menuType: value, 
-                parentId: value === 'glink' ? null : prev.parentId 
-              }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="glink">GLink (Main Menu)</SelectItem>
-              <SelectItem value="plink">PLink (Sub Menu)</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-gray-500">
-            GLink: Main navigation items | PLink: Sub-menu items under GLink
-          </p>
-        </div>
-
-        {/* Parent Menu Selection - Only for PLink */}
-        {formData.menuType === 'plink' && (
-          <div className="space-y-2">
-            <Label htmlFor="parentId">Parent GLink Menu *</Label>
-            <Select
-              value={formData.parentId?.toString() || ''}
-              onValueChange={(value: string) => 
-                setFormData(prev => ({ 
-                  ...prev, 
-                  parentId: value ? parseInt(value) : null 
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select parent menu" />
-              </SelectTrigger>
-              <SelectContent>
-                {glinkMenus.map(menu => (
-                  <SelectItem key={menu.id} value={menu.id.toString()}>
-                    {menu.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {/* Name */}
-        <div className="space-y-2">
-          <Label htmlFor="name">Name *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="dashboard"
-            data-testid="input-name"
-          />
-          <p className="text-xs text-gray-500">Unique identifier (lowercase, no spaces)</p>
-        </div>
-
-        {/* Label */}
-        <div className="space-y-2">
-          <Label htmlFor="label">Label *</Label>
-          <Input
-            id="label"
-            value={formData.label}
-            onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
-            placeholder="Dashboard"
-            data-testid="input-label"
-          />
-          <p className="text-xs text-gray-500">Display name shown in navigation</p>
-        </div>
-
-        {/* Icon */}
-        <div className="space-y-2">
-          <Label htmlFor="icon">Icon</Label>
-          <select
-            id="icon"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            value={formData.icon}
-            onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-            data-testid="select-icon"
-          >
-            <option value="">No icon</option>
-            <option value="Home">🏠 Home</option>
-            <option value="Settings">⚙️ Settings</option>
-            <option value="Users">👥 Users</option>
-            <option value="Building2">🏢 Building2</option>
-            <option value="Ship">🚢 Ship</option>
-            <option value="Shield">🛡️ Shield</option>
-            <option value="Package">📦 Package</option>
-            <option value="Mail">📧 Mail</option>
-            <option value="Bell">🔔 Bell</option>
-            <option value="Zap">⚡ Zap</option>
-            <option value="MapPin">📍 MapPin</option>
-            <option value="FileText">📄 FileText</option>
-            <option value="Database">🗄️ Database</option>
-            <option value="Grid">▦ Grid</option>
-            <option value="Calendar">📅 Calendar</option>
-            <option value="Search">🔍 Search</option>
-            <option value="Tag">🏷️ Tag</option>
-            <option value="Truck">🚛 Truck</option>
-            <option value="Globe">🌐 Globe</option>
-            <option value="BarChart">📊 BarChart</option>
-            <option value="MenuIcon">☰ Menu</option>
-            <option value="Key">🔑 Key</option>
-            <option value="Lock">🔒 Lock</option>
-          </select>
-        </div>
-
-        {/* Route */}
-        <div className="space-y-2">
-          <Label htmlFor="route">Route</Label>
-          <Input
-            id="route"
-            value={formData.route}
-            onChange={(e) => setFormData(prev => ({ ...prev, route: e.target.value }))}
-            placeholder="/dashboard"
-            data-testid="input-route"
-          />
-          <p className="text-xs text-gray-500">URL path for this menu item</p>
-        </div>
-
-        {/* Sort Order */}
-        <div className="space-y-2">
-          <Label htmlFor="sortOrder">Sort Order</Label>
-          <Input
-            id="sortOrder"
-            type="number"
-            value={formData.sortOrder}
-            onChange={(e) => setFormData(prev => ({ ...prev, sortOrder: parseInt(e.target.value) || 0 }))}
-            data-testid="input-sort-order"
-          />
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-end space-x-3 pt-6 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setShowAddDialog(false);
-              setShowEditDialog(false);
-              resetForm();
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={() => saveMenuMutation.mutate(formData)}
-            disabled={saveMenuMutation.isPending || !formData.name || !formData.label}
-            data-testid="button-save"
-          >
-            {saveMenuMutation.isPending ? 'Saving...' : (editingMenu ? 'Update' : 'Create')}
-          </Button>
-        </div>
-      </form>
-    );
-  };
+  // Form component removed - now using separate add/edit page
 
   return (
     <AppLayout title="Menu Management">
@@ -749,18 +515,7 @@ export default function MenuManagement() {
             </CardContent>
           </Card>
 
-          {/* Edit Dialog */}
-          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Edit Menu</DialogTitle>
-                <DialogDescription>
-                  Update the menu item details
-                </DialogDescription>
-              </DialogHeader>
-              <MenuForm />
-            </DialogContent>
-          </Dialog>
+          {/* Edit dialog removed - now uses separate page */}
         </main>
       </div>
     </AppLayout>

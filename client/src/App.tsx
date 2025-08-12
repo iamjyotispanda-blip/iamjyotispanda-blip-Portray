@@ -132,6 +132,9 @@ function Router() {
       <Route path="/configuration/menu/add">
         {() => <ProtectedRoute component={AddMenu} />}
       </Route>
+      <Route path="/configuration/menu/edit/:id">
+        {(params) => <ProtectedRoute component={() => <AddMenu params={params} />} />}
+      </Route>
       <Route path="/configuration/pages">
         {() => <ProtectedRoute component={PageManagementPage} />}
       </Route>
