@@ -1,0 +1,38 @@
+AppLayout - User loading: false error: TypeError: Failed to execute 'fetch' on 'Window': '/api/auth/me' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:35:21)
+    at getCurrentUser (auth.ts:102:28)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=d508f884:840:14)
+    at run (@tanstack_react-query.js?v=d508f884:494:49)
+    at Object.start (@tanstack_react-query.js?v=d508f884:536:9)
+    at _a4.fetch (@tanstack_react-query.js?v=d508f884:926:41)
+    at _a9.executeFetch_fn (@tanstack_react-query.js?v=d508f884:2211:51)
+    at _a9.onSubscribe (@tanstack_react-query.js?v=d508f884:1898:74)
+    at _a9.subscribe (@tanstack_react-query.js?v=d508f884:24:10)
+    at @tanstack_react-query.js?v=d508f884:3022:60
+AppLayout.tsx:120 AppLayout - User condition check: false
+AppLayout.tsx:118 AppLayout - User data: undefined
+AppLayout.tsx:119 AppLayout - User loading: false error: TypeError: Failed to execute 'fetch' on 'Window': '/api/auth/me' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:35:21)
+    at getCurrentUser (auth.ts:102:28)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=d508f884:840:14)
+    at run (@tanstack_react-query.js?v=d508f884:494:49)
+    at Object.start (@tanstack_react-query.js?v=d508f884:536:9)
+    at _a4.fetch (@tanstack_react-query.js?v=d508f884:926:41)
+    at _a9.executeFetch_fn (@tanstack_react-query.js?v=d508f884:2211:51)
+    at _a9.onSubscribe (@tanstack_react-query.js?v=d508f884:1898:74)
+    at _a9.subscribe (@tanstack_react-query.js?v=d508f884:24:10)
+    at @tanstack_react-query.js?v=d508f884:3022:60
+AppLayout.tsx:120 AppLayout - User condition check: false
+AppLayout.tsx:118 AppLayout - User data: undefined
+AppLayout.tsx:119 AppLayout - User loading: false error: TypeError: Failed to execute 'fetch' on 'Window': '/api/auth/me' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:35:21)
+    at getCurrentUser (auth.ts:102:28)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=d508f884:840:14)
+    at run (@tanstack_react-query.js?v=d508f884:494:49)
+    at Object.start (@tanstack_react-query.js?v=d508f884:536:9)
+    at _a4.fetch (@tanstack_react-query.js?v=d508f884:926:41)
+    at _a9.executeFetch_fn (@tanstack_react-query.js?v=d508f884:2211:51)
+    at _a9.onSubscribe (@tanstack_react-query.js?v=d508f884:1898:74)
+    at _a9.subscribe (@tanstack_react-query.js?v=d508f884:24:10)
+    at @tanstack_react-query.js?v=d508f884:3022:60
+AppLayout.tsx:120 AppLayout - User condition check: false

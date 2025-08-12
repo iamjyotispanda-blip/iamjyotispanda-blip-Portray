@@ -88,7 +88,7 @@ export class AuthService {
     try {
       const token = AuthService.getToken();
       if (token) {
-        await apiRequest("/api/auth/logout", "POST");
+        await apiRequest("POST", "/api/auth/logout");
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -99,7 +99,7 @@ export class AuthService {
   }
 
   static async getCurrentUser(): Promise<User> {
-    const response = await apiRequest("/api/auth/me", "GET");
+    const response = await apiRequest("GET", "/api/auth/me");
     const data = await response.json();
     AuthService.setUser(data.user);
     return data.user;
