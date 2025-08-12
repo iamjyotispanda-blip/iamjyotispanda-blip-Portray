@@ -227,6 +227,7 @@ export const emailLogsRelations = relations(emailLogs, ({ one }) => ({
 export const insertUserSchema = createInsertSchema(users).pick({
   userType: true,
   email: true,
+  password: true,
   firstName: true,
   lastName: true,
   role: true,
@@ -238,6 +239,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const updateUserSchema = createInsertSchema(users).pick({
   email: true,
+  password: true,
   firstName: true,
   lastName: true,
   role: true,
@@ -245,6 +247,7 @@ export const updateUserSchema = createInsertSchema(users).pick({
   isActive: true,
   isVerified: true,
   isSystemAdmin: true,
+  lastLogin: true,
 }).partial();
 
 export type UpdateUser = z.infer<typeof updateUserSchema>;
@@ -862,6 +865,7 @@ export const insertCustomerSchema = createInsertSchema(customers).pick({
   email: true,
   terminalId: true,
   portId: true,
+  createdBy: true,
 }).extend({
   pan: z.string().regex(indianPANRegex, "Please enter a valid PAN number (e.g., ABCDE1234F)"),
   gst: z.string().regex(indianGSTRegex, "Please enter a valid GST number"),
