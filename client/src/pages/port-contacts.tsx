@@ -180,9 +180,12 @@ export default function PortContactsPage({ params }: PortContactsPageProps) {
                                 {contact.contactName}
                               </h3>
                               <Badge
-                                variant={contact.status === "active" ? "default" : "secondary"}
+                                variant={contact.status === "active" ? "default" : 
+                                        contact.status === "process for verification" ? "outline" : "secondary"}
+                                className={contact.status === "process for verification" ? 
+                                          "text-yellow-600 border-yellow-200" : ""}
                               >
-                                {contact.status}
+                                {contact.status === "process for verification" ? "Process for Verification" : contact.status}
                               </Badge>
                               {contact.isVerified ? (
                                 <Badge variant="outline" className="text-green-600 border-green-200">

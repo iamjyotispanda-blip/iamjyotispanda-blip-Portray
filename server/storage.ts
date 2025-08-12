@@ -467,7 +467,7 @@ export class DatabaseStorage implements IStorage {
       .update(portAdminContacts)
       .set({ 
         isVerified: true, 
-        status: "in progress", // Keep as "in progress" until password setup is completed
+        status: "process for verification", // Set to "process for verification" until password setup is completed
         userId: userId,
         verificationToken: null,
         verificationTokenExpires: null,
@@ -482,7 +482,7 @@ export class DatabaseStorage implements IStorage {
     const [contact] = await db
       .update(portAdminContacts)
       .set({ 
-        status: "active", // Change status to "active" after password setup is completed
+        status: "active", // Change status from "process for verification" to "active" after password setup is completed
         updatedAt: new Date()
       })
       .where(eq(portAdminContacts.userId, userId))
