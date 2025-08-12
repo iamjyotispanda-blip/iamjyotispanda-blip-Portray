@@ -197,6 +197,20 @@ export interface IStorage {
   getStatesByCountryId(countryId: number): Promise<State[]>;
   getAllCargoTypes(): Promise<CargoType[]>;
   getPlotsByTerminalId(terminalId: number): Promise<Plot[]>;
+  
+  // Dashboard operations
+  getDashboardStats(): Promise<{
+    totalUsers: number;
+    totalOrganizations: number;
+    totalPorts: number;
+    totalTerminals: number;
+    totalCustomers: number;
+    totalContracts: number;
+    activeContracts: number;
+    draftContracts: number;
+    pendingActivations: number;
+    recentActivity: any[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1339,6 +1353,47 @@ export class DatabaseStorage implements IStorage {
   async getPlotsByTerminalId(terminalId: number): Promise<Plot[]> {
     return await db.select().from(plots).where(eq(plots.terminalId, terminalId));
   }
+
+  async getDashboardStats(): Promise<{
+    totalUsers: number;
+    totalOrganizations: number;
+    totalPorts: number;
+    totalTerminals: number;
+    totalCustomers: number;
+    totalContracts: number;
+    activeContracts: number;
+    draftContracts: number;
+    pendingActivations: number;
+    recentActivity: any[];
+  }> {
+    // Use raw SQL for counting due to Drizzle count limitations
+    const [result] = await db.execute({
+      sql: `SELECT 
+        (SELECT COUNT(*) FROM users WHERE is_active = true) as total_users,
+        (SELECT COUNT(*) FROM organizations WHERE is_active = true) as total_organizations,
+        (SELECT COUNT(*) FROM ports WHERE is_active = true) as total_ports,
+        (SELECT COUNT(*) FROM terminals WHERE is_active = true) as total_terminals,
+        (SELECT COUNT(*) FROM customers) as total_customers,
+        (SELECT COUNT(*) FROM contracts) as total_contracts,
+        (SELECT COUNT(*) FROM contracts WHERE valid_to > NOW()) as active_contracts,
+        (SELECT COUNT(*) FROM contracts WHERE valid_from > NOW()) as draft_contracts,
+        (SELECT COUNT(*) FROM terminals WHERE status != 'Active') as pending_activations`,
+      args: []
+    });
+
+    return {
+      totalUsers: Number(result.total_users) || 0,
+      totalOrganizations: Number(result.total_organizations) || 0,
+      totalPorts: Number(result.total_ports) || 0,
+      totalTerminals: Number(result.total_terminals) || 0,
+      totalCustomers: Number(result.total_customers) || 0,
+      totalContracts: Number(result.total_contracts) || 0,
+      activeContracts: Number(result.active_contracts) || 0,
+      draftContracts: Number(result.draft_contracts) || 0,
+      pendingActivations: Number(result.pending_activations) || 0,
+      recentActivity: []
+    };
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -2366,6 +2421,33 @@ export class MemStorage implements IStorage {
 
   async getPlotsByTerminalId(terminalId: number): Promise<Plot[]> {
     return [];
+  }
+
+  async getDashboardStats(): Promise<{
+    totalUsers: number;
+    totalOrganizations: number;
+    totalPorts: number;
+    totalTerminals: number;
+    totalCustomers: number;
+    totalContracts: number;
+    activeContracts: number;
+    draftContracts: number;
+    pendingActivations: number;
+    recentActivity: any[];
+  }> {
+    // Return mock data for memory storage
+    return {
+      totalUsers: this.users.size,
+      totalOrganizations: this.organizations.size,
+      totalPorts: this.ports.size,
+      totalTerminals: this.terminals.size,
+      totalCustomers: 0, // Not implemented in mem storage
+      totalContracts: 0, // Not implemented in mem storage
+      activeContracts: 0,
+      draftContracts: 0,
+      pendingActivations: Array.from(this.terminals.values()).filter(t => t.status !== 'Active').length,
+      recentActivity: []
+    };
   }
 }
 
