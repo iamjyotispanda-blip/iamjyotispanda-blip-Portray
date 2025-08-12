@@ -151,8 +151,7 @@ export default function MenuManagement() {
   const { data: menus = [], isLoading } = useQuery({
     queryKey: ['/api/menus'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/menus');
-      return response as Menu[];
+      return apiRequest('GET', '/api/menus') as Promise<Menu[]>;
     },
   });
 
@@ -689,7 +688,7 @@ export default function MenuManagement() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout title="Menu Management">
       <div className="flex-1 space-y-6 p-4 md:p-6 pt-6">
         <main className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
