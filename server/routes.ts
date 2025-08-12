@@ -745,12 +745,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const [firstName, ...lastNameParts] = contact.contactName.split(' ');
           const lastName = lastNameParts.join(' ') || firstName;
           
+          // Get Port Admin role ID
+          const portAdminRole = await storage.getRoleByName("PortAdmin");
+          
           const userData: InsertUser = {
             email: contact.email,
             password: "TEMP_PASSWORD_NEEDS_SETUP", // Temporary, user will set real password
             firstName,
             lastName,
             role: "PortAdmin",
+            roleId: portAdminRole?.id,
           };
           
           user = await storage.createUser(userData);
@@ -759,10 +763,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const [firstName, ...lastNameParts] = contact.contactName.split(' ');
           const lastName = lastNameParts.join(' ') || firstName;
           
+          // Get Port Admin role ID
+          const portAdminRole = await storage.getRoleByName("PortAdmin");
+          
           const updatedUser = await storage.updateUser(user.id, {
             firstName,
             lastName,
             role: "PortAdmin",
+            roleId: portAdminRole?.id,
             password: "TEMP_PASSWORD_NEEDS_SETUP" // Reset password for security
           });
           
