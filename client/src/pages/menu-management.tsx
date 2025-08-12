@@ -688,19 +688,27 @@ export default function MenuManagementPage() {
             
             {/* All Available Icons Section */}
             <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b">
-              🎨 All Available Icons
+              🎨 All Available Icons ({(() => {
+                const iconCount = getAllAvailableIcons().length;
+                console.log("[Menu Management] Loading all available icons:", iconCount);
+                return iconCount;
+              })()})
             </div>
-            {getAllAvailableIcons().map((iconName) => {
-              const IconComponent = getIconComponent(iconName) as React.ComponentType<{ className?: string }>;
-              return (
-                <SelectItem key={iconName} value={iconName}>
-                  <div className="flex items-center space-x-2">
-                    <IconComponent className="h-4 w-4" />
-                    <span>{iconName}</span>
-                  </div>
-                </SelectItem>
-              );
-            })}
+            {(() => {
+              const allIcons = getAllAvailableIcons();
+              console.log("[Menu Management] All icons array:", allIcons.slice(0, 10), "...");
+              return allIcons.map((iconName) => {
+                const IconComponent = getIconComponent(iconName) as React.ComponentType<{ className?: string }>;
+                return (
+                  <SelectItem key={iconName} value={iconName}>
+                    <div className="flex items-center space-x-2">
+                      <IconComponent className="h-4 w-4" />
+                      <span>{iconName}</span>
+                    </div>
+                  </SelectItem>
+                );
+              });
+            })()}
           </SelectContent>
         </Select>
         <p className="text-xs text-gray-500">Choose an icon for the navigation menu</p>
