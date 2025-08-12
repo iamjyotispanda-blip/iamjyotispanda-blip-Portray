@@ -16,6 +16,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PortrayLogo } from "@/components/portray-logo";
 import { TreeNavigation } from "@/components/navigation/TreeNavigation";
+import { UserProfileQuickSettings } from "@/components/UserProfileQuickSettings";
 import { AuthService } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import type { Notification, Menu as MenuType } from "@shared/schema";
@@ -438,67 +439,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               </DropdownMenu>
             )}
 
-            {/* User Menu */}
+            {/* User Profile Quick Settings */}
             {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="flex items-center space-x-2 h-10 px-3"
-                    data-testid="button-user-menu"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                      {user.firstName && user.lastName ? 
-                        `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
-                        user.firstName ? 
-                        `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
-                        user.email ? 
-                        `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'US'
-                      }
-                    </div>
-                    <div className="text-left min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {user.role || 'User'} • {user.email}
-                      </p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-3 py-2 text-sm border-b">
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {user.email}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {user.role || 'User'}
-                    </p>
-                  </div>
-                  <DropdownMenuItem 
-                    onClick={() => setLocation('/profile')}
-                    className="cursor-pointer"
-                    data-testid="menu-item-profile"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className="text-red-600 focus:text-red-600 cursor-pointer"
-                    data-testid="menu-item-logout"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserProfileQuickSettings user={user} onLogout={handleLogout} />
             )}
 
           </div>
