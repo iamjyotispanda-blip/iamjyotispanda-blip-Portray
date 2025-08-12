@@ -8,11 +8,6 @@ export default function DashboardPage() {
   return (
     <AppLayout title="Dashboard" activeSection="dashboard">
       <div className="p-6 space-y-6" data-testid="dashboard-content">
-        {/* Page Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to PortRay Dashboard</h2>
-          <p className="text-gray-600 dark:text-gray-400">Monitor your port operations and key metrics</p>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

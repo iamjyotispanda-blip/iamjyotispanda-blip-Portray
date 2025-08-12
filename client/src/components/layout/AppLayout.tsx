@@ -326,12 +326,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               <MenuIcon className="h-5 w-5" />
             </Button>
             
-            {/* Page Title */}
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white" data-testid="page-title">
-                {title}
-              </h1>
-            </div>
+
           </div>
 
           {/* Right Side */}
@@ -508,6 +503,12 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto">
+          {/* Page Title Section */}
+          <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="page-title">
+              {title}
+            </h1>
+          </div>
           {children}
         </main>
       </div>
