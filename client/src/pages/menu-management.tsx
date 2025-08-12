@@ -69,133 +69,11 @@ interface GlinkFormData {
 const getRecommendedIcons = (menuType: 'glink' | 'plink', name: string, label: string, parentMenu?: Menu): string[] => {
   const recommendations = getIconRecommendations(name, label, menuType, undefined);
   return recommendations.map(rec => rec.icon).filter(icon => 
-    iconOptions.some(opt => opt.name === icon)
+    getAllAvailableIcons().includes(icon)
   );
 };
 
-const iconOptions = [
-  // Navigation & Core
-  { name: "Home", component: Home },
-  { name: "Menu", component: MenuIcon },
-  { name: "Navigation", component: Navigation },
-  { name: "Link", component: LinkIcon },
-  { name: "Link2", component: Link2 },
-  { name: "Globe", component: Globe },
-  
-  // Settings & Configuration
-  { name: "Settings", component: Settings },
-  { name: "Sliders", component: Sliders },
-  { name: "Wrench", component: Wrench },
-  { name: "Palette", component: Palette },
-  { name: "Filter", component: Filter },
-  
-  // Users & Access
-  { name: "User", component: User },
-  { name: "Users", component: Users },
-  { name: "UserCheck", component: UserCheck },
-  { name: "Shield", component: Shield },
-  { name: "Lock", component: Lock },
-  { name: "Unlock", component: Unlock },
-  { name: "Key", component: Key },
-  { name: "LogIn", component: LogIn },
-  { name: "LogOut", component: LogOut },
-  
-  // Business & Organization
-  { name: "Building2", component: Building2 },
-  { name: "Briefcase", component: Briefcase },
-  { name: "Package", component: Package },
-  { name: "Truck", component: Truck },
-  { name: "Ship", component: Ship },
-  { name: "DollarSign", component: DollarSign },
-  { name: "CreditCard", component: CreditCard },
-  { name: "Wallet", component: Wallet },
-  
-  // Communication
-  { name: "Mail", component: Mail },
-  { name: "MessageCircle", component: MessageCircle },
-  { name: "MessageSquare", component: MessageSquare },
-  { name: "Phone", component: Phone },
-  { name: "Bell", component: Bell },
-  { name: "Mic", component: Mic },
-  
-  // Data & Analytics
-  { name: "Database", component: Database },
-  { name: "Server", component: Server },
-  { name: "BarChart", component: BarChart },
-  { name: "PieChart", component: PieChart },
-  { name: "Target", component: Target },
-  { name: "Trophy", component: Trophy },
-  
-  // Files & Documents
-  { name: "File", component: File },
-  { name: "FileText", component: FileText },
-  { name: "Folder", component: Folder },
-  { name: "Archive", component: Archive },
-  { name: "Bookmark", component: Bookmark },
-  { name: "Clipboard", component: Clipboard },
-  { name: "Code", component: Code },
-  
-  // Media & Content
-  { name: "Image", component: Image },
-  { name: "Camera", component: Camera },
-  { name: "Video", component: Video },
-  { name: "Play", component: Play },
-  { name: "Volume2", component: Volume2 },
-  { name: "Youtube", component: Youtube },
-  
-  // Actions
-  { name: "Plus", component: PlusIcon },
-  { name: "PlusCircle", component: PlusCircle },
-  { name: "Save", component: Save },
-  { name: "Download", component: Download },
-  { name: "Upload", component: Upload },
-  { name: "Search", component: Search },
-  { name: "RefreshCw", component: RefreshCw },
-  { name: "Power", component: Power },
-  { name: "Repeat", component: Repeat },
-  
-  // Status & Alerts
-  { name: "CheckCircle", component: CheckCircle },
-  { name: "AlertCircle", component: AlertCircle },
-  { name: "Info", component: Info },
-  { name: "HelpCircle", component: HelpCircle },
-  { name: "Star", component: Star },
-  { name: "Heart", component: Heart },
-  { name: "Flag", component: Flag },
-  { name: "Gift", component: Gift },
-  { name: "Verified", component: Verified },
-  
-  // Technology
-  { name: "Monitor", component: Monitor },
-  { name: "Smartphone", component: Smartphone },
-  { name: "Tablet", component: Tablet },
-  { name: "Wifi", component: Wifi },
-  { name: "Cloud", component: Cloud },
-  { name: "Zap", component: Zap },
-  { name: "Radio", component: Radio },
-  { name: "Printer", component: Printer },
-  
-  // Time & Scheduling
-  { name: "Calendar", component: Calendar },
-  { name: "Clock", component: Clock },
-  
-  // Layout & Design
-  { name: "Layout", component: Layout },
-  { name: "Grid", component: Grid },
-  { name: "Layers", component: Layers },
-  { name: "Eye", component: Eye },
-  
-  // Utilities
-  { name: "Tag", component: Tag },
-  { name: "Hash", component: Hash },
-  { name: "MapPin", component: MapPin },
-  { name: "Lightbulb", component: Lightbulb },
-  { name: "Scissors", component: Scissors },
-  { name: "Thermometer", component: Thermometer },
-  { name: "Umbrella", component: Umbrella },
-  { name: "Trash", component: Trash },
-  { name: "X", component: X },
-];
+// Remove hardcoded icon list - now using dynamic getAllAvailableIcons()
 
 export default function MenuManagementPage() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -483,11 +361,7 @@ export default function MenuManagementPage() {
     saveMenuMutation.mutate(formData);
   };
 
-  const getIconComponent = (iconName: string | null) => {
-    if (!iconName) return LinkIcon;
-    const iconOption = iconOptions.find(option => option.name === iconName);
-    return iconOption ? iconOption.component : LinkIcon;
-  };
+  // Use the imported getIconComponent function from iconRecommendations
 
   // Sortable menu item component for drag-and-drop builder
   const SortableMenuItem = ({ menu }: { menu: Menu }) => {
@@ -506,7 +380,7 @@ export default function MenuManagementPage() {
       opacity: isDragging ? 0.5 : 1,
     };
   
-    const IconComponent = getIconComponent(menu.icon);
+    const IconComponent = getIconComponent(menu.icon) as React.ComponentType<{ className?: string }>;
   
     return (
       <div
@@ -642,7 +516,7 @@ export default function MenuManagementPage() {
                   .sort((a, b) => a.sortOrder - b.sortOrder);
                 console.log("[Menu Management Page] Filtered active GLinks:", availableGLinks);
                 return availableGLinks.map((menu) => {
-                  const IconComponent = getIconComponent(menu.icon);
+                  const IconComponent = getIconComponent(menu.icon) as React.ComponentType<{ className?: string }>;
                   return (
                     <SelectItem key={menu.id} value={menu.id.toString()}>
                       <div className="flex items-center space-x-2">
@@ -698,7 +572,7 @@ export default function MenuManagementPage() {
               {formData.icon && (
                 <div className="flex items-center space-x-2">
                   {(() => {
-                    const IconComponent = getIconComponent(formData.icon);
+                    const IconComponent = getIconComponent(formData.icon) as React.ComponentType<{ className?: string }>;
                     return <IconComponent className="h-4 w-4" />;
                   })()}
                   <span>{formData.icon}</span>
@@ -740,9 +614,7 @@ export default function MenuManagementPage() {
                           🎯 Perfect Match for "{formData.name || formData.label}" ({formData.menuType === 'glink' ? 'Main Menu' : 'Sub Menu'})
                         </div>
                         {exactRecommendations.map((recommendation) => {
-                          const iconOption = iconOptions.find(opt => opt.name === recommendation.icon);
-                          if (!iconOption) return null;
-                          const IconComponent = iconOption.component;
+                          const IconComponent = getIconComponent(recommendation.icon) as React.ComponentType<{ className?: string }>;
                           
                           return (
                             <SelectItem key={`exact-${recommendation.icon}`} value={recommendation.icon}>
@@ -767,9 +639,7 @@ export default function MenuManagementPage() {
                           💡 Contextual Suggestions
                         </div>
                         {contextualRecommendations.map((recommendation) => {
-                          const iconOption = iconOptions.find(opt => opt.name === recommendation.icon);
-                          if (!iconOption) return null;
-                          const IconComponent = iconOption.component;
+                          const IconComponent = getIconComponent(recommendation.icon) as React.ComponentType<{ className?: string }>;
                           
                           return (
                             <SelectItem key={`contextual-${recommendation.icon}`} value={recommendation.icon}>
@@ -794,9 +664,7 @@ export default function MenuManagementPage() {
                           📋 General Options
                         </div>
                         {fallbackRecommendations.map((recommendation) => {
-                          const iconOption = iconOptions.find(opt => opt.name === recommendation.icon);
-                          if (!iconOption) return null;
-                          const IconComponent = iconOption.component;
+                          const IconComponent = getIconComponent(recommendation.icon) as React.ComponentType<{ className?: string }>;
                           
                           return (
                             <SelectItem key={`fallback-${recommendation.icon}`} value={recommendation.icon}>
@@ -822,13 +690,13 @@ export default function MenuManagementPage() {
             <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 dark:bg-gray-800 border-b">
               🎨 All Available Icons
             </div>
-            {iconOptions.map((iconOption) => {
-              const IconComponent = iconOption.component;
+            {getAllAvailableIcons().map((iconName) => {
+              const IconComponent = getIconComponent(iconName) as React.ComponentType<{ className?: string }>;
               return (
-                <SelectItem key={iconOption.name} value={iconOption.name}>
+                <SelectItem key={iconName} value={iconName}>
                   <div className="flex items-center space-x-2">
                     <IconComponent className="h-4 w-4" />
-                    <span>{iconOption.name}</span>
+                    <span>{iconName}</span>
                   </div>
                 </SelectItem>
               );
@@ -1008,7 +876,7 @@ export default function MenuManagementPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredMenus.map((menu) => {
-                        const IconComponent = getIconComponent(menu.icon);
+                        const IconComponent = getIconComponent(menu.icon) as React.ComponentType<{ className?: string }>;
                         return (
                           <TableRow key={menu.id} className={menu.isChild ? "bg-gray-50 dark:bg-gray-800/50" : ""} data-testid={`table-row-${menu.id}`}>
                             <TableCell>
