@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { AuthService } from "@/lib/auth";
+import type { Role } from "@shared/schema";
 
 export interface Permission {
   section: string;
@@ -8,9 +9,16 @@ export interface Permission {
 }
 
 export function usePermissions() {
-  // Get current user data with permissions
-  const { data: user } = useQuery({
+  // Get current user data
+  const { data: user } = useQuery<any>({
     queryKey: ["/api/auth/me"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Get user role with permissions
+  const { data: userRole } = useQuery<Role>({
+    queryKey: ["/api/roles", (user as any)?.user?.roleId],
+    enabled: !!(user as any)?.user?.roleId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -45,27 +53,37 @@ export function usePermissions() {
 
   // Get user's permissions
   const getUserPermissions = (): Permission[] => {
-    if (!user || !user.user?.role) return [];
+    console.log('getUserPermissions called - user:', user, 'userRole:', userRole);
+    
+    const userData = (user as any)?.user;
+    if (!user || !userData?.role) {
+      console.log('No user or role found');
+      return [];
+    }
     
     // System admin has all permissions
-    if (user.user.isSystemAdmin || user.user.role === "SystemAdmin" || user.user.role === "System Admin") {
+    if (userData.isSystemAdmin || userData.role === "SystemAdmin" || userData.role === "System Admin") {
+      console.log('User is SystemAdmin, granting all permissions');
       return [
         { section: "*", levels: ['read', 'write', 'manage'] }
       ];
     }
 
-    // Parse role-based permissions from role data
-    // For now, get permissions from user object or assume full permissions for System Admin
-    const rolePermissions = user.user.rolePermissions || [];
+    // Get permissions from role data if available
+    const rolePermissions = userRole?.permissions || [];
+    console.log('Role permissions found:', rolePermissions);
     
     // If no role permissions defined but user is System Admin, grant all permissions
-    if (rolePermissions.length === 0 && (user.user.isSystemAdmin || user.user.role === "SystemAdmin" || user.user.role === "System Admin")) {
+    if (rolePermissions.length === 0 && (userData.isSystemAdmin || userData.role === "SystemAdmin" || userData.role === "System Admin")) {
+      console.log('No role permissions but user is SystemAdmin, granting all permissions');
       return [
         { section: "*", levels: ['read', 'write', 'manage'] }
       ];
     }
     
-    return parsePermissions(rolePermissions);
+    const parsedPermissions = parsePermissions(rolePermissions);
+    console.log('Parsed permissions:', parsedPermissions);
+    return parsedPermissions;
   };
 
   // Check if user has specific permission level
