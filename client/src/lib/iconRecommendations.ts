@@ -152,11 +152,18 @@ export function getIconRecommendations(
 }
 
 export function getAllAvailableIcons(): string[] {
-  return Object.keys(LucideIcons).filter(iconName => 
+  const icons = Object.keys(LucideIcons).filter(iconName => 
     typeof LucideIcons[iconName as keyof typeof LucideIcons] === 'function' &&
     iconName !== 'createLucideIcon' &&
     iconName !== 'default'
   ).sort();
+  
+  // Debug log for development
+  if (typeof window !== 'undefined') {
+    console.log(`PortRay Icons: ${icons.length} Lucide icons loaded for menu selection`);
+  }
+  
+  return icons;
 }
 
 export function getIconComponent(iconName: string | null) {
