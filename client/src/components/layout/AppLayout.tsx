@@ -114,6 +114,9 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     queryFn: AuthService.getCurrentUser,
   });
 
+  // Debug user data
+  console.log('AppLayout - User data:', user);
+
   // Get notifications for authenticated users
   const queryClient = useQueryClient();
   const { data: notifications = [] } = useQuery<Notification[]>({
