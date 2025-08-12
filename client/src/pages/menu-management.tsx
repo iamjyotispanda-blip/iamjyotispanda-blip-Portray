@@ -278,17 +278,24 @@ export default function MenuManagement() {
   // Save order mutation with auto-save
   const saveOrderMutation = useMutation({
     mutationFn: async (orderedMenus: Menu[]) => {
-      return apiRequest('POST', '/api/menus/bulk-update-order', { menus: orderedMenus });
+      // Transform the data to match backend expectation
+      const updates = orderedMenus.map((menu) => ({
+        id: menu.id,
+        sortOrder: menu.sortOrder
+      }));
+      
+      console.log('Sending bulk update with data:', { updates });
+      return apiRequest('PATCH', '/api/menus/bulk-update-order', { updates });
     },
     onSuccess: () => {
       toast({
         title: 'Success',
-        description: 'Menu order updated',
+        description: 'Menu order updated successfully',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
-      queryClient.refetchQueries({ queryKey: ['/api/menus'] });
     },
     onError: (error: any) => {
+      console.error('Save order error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to update menu order',

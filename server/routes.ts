@@ -1245,18 +1245,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { updates } = req.body;
       
+      console.log('Bulk update received:', { updates, type: typeof updates, isArray: Array.isArray(updates) });
+      
       if (!Array.isArray(updates)) {
         return res.status(400).json({ message: "Updates must be an array" });
       }
       
+      if (updates.length === 0) {
+        return res.status(400).json({ message: "No updates provided" });
+      }
+      
+      // Validate update structure
+      for (const update of updates) {
+        if (!update.id || typeof update.id !== 'number' || typeof update.sortOrder !== 'number') {
+          console.error('Invalid update structure:', update);
+          return res.status(400).json({ message: "Each update must have id and sortOrder" });
+        }
+      }
+      
+      console.log('Processing menu updates:', updates.map(u => `ID ${u.id} -> Sort ${u.sortOrder}`));
+      
       // Update each menu's sort order
-      const updatePromises = updates.map(({ id, sortOrder }: { id: number; sortOrder: number }) => 
-        storage.updateMenu(id, { sortOrder })
-      );
+      const updatePromises = updates.map(async ({ id, sortOrder }: { id: number; sortOrder: number }) => {
+        console.log(`Updating menu ${id} with sortOrder ${sortOrder}`);
+        const result = await storage.updateMenu(id, { sortOrder });
+        console.log(`Update result for menu ${id}:`, result ? 'success' : 'failed');
+        return result;
+      });
       
-      await Promise.all(updatePromises);
+      const results = await Promise.all(updatePromises);
+      const successCount = results.filter(r => r !== undefined).length;
       
-      res.json({ message: "Menu order updated successfully" });
+      console.log(`Bulk update completed: ${successCount}/${updates.length} successful`);
+      
+      res.json({ 
+        message: "Menu order updated successfully", 
+        updated: successCount,
+        total: updates.length
+      });
     } catch (error) {
       console.error("Bulk update menu order error:", error);
       res.status(500).json({ message: "Internal server error" });
