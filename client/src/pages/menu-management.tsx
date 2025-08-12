@@ -136,7 +136,7 @@ export default function MenuManagement() {
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<Set<number>>(new Set());
   const [menuOrder, setMenuOrder] = useState<Menu[]>([]);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   
   // Form data
   const [formData, setFormData] = useState<MenuFormData>({
@@ -225,7 +225,7 @@ export default function MenuManagement() {
     })
   );
 
-  // Handle drag end
+  // Handle drag end with auto-save
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -242,7 +242,9 @@ export default function MenuManagement() {
       }));
       
       setMenuOrder(updatedOrder);
-      setHasUnsavedChanges(true);
+      
+      // Auto-save the new order
+      saveOrderMutation.mutate(updatedOrder);
     }
   };
 
@@ -326,7 +328,7 @@ export default function MenuManagement() {
     },
   });
 
-  // Save order mutation
+  // Save order mutation with auto-save
   const saveOrderMutation = useMutation({
     mutationFn: async (orderedMenus: Menu[]) => {
       return apiRequest('POST', '/api/menus/bulk-update-order', { menus: orderedMenus });
@@ -334,16 +336,15 @@ export default function MenuManagement() {
     onSuccess: () => {
       toast({
         title: 'Success',
-        description: 'Menu order saved successfully',
+        description: 'Menu order updated',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
       queryClient.refetchQueries({ queryKey: ['/api/menus'] });
-      setHasUnsavedChanges(false);
     },
     onError: (error: any) => {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to save menu order',
+        description: error.message || 'Failed to update menu order',
         variant: 'destructive',
       });
     },
@@ -364,16 +365,7 @@ export default function MenuManagement() {
     setShowEditDialog(true);
   };
 
-  // Handle save order
-  const handleSaveOrder = () => {
-    saveOrderMutation.mutate(menuOrder);
-  };
 
-  // Handle discard changes
-  const handleDiscardChanges = () => {
-    setMenuOrder([...menus].sort((a, b) => a.sortOrder - b.sortOrder));
-    setHasUnsavedChanges(false);
-  };
 
   // Sortable menu item component
   const SortableMenuItem = ({ menu }: { menu: HierarchicalMenu }) => {
@@ -702,62 +694,28 @@ export default function MenuManagement() {
     <AppLayout title="Menu Management">
       <div className="flex-1 space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
         <main className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-          {/* Action Bar */}
-          <div className="flex items-center justify-end space-x-2 sm:space-x-3">
-            <Badge variant="outline" className="text-xs">
-              {menus.length} total
-            </Badge>
-            
-            {/* Add New Menu Button */}
-            <Button 
-              onClick={() => setLocation('/configuration/menu/add')}
-              data-testid="button-add-menu"
-              size="sm"
-              className="h-8 text-sm px-3"
-            >
-              <Plus className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Add Menu</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-          </div>
-
-          {/* Unsaved Changes Banner */}
-          {hasUnsavedChanges && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 sm:p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full flex-shrink-0"></div>
-                  <span className="text-xs sm:text-sm text-amber-700 dark:text-amber-300">
-                    Unsaved menu order changes
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDiscardChanges}
-                    data-testid="button-discard"
-                    className="h-8 text-xs px-3"
-                  >
-                    Discard
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSaveOrder}
-                    disabled={saveOrderMutation.isPending}
-                    data-testid="button-save-order"
-                    className="h-8 text-xs px-3"
-                  >
-                    {saveOrderMutation.isPending ? 'Saving...' : 'Save Order'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Menu Tree */}
           <Card>
             <CardContent className="p-6">
+              {/* Add Menu Button and Stats */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <Badge variant="outline" className="text-xs">
+                    {menus.length} total
+                  </Badge>
+                </div>
+                <Button 
+                  onClick={() => setLocation('/configuration/menu/add')}
+                  data-testid="button-add-menu"
+                  size="sm"
+                  className="h-8 text-sm px-3"
+                >
+                  <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Add Menu</span>
+                  <span className="sm:hidden">Add</span>
+                </Button>
+              </div>
+              
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
