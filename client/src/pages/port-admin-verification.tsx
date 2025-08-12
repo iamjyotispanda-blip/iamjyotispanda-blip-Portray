@@ -55,11 +55,10 @@ export default function PortAdminVerificationPage() {
 
   const verifyToken = async (tokenValue: string) => {
     try {
-      const response = await apiRequest(`/api/verify?token=${tokenValue}`, {
-        method: "GET",
-      });
+      const response = await apiRequest("GET", `/api/verify?token=${tokenValue}`);
+      const data = await response.json();
       
-      setContactInfo(response);
+      setContactInfo(data);
       setVerificationStatus("valid");
     } catch (error: any) {
       setVerificationStatus("invalid");
@@ -72,16 +71,14 @@ export default function PortAdminVerificationPage() {
     setError("");
 
     try {
-      const response = await apiRequest("/api/register-port-admin", {
-        method: "POST",
-        body: JSON.stringify({
-          token,
-          password: data.password,
-        }),
+      const response = await apiRequest("POST", "/api/register-port-admin", {
+        token,
+        password: data.password,
       });
+      const responseData = await response.json();
 
       // Store the authentication token
-      localStorage.setItem("authToken", response.token);
+      localStorage.setItem("authToken", responseData.token);
       
       setRegistrationStatus("success");
       

@@ -69,7 +69,7 @@ export class AuthService {
 
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiRequest("/api/auth/login", "POST", credentials);
+      const response = await apiRequest("POST", "/api/auth/login", credentials);
       const data: AuthResponse = await response.json();
       
       console.log("Login successful, storing token:", data.token);
