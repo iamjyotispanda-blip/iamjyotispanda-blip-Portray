@@ -27,6 +27,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Plus, Link as LinkIcon, Trash2, Edit, ToggleLeft, ToggleRight, Home, Settings, Building2, Ship, Users, Shield, UserCheck, Menu as MenuIcon, GripVertical, List, LayoutGrid, GitBranch, AlertTriangle, ChevronDown, ChevronRight, Mail, Calendar, Clock, Database, File, Folder, Globe, Heart, Image, Key, Lock, MapPin, MessageCircle, Phone, Search, Tag, Target, Trophy, Truck, Wifi, Zap, Archive, Bookmark, Camera, Download, Flag, Gift, HelpCircle, Info, LogIn, LogOut, Monitor, Palette, PieChart, Play, Plus as PlusIcon, Power, RefreshCw, Save, Star, Trash, Upload, User, Video, Volume2, Wrench, AlertCircle, BarChart, Bell, Briefcase, CheckCircle, Clipboard, Cloud, Code, CreditCard, DollarSign, Eye, FileText, Filter, Grid, Hash, Layers, Layout, Lightbulb, Link2, MessageSquare, Mic, Navigation, Package, PlusCircle, Printer, Radio, Repeat, Scissors, Server, Sliders, Smartphone, Tablet, Thermometer, Umbrella, Unlock, Verified, Wallet, X, Youtube } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -704,15 +712,15 @@ export default function MenuManagementPage() {
             </div>
             
             {/* Add menu button */}
-            <Sheet open={showAddForm} onOpenChange={(open) => {
+            <Dialog open={showAddForm} onOpenChange={(open) => {
               setShowAddForm(open);
               if (!open) {
-                // Reset form when sheet closes
+                // Reset form when dialog closes
                 setEditingMenu(null);
                 resetForm();
               }
             }}>
-              <SheetTrigger asChild>
+              <DialogTrigger asChild>
                 <Button className="flex items-center space-x-2" data-testid="button-add-menu" onClick={() => {
                   setEditingMenu(null); // Ensure we're not in edit mode
                   resetForm(); // Reset form data
@@ -721,19 +729,19 @@ export default function MenuManagementPage() {
                   <Plus className="h-4 w-4" />
                   <span>Add {selectedMenuType === 'glink' ? 'GLink' : 'PLink'} Menu</span>
                 </Button>
-              </SheetTrigger>
-              <SheetContent className="w-[95vw] sm:w-[600px] lg:w-[700px] overflow-y-auto shadow-2xl border-l-4 border-l-blue-500 fixed inset-y-0 right-0">
-                <SheetHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 pb-4">
-                  <SheetTitle>Add Menu</SheetTitle>
-                  <SheetDescription>
+              </DialogTrigger>
+              <DialogContent className="w-[95vw] max-w-[800px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Menu</DialogTitle>
+                  <DialogDescription>
                     Create a new menu item for navigation
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="flex-1 overflow-y-auto px-1 py-4 pb-20">
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
                   <MenuForm />
                 </div>
-              </SheetContent>
-            </Sheet>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
