@@ -49,6 +49,8 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       }
     },
     enabled: !!user?.roleId,
+    staleTime: 0, // Always refetch to get latest permissions
+    gcTime: 0, // Don't cache role data to ensure fresh permissions
   });
 
   // Get all menus from database
@@ -65,6 +67,7 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
       }
     },
     enabled: !!user,
+    staleTime: 0, // Always refetch to get latest menu permissions
   });
 
   // Helper function to check if user has permission for a menu item

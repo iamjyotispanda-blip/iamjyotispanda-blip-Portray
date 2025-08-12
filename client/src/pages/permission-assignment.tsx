@@ -127,10 +127,18 @@ export default function PermissionAssignmentPage() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Permissions updated successfully",
+        description: "Permissions updated successfully. Navigation menu will refresh automatically.",
       });
+      // Invalidate all related cache queries to refresh navigation
       queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/roles", selectedRoleId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/menus"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      
+      // Force refetch of navigation data for immediate UI update
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/menus"] });
+      }, 100);
     },
     onError: (error: any) => {
       toast({
