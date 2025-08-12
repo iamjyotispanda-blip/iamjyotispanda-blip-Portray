@@ -449,7 +449,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                     {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Admin User'}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user.role || 'Administrator'}
+                    {user.email}
                   </p>
                 </div>
 
@@ -473,35 +473,53 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-3 py-2 text-sm border-b">
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {user.email}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {user.role || 'User'}
-                    </p>
+                <DropdownMenuContent align="end" className="w-64">
+                  {/* User Header */}
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                        {user.firstName && user.lastName ? 
+                          `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : 
+                          user.firstName ? 
+                          `${user.firstName.charAt(0)}${user.firstName.charAt(1) || ''}` : 
+                          user.email ? 
+                          `${user.email.charAt(0)}${user.email.charAt(1) || ''}` : 'AU'
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <DropdownMenuItem 
-                    onClick={() => setLocation('/profile')}
-                    className="cursor-pointer"
-                    data-testid="menu-item-profile"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className="text-red-600 focus:text-red-600 cursor-pointer"
-                    data-testid="menu-item-logout"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
+                  
+                  {/* Menu Items */}
+                  <div className="py-2">
+                    <DropdownMenuItem 
+                      onClick={() => setLocation('/profile')}
+                      className="cursor-pointer px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      data-testid="menu-item-profile"
+                    >
+                      <User className="w-4 h-4 mr-3 text-gray-500" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Profile</span>
+                    </DropdownMenuItem>
+                  </div>
+                  
+                  {/* Logout Button */}
+                  <div className="px-3 py-3 border-t border-gray-100 dark:border-gray-700">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                      data-testid="menu-item-logout"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </button>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               </div>
