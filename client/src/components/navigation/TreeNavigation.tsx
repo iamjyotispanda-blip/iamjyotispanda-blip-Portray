@@ -75,19 +75,32 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
     console.log('hasMenuPermission check:', { 
       menuName, 
       parentMenuName, 
+      user: user,
       userRole: user?.role, 
       isSystemAdmin: user?.isSystemAdmin,
-      roleFromUserData: user?.role 
+      userRoleData: userRole
     });
     
-    // SystemAdmin has all permissions - check both role name and isSystemAdmin flag
-    if (user?.role === "SystemAdmin" || user?.isSystemAdmin === true || user?.role === "System Admin") {
+    // SystemAdmin has all permissions - check multiple conditions
+    const isSystemAdmin = (
+      user?.role === "SystemAdmin" || 
+      user?.isSystemAdmin === true || 
+      user?.role === "System Admin" ||
+      user?.userType === "SuperAdmin" ||
+      (userRole && (
+        userRole.name === "SystemAdmin" || 
+        userRole.name === "System Admin" ||
+        userRole.displayName === "System Admin"
+      ))
+    );
+    
+    if (isSystemAdmin) {
       console.log('SystemAdmin detected - returning true for', menuName);
       return true;
     }
 
     if (!userRole?.permissions || !Array.isArray(userRole.permissions)) {
-      console.log('No permissions found for user role');
+      console.log('No permissions found for user role, checking fallback for non-system admin');
       return false;
     }
 
