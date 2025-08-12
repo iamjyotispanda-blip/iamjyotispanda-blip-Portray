@@ -321,10 +321,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
               size="sm"
               className="lg:hidden"
               onClick={() => setSidebarOpen(true)}
+              data-testid="button-mobile-menu"
             >
               <MenuIcon className="h-5 w-5" />
             </Button>
             
+            {/* Page Title */}
+            <div className="flex items-center space-x-2">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white" data-testid="page-title">
+                {title}
+              </h1>
+            </div>
           </div>
 
           {/* Right Side */}
