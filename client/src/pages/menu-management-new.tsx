@@ -13,6 +13,7 @@ import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Menu } from "@shared/schema";
+import { getIconRecommendations, getAllAvailableIcons, getIconComponent } from "@/lib/iconRecommendations";
 
 interface FormData {
   name: string;
@@ -232,6 +233,53 @@ export default function MenuManagementNew() {
           onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
           placeholder="Menu Label"
         />
+      </div>
+
+      {/* Icon Selection */}
+      <div className="space-y-2">
+        <Label>Icon</Label>
+        <Select
+          value={formData.icon || "no-icon"}
+          onValueChange={(value: string) => setFormData(prev => ({ ...prev, icon: value === "no-icon" ? "" : value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select an icon">
+              {formData.icon && (
+                <div className="flex items-center space-x-2">
+                  {(() => {
+                    const IconComponent = getIconComponent(formData.icon) as React.ComponentType<{ className?: string }>;
+                    return <IconComponent className="h-4 w-4" />;
+                  })()}
+                  <span>{formData.icon}</span>
+                </div>
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-64 overflow-y-auto">
+            <SelectItem value="no-icon">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4"></div>
+                <span>No icon</span>
+              </div>
+            </SelectItem>
+            
+            {/* Show available icons */}
+            {(() => {
+              const iconNames = getAllAvailableIcons();
+              return iconNames.map((iconName) => {
+                const IconComponent = getIconComponent(iconName) as React.ComponentType<{ className?: string }>;
+                return (
+                  <SelectItem key={iconName} value={iconName}>
+                    <div className="flex items-center space-x-2">
+                      <IconComponent className="h-4 w-4" />
+                      <span>{iconName}</span>
+                    </div>
+                  </SelectItem>
+                );
+              });
+            })()}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Route */}

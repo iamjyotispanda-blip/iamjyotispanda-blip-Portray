@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, ChevronRight, ChevronDown, GripVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getAllAvailableIcons, getIconComponent } from "@/lib/iconRecommendations";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
@@ -22,6 +23,7 @@ export default function MenuSimple() {
   const [label, setLabel] = useState("");
   const [menuType, setMenuType] = useState("glink");
   const [parentId, setParentId] = useState("");
+  const [icon, setIcon] = useState("");
   const [route, setRoute] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
@@ -97,6 +99,7 @@ export default function MenuSimple() {
     setLabel("");
     setMenuType("glink");
     setParentId("");
+    setIcon("");
     setRoute("");
     setSortOrder("0");
     setIsActive(true);
@@ -110,6 +113,7 @@ export default function MenuSimple() {
     setLabel(menu.label);
     setMenuType(menu.menuType);
     setParentId(menu.parentId?.toString() || "");
+    setIcon(menu.icon || "");
     setRoute(menu.route || "");
     setSortOrder(menu.sortOrder.toString());
     setIsActive(menu.isActive);
@@ -124,6 +128,7 @@ export default function MenuSimple() {
       label,
       menuType,
       parentId: parentId ? parseInt(parentId) : null,
+      icon,
       route,
       sortOrder: parseInt(sortOrder) || 0,
       isActive,
@@ -390,6 +395,43 @@ export default function MenuSimple() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label className="text-sm">Icon</Label>
+                  <Select value={icon || "no-icon"} onValueChange={(value) => setIcon(value === "no-icon" ? "" : value)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select an icon">
+                        {icon && (
+                          <div className="flex items-center space-x-2">
+                            {(() => {
+                              const IconComponent = getIconComponent(icon) as React.ComponentType<{ className?: string }>;
+                              return <IconComponent className="h-4 w-4" />;
+                            })()}
+                            <span>{icon}</span>
+                          </div>
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-48 overflow-y-auto">
+                      <SelectItem value="no-icon">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4"></div>
+                          <span>No icon</span>
+                        </div>
+                      </SelectItem>
+                      {getAllAvailableIcons().map((iconName) => {
+                        const IconComponent = getIconComponent(iconName) as React.ComponentType<{ className?: string }>;
+                        return (
+                          <SelectItem key={iconName} value={iconName}>
+                            <div className="flex items-center space-x-2">
+                              <IconComponent className="h-4 w-4" />
+                              <span>{iconName}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label className="text-sm">Route</Label>
                   <Input 
                     value={route} 
@@ -398,6 +440,9 @@ export default function MenuSimple() {
                     placeholder="/menu-route"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm">Sort Order</Label>
                   <Input 
