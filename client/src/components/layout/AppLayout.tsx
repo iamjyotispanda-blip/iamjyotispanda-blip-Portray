@@ -116,6 +116,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
 
   // Debug user data
   console.log('AppLayout - User data:', user);
+  console.log('AppLayout - User condition check:', !!user);
 
   // Get notifications for authenticated users
   const queryClient = useQueryClient();
@@ -445,7 +446,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="flex items-center space-x-2 h-10 px-3"
+                    className="flex items-center space-x-2 h-10 px-3 border border-gray-200"
                     data-testid="button-user-menu"
                   >
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
