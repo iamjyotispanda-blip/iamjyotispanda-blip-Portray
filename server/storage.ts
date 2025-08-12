@@ -1367,8 +1367,7 @@ export class DatabaseStorage implements IStorage {
     recentActivity: any[];
   }> {
     // Use raw SQL for counting due to Drizzle count limitations
-    const [result] = await db.execute({
-      sql: `SELECT 
+    const result = await db.execute(`SELECT 
         (SELECT COUNT(*) FROM users WHERE is_active = true) as total_users,
         (SELECT COUNT(*) FROM organizations WHERE is_active = true) as total_organizations,
         (SELECT COUNT(*) FROM ports WHERE is_active = true) as total_ports,
@@ -1377,20 +1376,19 @@ export class DatabaseStorage implements IStorage {
         (SELECT COUNT(*) FROM contracts) as total_contracts,
         (SELECT COUNT(*) FROM contracts WHERE valid_to > NOW()) as active_contracts,
         (SELECT COUNT(*) FROM contracts WHERE valid_from > NOW()) as draft_contracts,
-        (SELECT COUNT(*) FROM terminals WHERE status != 'Active') as pending_activations`,
-      args: []
-    });
+        (SELECT COUNT(*) FROM terminals WHERE status != 'Active') as pending_activations`);
 
+    const row = result.rows[0];
     return {
-      totalUsers: Number(result.total_users) || 0,
-      totalOrganizations: Number(result.total_organizations) || 0,
-      totalPorts: Number(result.total_ports) || 0,
-      totalTerminals: Number(result.total_terminals) || 0,
-      totalCustomers: Number(result.total_customers) || 0,
-      totalContracts: Number(result.total_contracts) || 0,
-      activeContracts: Number(result.active_contracts) || 0,
-      draftContracts: Number(result.draft_contracts) || 0,
-      pendingActivations: Number(result.pending_activations) || 0,
+      totalUsers: Number(row.total_users) || 0,
+      totalOrganizations: Number(row.total_organizations) || 0,
+      totalPorts: Number(row.total_ports) || 0,
+      totalTerminals: Number(row.total_terminals) || 0,
+      totalCustomers: Number(row.total_customers) || 0,
+      totalContracts: Number(row.total_contracts) || 0,
+      activeContracts: Number(row.active_contracts) || 0,
+      draftContracts: Number(row.draft_contracts) || 0,
+      pendingActivations: Number(row.pending_activations) || 0,
       recentActivity: []
     };
   }
