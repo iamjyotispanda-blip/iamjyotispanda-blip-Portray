@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Shield, Edit, ToggleLeft, ToggleRight, Trash2, Search } from "lucide-react";
+import { Plus, Shield, Edit, ToggleLeft, ToggleRight, Trash2, Search, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -50,7 +51,6 @@ export default function RolesPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   
   const [formData, setFormData] = useState<RoleFormData>({
     name: "",
@@ -368,9 +368,6 @@ export default function RolesPage() {
                       <h3 className="font-medium text-gray-900 mb-1" data-testid={`text-role-name-${role.id}`}>
                         {role.displayName}
                       </h3>
-                      <p className="text-sm text-gray-600" data-testid={`text-role-description-${role.id}`}>
-                        {role.description || "No description"}
-                      </p>
                     </div>
                     <Badge 
                       variant={role.isActive ? "default" : "secondary"} 
@@ -388,6 +385,47 @@ export default function RolesPage() {
                       Created: {format(new Date(role.createdAt), "MMM dd, yyyy")}
                     </div>
                     <div className="flex items-center space-x-2 order-1 sm:order-2">
+                      {/* View Permissions Button */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3"
+                            data-testid={`button-view-permissions-${role.id}`}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Permissions - {role.displayName}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 mt-4">
+                            {role.permissions && role.permissions.length > 0 ? (
+                              <>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                  Total Permissions: {role.permissions.length}
+                                </div>
+                                <div className="grid gap-2">
+                                  {role.permissions.map((permission, index) => (
+                                    <div key={index} className="flex items-center space-x-2 p-2 border rounded">
+                                      <Badge variant="outline" className="font-mono text-xs">
+                                        {permission}
+                                      </Badge>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-center text-gray-500 py-8">
+                                No permissions assigned to this role
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
                       {canWrite("roles", "user-access") && (
                         <Button
                           variant="outline"
