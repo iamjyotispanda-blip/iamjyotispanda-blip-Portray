@@ -154,7 +154,7 @@ export default function MenuManagement() {
     queryKey: ['/api/menus'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/menus');
-      return response as Menu[];
+      return await response.json() as Menu[];
     },
   });
 
