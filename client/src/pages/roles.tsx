@@ -84,9 +84,10 @@ export default function RolesPage() {
       });
     },
     onError: (error: any) => {
+      console.error("Create role error:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to create role",
+        description: error.message || "Failed to create role",
         variant: "destructive"
       });
     }
@@ -107,9 +108,10 @@ export default function RolesPage() {
       });
     },
     onError: (error: any) => {
+      console.error("Update role error:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update role",
+        description: error.message || "Failed to update role",
         variant: "destructive"
       });
     }
@@ -126,9 +128,10 @@ export default function RolesPage() {
       });
     },
     onError: (error: any) => {
+      console.error("Toggle role status error:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update role status",
+        description: error.message || "Failed to update role status",
         variant: "destructive"
       });
     }
@@ -145,9 +148,10 @@ export default function RolesPage() {
       });
     },
     onError: (error: any) => {
+      console.error("Delete role error:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to delete role",
+        description: error.message || "Failed to delete role",
         variant: "destructive"
       });
     }
