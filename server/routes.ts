@@ -3044,6 +3044,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel database backup
+  app.post("/api/database/backup/:backupId/cancel", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const { backupId } = req.params;
+      
+      const result = await storage.cancelBackup(backupId);
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error("Error cancelling backup:", error);
+      res.status(500).json({ message: "Failed to cancel backup" });
+    }
+  });
+
   app.get("/api/database/backups/:id/download", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Only allow System Admins

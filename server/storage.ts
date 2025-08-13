@@ -5,6 +5,9 @@ import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
+// Global map to track running backup processes for cancellation
+const runningBackups = new Map<string, { timeoutId: NodeJS.Timeout | null; cancelled: boolean }>();
+
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
@@ -219,6 +222,7 @@ export interface IStorage {
   getBackupPath(backupId: string): Promise<string | null>;
   deleteDatabaseBackup(backupId: string): Promise<void>;
   restoreFromBackup(backupId: string, createIfNotExists?: boolean): Promise<{ success: boolean; message: string; }>;
+  cancelBackup(backupId: string): Promise<{ success: boolean; message: string; }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1409,9 +1413,28 @@ export class DatabaseStorage implements IStorage {
 
     // Simulate backup creation (in real implementation, you'd use pg_dump)
     try {
-      // Mock backup creation delay
-      setTimeout(async () => {
+      // Track this backup process for cancellation
+      const backupProcess = { timeoutId: null as NodeJS.Timeout | null, cancelled: false };
+      runningBackups.set(backup.id, backupProcess);
+
+      // Mock backup creation delay with cancellation support
+      const timeoutId = setTimeout(async () => {
         try {
+          // Check if backup was cancelled during delay
+          const process = runningBackups.get(backup.id);
+          if (process?.cancelled) {
+            console.log(`Backup ${backup.id} was cancelled during processing`);
+            await db
+              .update(databaseBackups)
+              .set({
+                status: 'failed',
+                completedAt: new Date(),
+              })
+              .where(eq(databaseBackups.id, backup.id));
+            runningBackups.delete(backup.id);
+            return;
+          }
+
           // In real implementation: 
           // const backupCommand = `pg_dump ${process.env.DATABASE_URL} > ${filePath}`;
           // await execSync(backupCommand);
@@ -1421,6 +1444,21 @@ export class DatabaseStorage implements IStorage {
           const { execSync } = await import('child_process');
           
           try {
+            // Check cancellation again before expensive operation
+            const processCheck = runningBackups.get(backup.id);
+            if (processCheck?.cancelled) {
+              console.log(`Backup ${backup.id} cancelled before pg_dump`);
+              await db
+                .update(databaseBackups)
+                .set({
+                  status: 'failed',
+                  completedAt: new Date(),
+                })
+                .where(eq(databaseBackups.id, backup.id));
+              runningBackups.delete(backup.id);
+              return;
+            }
+
             // Create a real database dump
             const dumpCommand = `pg_dump "${process.env.DATABASE_URL}" --no-owner --no-privileges --clean --if-exists`;
             console.log('Creating database backup with pg_dump...');
@@ -1443,6 +1481,28 @@ export class DatabaseStorage implements IStorage {
             console.log(`Fallback backup created: ${filePath} (${stats.size} bytes)`);
           }
           
+          // Final cancellation check before completion
+          const finalCheck = runningBackups.get(backup.id);
+          if (finalCheck?.cancelled) {
+            console.log(`Backup ${backup.id} cancelled before completion`);
+            // Clean up created file if cancelled
+            try {
+              const fs3 = await import('fs');
+              await fs3.promises.unlink(filePath);
+            } catch (cleanupError) {
+              console.error('Error cleaning up cancelled backup file:', cleanupError);
+            }
+            await db
+              .update(databaseBackups)
+              .set({
+                status: 'failed',
+                completedAt: new Date(),
+              })
+              .where(eq(databaseBackups.id, backup.id));
+            runningBackups.delete(backup.id);
+            return;
+          }
+          
           // Get file stats for the completed backup
           const stats = await fs.promises.stat(filePath);
           
@@ -1454,14 +1514,21 @@ export class DatabaseStorage implements IStorage {
               size: stats.size,
             })
             .where(eq(databaseBackups.id, backup.id));
+            
+          console.log(`Database backup completed: ${backup.id}`);
+          runningBackups.delete(backup.id);
         } catch (error) {
           console.error('Backup creation failed:', error);
           await db
             .update(databaseBackups)
             .set({ status: 'failed' })
             .where(eq(databaseBackups.id, backup.id));
+          runningBackups.delete(backup.id);
         }
       }, 2000); // 2 second delay to simulate backup process
+      
+      // Store the timeout ID for cancellation
+      backupProcess.timeoutId = timeoutId;
       
     } catch (error) {
       console.error('Error creating backup:', error);
@@ -1608,6 +1675,56 @@ export class DatabaseStorage implements IStorage {
         success: false, 
         message: `Failed to restore database: ${error instanceof Error ? error.message : 'Unknown error'}` 
       };
+    }
+  }
+
+  async cancelBackup(backupId: string): Promise<{ success: boolean; message: string; }> {
+    try {
+      // Check if backup exists and is in progress
+      const [backup] = await db
+        .select()
+        .from(databaseBackups)
+        .where(eq(databaseBackups.id, backupId));
+
+      if (!backup) {
+        return { success: false, message: "Backup not found" };
+      }
+
+      if (backup.status !== 'in_progress') {
+        return { success: false, message: `Cannot cancel backup with status: ${backup.status}` };
+      }
+
+      // Get the running backup process
+      const process = runningBackups.get(backupId);
+      if (!process) {
+        return { success: false, message: "Backup process not found or already completed" };
+      }
+
+      // Mark the process as cancelled
+      process.cancelled = true;
+
+      // Clear the timeout if it exists
+      if (process.timeoutId) {
+        clearTimeout(process.timeoutId);
+      }
+
+      // Update database record to failed status
+      await db
+        .update(databaseBackups)
+        .set({
+          status: 'failed',
+          completedAt: new Date(),
+        })
+        .where(eq(databaseBackups.id, backupId));
+
+      // Remove from running backups
+      runningBackups.delete(backupId);
+
+      console.log(`Backup ${backupId} has been cancelled`);
+      return { success: true, message: "Backup cancelled successfully" };
+    } catch (error) {
+      console.error('Error cancelling backup:', error);
+      return { success: false, message: "Failed to cancel backup" };
     }
   }
 }
@@ -2886,6 +3003,13 @@ export class MemStorage implements IStorage {
     return { 
       success: false, 
       message: "Database restore not supported in memory storage" 
+    };
+  }
+
+  async cancelBackup(backupId: string): Promise<{ success: boolean; message: string; }> {
+    return { 
+      success: false, 
+      message: "Database backup cancellation not supported in memory storage" 
     };
   }
 }

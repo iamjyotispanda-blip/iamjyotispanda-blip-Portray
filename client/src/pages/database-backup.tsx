@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Download, Database, FileText, Calendar, Clock, CheckCircle, AlertCircle, Trash2, RotateCcw, Loader2 } from "lucide-react";
+import { Download, Database, FileText, Calendar, Clock, CheckCircle, AlertCircle, Trash2, RotateCcw, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +82,32 @@ export default function DatabaseBackupPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete backup",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Cancel backup mutation
+  const cancelBackupMutation = useMutation({
+    mutationFn: async (backupId: string) => {
+      const response = await apiRequest("POST", `/api/database/backup/${backupId}/cancel`);
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to cancel backup');
+      }
+      return result;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Backup Cancelled",
+        description: data.message || "Database backup has been cancelled successfully.",
+      });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Cancel Failed",
+        description: error?.message || "Failed to cancel database backup. Please try again.",
         variant: "destructive",
       });
     },
@@ -180,6 +206,12 @@ export default function DatabaseBackupPage() {
   const handleDeleteBackup = (backupId: string) => {
     if (confirm("Are you sure you want to delete this backup? This action cannot be undone.")) {
       deleteBackupMutation.mutate(backupId);
+    }
+  };
+
+  const handleCancelBackup = (backupId: string) => {
+    if (confirm("Are you sure you want to cancel this backup?")) {
+      cancelBackupMutation.mutate(backupId);
     }
   };
 
@@ -448,50 +480,73 @@ export default function DatabaseBackupPage() {
                             </div>
                           </div>
                           
-                          {(backup.status === 'completed' || backup.status === 'failed') && (
-                            <div className="flex space-x-2 ml-4">
-                              {backup.status === 'completed' && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDownloadBackup(backup.id, backup.filename)}
-                                    disabled={downloadingBackupId === backup.id}
-                                    className="h-8"
-                                  >
-                                    {downloadingBackupId === backup.id ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                                        Downloading...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Download className="w-4 h-4 mr-1" />
-                                        Download
-                                      </>
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleRestoreBackup(backup.id, backup.filename)}
-                                    disabled={restoreBackupMutation.isPending}
-                                    className="h-8 text-blue-600 hover:text-blue-700"
-                                  >
-                                    {restoreBackupMutation.isPending ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                                        Restoring...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <RotateCcw className="w-4 h-4 mr-1" />
-                                        Restore
-                                      </>
-                                    )}
-                                  </Button>
-                                </>
-                              )}
+                          <div className="flex space-x-2 ml-4">
+                            {backup.status === 'in_progress' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelBackup(backup.id)}
+                                disabled={cancelBackupMutation.isPending}
+                                className="h-8 text-red-600 hover:text-red-700"
+                              >
+                                {cancelBackupMutation.isPending ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    Cancelling...
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="w-4 h-4 mr-1" />
+                                    Cancel
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            
+                            {backup.status === 'completed' && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownloadBackup(backup.id, backup.filename)}
+                                  disabled={downloadingBackupId === backup.id}
+                                  className="h-8"
+                                >
+                                  {downloadingBackupId === backup.id ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                      Downloading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Download className="w-4 h-4 mr-1" />
+                                      Download
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleRestoreBackup(backup.id, backup.filename)}
+                                  disabled={restoreBackupMutation.isPending}
+                                  className="h-8 text-blue-600 hover:text-blue-700"
+                                >
+                                  {restoreBackupMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                      Restoring...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RotateCcw className="w-4 h-4 mr-1" />
+                                      Restore
+                                    </>
+                                  )}
+                                </Button>
+                              </>
+                            )}
+                            
+                            {(backup.status === 'completed' || backup.status === 'failed') && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -505,8 +560,8 @@ export default function DatabaseBackupPage() {
                                   <Trash2 className="w-4 h-4" />
                                 )}
                               </Button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
