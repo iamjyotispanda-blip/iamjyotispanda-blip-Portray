@@ -544,8 +544,8 @@ export default function OrganizationPage() {
       
       <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <div className="relative w-80">
+          <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
+            <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search organizations..."
@@ -554,7 +554,7 @@ export default function OrganizationPage() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={handleAdd} className="h-8">
+            <Button onClick={handleAdd} className="h-8 w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Add Organization
             </Button>
@@ -767,12 +767,12 @@ export default function OrganizationPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Organization</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="min-w-[200px]">Organization</TableHead>
+                    <TableHead className="min-w-[100px]">Code</TableHead>
+                    <TableHead className="min-w-[120px] hidden sm:table-cell">Location</TableHead>
+                    <TableHead className="min-w-[150px] hidden md:table-cell">Contact</TableHead>
+                    <TableHead className="min-w-[80px]">Status</TableHead>
+                    <TableHead className="min-w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -781,22 +781,29 @@ export default function OrganizationPage() {
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           {org.logoUrl ? (
-                            <div>
+                            <div className="flex-shrink-0">
                               <img 
                                 src={org.logoUrl} 
                                 alt={`${org.displayName} logo`}
-                                className="w-10 h-10 object-cover rounded border"
+                                className="w-12 h-12 object-contain rounded border bg-white"
                               />
                             </div>
                           ) : (
-                            <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded border flex items-center justify-center">
-                              <Building2 className="w-5 h-5 text-gray-400" />
+                            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded border flex items-center justify-center flex-shrink-0">
+                              <Building2 className="w-6 h-6 text-gray-400" />
                             </div>
                           )}
-                          <div>
-                            <div className="font-medium">{org.displayName}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium truncate">{org.displayName}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                               {org.organizationName}
+                            </div>
+                            {/* Show location on mobile when Location column is hidden */}
+                            <div className="text-xs text-gray-400 mt-1 sm:hidden">
+                              {(() => {
+                                const country = COUNTRIES.find(c => c.name === org.country);
+                                return country ? country.name : org.country;
+                              })()}
                             </div>
                           </div>
                         </div>
@@ -806,7 +813,7 @@ export default function OrganizationPage() {
                           {org.organizationCode}
                         </code>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center text-sm">
                           {(() => {
                             const country = COUNTRIES.find(c => c.name === org.country);
@@ -821,12 +828,12 @@ export default function OrganizationPage() {
                           })()}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <div className="space-y-1 text-sm">
                           {org.telephone && (
                             <div className="flex items-center">
                               <Phone className="w-3 h-3 mr-1" />
-                              {org.telephone}
+                              <span className="truncate">{org.telephone}</span>
                             </div>
                           )}
                           {org.website && (
@@ -836,7 +843,7 @@ export default function OrganizationPage() {
                                 href={org.website} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-600 dark:text-blue-400 hover:underline"
+                                className="text-blue-600 dark:text-blue-400 hover:underline truncate"
                               >
                                 Website
                               </a>
