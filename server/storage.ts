@@ -1428,7 +1428,6 @@ export class DatabaseStorage implements IStorage {
               .update(databaseBackups)
               .set({
                 status: 'failed',
-                completedAt: new Date(),
               })
               .where(eq(databaseBackups.id, backup.id));
             runningBackups.delete(backup.id);
@@ -1452,15 +1451,14 @@ export class DatabaseStorage implements IStorage {
                 .update(databaseBackups)
                 .set({
                   status: 'failed',
-                  completedAt: new Date(),
                 })
                 .where(eq(databaseBackups.id, backup.id));
               runningBackups.delete(backup.id);
               return;
             }
 
-            // Create a real database dump
-            const dumpCommand = `pg_dump "${process.env.DATABASE_URL}" --no-owner --no-privileges --clean --if-exists`;
+            // Create a real database dump  
+            const dumpCommand = `pg_dump "${(globalThis as any).process.env.DATABASE_URL}" --no-owner --no-privileges --clean --if-exists`;
             console.log('Creating database backup with pg_dump...');
             
             const backupData = execSync(dumpCommand, { encoding: 'utf8', maxBuffer: 50 * 1024 * 1024 }); // 50MB buffer
@@ -1496,7 +1494,6 @@ export class DatabaseStorage implements IStorage {
               .update(databaseBackups)
               .set({
                 status: 'failed',
-                completedAt: new Date(),
               })
               .where(eq(databaseBackups.id, backup.id));
             runningBackups.delete(backup.id);
@@ -1525,7 +1522,7 @@ export class DatabaseStorage implements IStorage {
             .where(eq(databaseBackups.id, backup.id));
           runningBackups.delete(backup.id);
         }
-      }, 2000); // 2 second delay to simulate backup process
+      }, 8000); // 8 second delay to allow time for cancellation
       
       // Store the timeout ID for cancellation
       backupProcess.timeoutId = timeoutId;
@@ -1713,7 +1710,6 @@ export class DatabaseStorage implements IStorage {
         .update(databaseBackups)
         .set({
           status: 'failed',
-          completedAt: new Date(),
         })
         .where(eq(databaseBackups.id, backupId));
 
