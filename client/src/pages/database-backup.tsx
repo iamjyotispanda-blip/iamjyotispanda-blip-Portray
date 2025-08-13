@@ -454,6 +454,10 @@ export default function DatabaseBackupPage() {
                       <p className="font-semibold mb-1">Warning: This action will replace your current database!</p>
                       <p>All existing data will be overwritten with the backup data from:</p>
                       <p className="font-mono text-xs mt-1 bg-yellow-100 dark:bg-yellow-800/30 p-1 rounded">{selectedBackupName}</p>
+                      <p className="text-xs mt-2 text-yellow-700 dark:text-yellow-300">
+                        <strong>Note:</strong> Only backups created with the new system contain real data. 
+                        Older mock backups will simulate restore but won't change actual data.
+                      </p>
                     </div>
                   </div>
                 </div>
