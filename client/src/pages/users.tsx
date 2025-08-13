@@ -77,7 +77,7 @@ export function UsersContent() {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { canCreate, canEdit, canManage, canRead, isLoading: permissionsLoading } = usePermissions();
+  const { canCreate, canEdit, canManage, canRead } = usePermissions();
 
   // Get all users
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -99,8 +99,13 @@ export function UsersContent() {
     queryKey: ["/api/terminals"],
   });
 
-  // Filter users based on search term, role, and status
+  // Filter users based on search term, role, and status - exclude System Administrators
   const filteredUsers = (users as UserType[]).filter((user: UserType) => {
+    // Hide System Administrator users from the list
+    if (user.role === 'SystemAdmin' || user.role === 'System Admin' || user.isSystemAdmin) {
+      return false;
+    }
+
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,11 +119,14 @@ export function UsersContent() {
     return matchesSearch && matchesRole && matchesStatus;
   });
   
-  // Calculate statistics
-  const totalUsers = (users as UserType[]).length;
-  const activeUsers = (users as UserType[]).filter(u => u.isActive).length;
+  // Calculate statistics - exclude System Administrators from counts
+  const nonSystemAdminUsers = (users as UserType[]).filter((user: UserType) => 
+    !(user.role === 'SystemAdmin' || user.role === 'System Admin' || user.isSystemAdmin)
+  );
+  const totalUsers = nonSystemAdminUsers.length;
+  const activeUsers = nonSystemAdminUsers.filter(u => u.isActive).length;
   const inactiveUsers = totalUsers - activeUsers;
-  const recentUsers = (users as UserType[]).filter(u => {
+  const recentUsers = nonSystemAdminUsers.filter(u => {
     const createdDate = new Date(u.createdAt);
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
