@@ -3012,6 +3012,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database Backup API Routes
+  app.get("/api/database/backups", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const backups = await storage.getDatabaseBackups();
+      res.json(backups);
+    } catch (error) {
+      console.error("Error fetching database backups:", error);
+      res.status(500).json({ message: "Failed to fetch database backups" });
+    }
+  });
+
+  app.post("/api/database/backup", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const { description } = req.body;
+      const backup = await storage.createDatabaseBackup(req.user.id, description);
+      res.status(201).json(backup);
+    } catch (error) {
+      console.error("Error creating database backup:", error);
+      res.status(500).json({ message: "Failed to create database backup" });
+    }
+  });
+
+  app.get("/api/database/backups/:id/download", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const backupId = req.params.id;
+      const backupPath = await storage.getBackupPath(backupId);
+      
+      if (!backupPath) {
+        return res.status(404).json({ message: "Backup file not found" });
+      }
+
+      res.download(backupPath);
+    } catch (error) {
+      console.error("Error downloading backup:", error);
+      res.status(500).json({ message: "Failed to download backup" });
+    }
+  });
+
+  app.delete("/api/database/backups/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const backupId = req.params.id;
+      await storage.deleteDatabaseBackup(backupId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting backup:", error);
+      res.status(500).json({ message: "Failed to delete backup" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

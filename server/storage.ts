@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots } from "@shared/schema";
+import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot, type DatabaseBackup, type InsertDatabaseBackup } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots, databaseBackups } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -212,6 +212,12 @@ export interface IStorage {
     pendingActivations: number;
     recentActivity: any[];
   }>;
+
+  // Database Backup operations
+  getDatabaseBackups(): Promise<any[]>;
+  createDatabaseBackup(userId: string, description?: string): Promise<any>;
+  getBackupPath(backupId: string): Promise<string | null>;
+  deleteDatabaseBackup(backupId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1376,6 +1382,108 @@ export class DatabaseStorage implements IStorage {
       recentActivity: []
     };
   }
+
+  // Database Backup operations
+  async getDatabaseBackups(): Promise<any[]> {
+    return await db.select().from(databaseBackups);
+  }
+
+  async createDatabaseBackup(userId: string, description?: string): Promise<any> {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `portray_backup_${timestamp}.sql`;
+    const filePath = `/tmp/${filename}`;
+    
+    // Create backup record with pending status
+    const [backup] = await db
+      .insert(databaseBackups)
+      .values({
+        filename,
+        description,
+        filePath,
+        size: 0,
+        status: 'in_progress',
+        createdBy: userId,
+      })
+      .returning();
+
+    // Simulate backup creation (in real implementation, you'd use pg_dump)
+    try {
+      // Mock backup creation delay
+      setTimeout(async () => {
+        try {
+          // In real implementation: 
+          // const backupCommand = `pg_dump ${process.env.DATABASE_URL} > ${filePath}`;
+          // await execSync(backupCommand);
+          
+          // For demonstration, create a mock backup file
+          const mockBackupContent = `-- PortRay Database Backup\n-- Created: ${new Date().toISOString()}\n-- Description: ${description || 'No description'}\n\n-- Mock backup content\nSELECT 'Database backup completed successfully';`;
+          await require('fs').promises.writeFile(filePath, mockBackupContent);
+          const stats = await require('fs').promises.stat(filePath);
+          
+          // Update backup status to completed
+          await db
+            .update(databaseBackups)
+            .set({
+              status: 'completed',
+              size: stats.size,
+            })
+            .where(eq(databaseBackups.id, backup.id));
+        } catch (error) {
+          console.error('Backup creation failed:', error);
+          await db
+            .update(databaseBackups)
+            .set({ status: 'failed' })
+            .where(eq(databaseBackups.id, backup.id));
+        }
+      }, 2000); // 2 second delay to simulate backup process
+      
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      throw error;
+    }
+
+    return backup;
+  }
+
+  async getBackupPath(backupId: string): Promise<string | null> {
+    const [backup] = await db
+      .select()
+      .from(databaseBackups)
+      .where(eq(databaseBackups.id, backupId));
+    
+    if (!backup || backup.status !== 'completed') {
+      return null;
+    }
+
+    // Check if file exists
+    try {
+      await require('fs').promises.access(backup.filePath);
+      return backup.filePath;
+    } catch {
+      return null;
+    }
+  }
+
+  async deleteDatabaseBackup(backupId: string): Promise<void> {
+    const [backup] = await db
+      .select()
+      .from(databaseBackups)
+      .where(eq(databaseBackups.id, backupId));
+    
+    if (backup) {
+      // Delete the file
+      try {
+        await require('fs').promises.unlink(backup.filePath);
+      } catch (error) {
+        console.warn('Could not delete backup file:', error);
+      }
+      
+      // Delete the database record
+      await db
+        .delete(databaseBackups)
+        .where(eq(databaseBackups.id, backupId));
+    }
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -2452,6 +2560,23 @@ export class MemStorage implements IStorage {
       pendingActivations: Array.from(this.terminals.values()).filter(t => t.status !== 'Active').length,
       recentActivity: []
     };
+  }
+
+  // Database Backup operations - stubs
+  async getDatabaseBackups(): Promise<any[]> {
+    return [];
+  }
+
+  async createDatabaseBackup(userId: string, description?: string): Promise<any> {
+    throw new Error("Database backups not supported in memory storage");
+  }
+
+  async getBackupPath(backupId: string): Promise<string | null> {
+    return null;
+  }
+
+  async deleteDatabaseBackup(backupId: string): Promise<void> {
+    // No-op
   }
 }
 

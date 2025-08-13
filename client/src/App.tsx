@@ -36,6 +36,7 @@ import PermissionAssignmentPage from "@/pages/permission-assignment";
 import CustomersPage from "@/pages/customers";
 import ContractsPage from "@/pages/contracts";
 import ContractDetails from "@/pages/contract-details";
+import DatabaseBackupPage from "@/pages/database-backup";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -177,6 +178,9 @@ function Router() {
       </Route>
       <Route path="/contracts">
         {() => <ProtectedRoute component={ContractsPage} />}
+      </Route>
+      <Route path="/configuration/database-backup">
+        {() => <ProtectedRoute component={DatabaseBackupPage} />}
       </Route>
       <Route path="/profile">
         {() => <ProtectedRoute component={ProfilePage} />}

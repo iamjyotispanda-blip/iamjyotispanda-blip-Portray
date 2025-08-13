@@ -494,6 +494,31 @@ export const insertSubscriptionTypeSchema = createInsertSchema(subscriptionTypes
 export type InsertSubscriptionType = z.infer<typeof insertSubscriptionTypeSchema>;
 export type SubscriptionType = typeof subscriptionTypes.$inferSelect;
 
+// Database Backups Table
+export const databaseBackups = pgTable("database_backups", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  filename: text("filename").notNull(),
+  description: text("description"),
+  size: integer("size").notNull().default(0),
+  filePath: text("file_path").notNull(),
+  status: text("status").notNull().default("in_progress"), // 'in_progress', 'completed', 'failed'
+  createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+// Add database backup schemas
+export const insertDatabaseBackupSchema = createInsertSchema(databaseBackups).pick({
+  filename: true,
+  description: true,
+  size: true,
+  filePath: true,
+  status: true,
+  createdBy: true,
+});
+
+export type InsertDatabaseBackup = z.infer<typeof insertDatabaseBackupSchema>;
+export type DatabaseBackup = typeof databaseBackups.$inferSelect;
+
 // Roles table
 export const roles = pgTable("roles", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
