@@ -293,6 +293,7 @@ export default function MenuManagement() {
         description: 'Menu order updated successfully',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
+      queryClient.refetchQueries({ queryKey: ['/api/menus'] });
     },
     onError: (error: any) => {
       console.error('Save order error:', error);
