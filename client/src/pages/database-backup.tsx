@@ -211,9 +211,6 @@ export default function DatabaseBackupPage() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Database Backup</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Create and manage database backups for data protection
-                </p>
               </div>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
