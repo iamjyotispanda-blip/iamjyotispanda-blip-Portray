@@ -1499,6 +1499,8 @@ export class MemStorage implements IStorage {
   private terminals: Map<number, Terminal>;
   private menus: Map<number, Menu>;
   private activationLogs: Map<number, ActivationLog>;
+  private emailLogs: Map<number, EmailLog>;
+  private userAuditLogs: Map<number, UserAuditLog>;
   private nextOrgId: number = 1;
   private nextPortId: number = 1;
   private nextContactId: number = 1;
@@ -1506,6 +1508,8 @@ export class MemStorage implements IStorage {
   private nextTerminalId: number = 1;
   private nextMenuId: number = 1;
   private nextActivationLogId: number = 1;
+  private nextEmailLogId: number = 1;
+  private nextUserAuditLogId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -1517,6 +1521,8 @@ export class MemStorage implements IStorage {
     this.terminals = new Map();
     this.menus = new Map();
     this.activationLogs = new Map();
+    this.emailLogs = new Map();
+    this.userAuditLogs = new Map();
     
     // Create a default admin user for testing
     this.initializeDefaultUser();
@@ -1683,23 +1689,42 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.verificationToken === token);
+  }
+
+  async getUserByPasswordSetupToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.passwordSetupToken === token);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => user.role === role);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = {
-      ...insertUser,
       id,
       userType: insertUser.userType || "PortUser",
+      email: insertUser.email,
+      password: insertUser.password || null,
+      firstName: insertUser.firstName,
+      lastName: insertUser.lastName,
       role: insertUser.role || "PortAdmin",
       roleId: insertUser.roleId || null,
       portId: insertUser.portId || null,
       terminalIds: insertUser.terminalIds || null,
       isActive: insertUser.isActive ?? false,
-      isVerified: insertUser.isVerified ?? false,
-      verificationToken: insertUser.verificationToken || null,
-      verificationTokenExpires: insertUser.verificationTokenExpires || null,
-      passwordSetupToken: insertUser.passwordSetupToken || null,
-      passwordSetupTokenExpires: insertUser.passwordSetupTokenExpires || null,
-      isSystemAdmin: insertUser.isSystemAdmin ?? false,
+      isVerified: false,
+      verificationToken: null,
+      verificationTokenExpires: null,
+      passwordSetupToken: null,
+      passwordSetupTokenExpires: null,
+      isSystemAdmin: false,
       lastLogin: null,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -1727,6 +1752,31 @@ export class MemStorage implements IStorage {
       user.lastLogin = new Date();
       this.users.set(id, user);
     }
+  }
+
+  async toggleUserStatus(id: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    const updatedUser: User = {
+      ...user,
+      isActive: !user.isActive,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    this.users.delete(id);
+    // Also delete any sessions for this user
+    const sessionsToDelete: string[] = [];
+    this.sessions.forEach((session, sessionId) => {
+      if (session.userId === id) {
+        sessionsToDelete.push(sessionId);
+      }
+    });
+    sessionsToDelete.forEach(sessionId => this.sessions.delete(sessionId));
   }
 
   async validateUserCredentials(email: string, password: string): Promise<User | null> {
@@ -2046,6 +2096,21 @@ export class MemStorage implements IStorage {
     return updatedContact;
   }
 
+  async activatePortAdminContact(userId: string): Promise<PortAdminContact | undefined> {
+    const contact = Array.from(this.portAdminContacts.values()).find(c => c.userId === userId);
+    if (!contact) return undefined;
+    
+    const updatedContact: PortAdminContact = {
+      ...contact,
+      status: "active",
+      isVerified: true,
+      updatedAt: new Date(),
+    };
+    
+    this.portAdminContacts.set(contact.id, updatedContact);
+    return updatedContact;
+  }
+
   // Email Configuration operations
   async getAllEmailConfigurations(): Promise<EmailConfiguration[]> {
     return Array.from(this.emailConfigurations.values());
@@ -2087,6 +2152,69 @@ export class MemStorage implements IStorage {
     this.emailConfigurations.delete(id);
   }
 
+  // Email Log operations
+  async getAllEmailLogs(): Promise<EmailLog[]> {
+    return Array.from(this.emailLogs.values());
+  }
+
+  async getEmailLogsByConfigurationId(configurationId: number): Promise<EmailLog[]> {
+    return Array.from(this.emailLogs.values()).filter(log => log.emailConfigurationId === configurationId);
+  }
+
+  async getEmailLogsByPortId(portId: number): Promise<EmailLog[]> {
+    return Array.from(this.emailLogs.values()).filter(log => log.portId === portId);
+  }
+
+  async createEmailLog(log: InsertEmailLog): Promise<EmailLog> {
+    const newEmailLog: EmailLog = {
+      id: this.nextEmailLogId++,
+      emailConfigurationId: log.emailConfigurationId || null,
+      portId: log.portId || null,
+      toEmail: log.toEmail,
+      fromEmail: log.fromEmail,
+      fromName: log.fromName,
+      subject: log.subject,
+      emailType: log.emailType,
+      status: log.status || "sent",
+      errorMessage: log.errorMessage || null,
+      sentAt: new Date(),
+      userId: log.userId || null,
+      createdAt: new Date(),
+    };
+    this.emailLogs.set(newEmailLog.id, newEmailLog);
+    return newEmailLog;
+  }
+
+  // User Audit Log operations
+  async getAllUserAuditLogs(): Promise<UserAuditLog[]> {
+    return Array.from(this.userAuditLogs.values());
+  }
+
+  async getUserAuditLogsByUserId(userId: string): Promise<UserAuditLog[]> {
+    return Array.from(this.userAuditLogs.values()).filter(log => log.targetUserId === userId);
+  }
+
+  async getUserAuditLogsByPerformedBy(performedBy: string): Promise<UserAuditLog[]> {
+    return Array.from(this.userAuditLogs.values()).filter(log => log.performedBy === performedBy);
+  }
+
+  async createUserAuditLog(log: InsertUserAuditLog): Promise<UserAuditLog> {
+    const newAuditLog: UserAuditLog = {
+      id: this.nextUserAuditLogId++,
+      targetUserId: log.targetUserId,
+      performedBy: log.performedBy,
+      action: log.action,
+      description: log.description,
+      oldValues: log.oldValues || null,
+      newValues: log.newValues || null,
+      ipAddress: log.ipAddress || null,
+      userAgent: log.userAgent || null,
+      createdAt: new Date(),
+    };
+    this.userAuditLogs.set(newAuditLog.id, newAuditLog);
+    return newAuditLog;
+  }
+
   // Terminal operations for MemStorage
   async getAllTerminals(): Promise<Terminal[]> {
     return Array.from(this.terminals.values());
@@ -2100,6 +2228,14 @@ export class MemStorage implements IStorage {
 
   async getTerminalById(id: number): Promise<Terminal | undefined> {
     return this.terminals.get(id);
+  }
+
+  async getTerminalByName(terminalName: string): Promise<Terminal | undefined> {
+    return Array.from(this.terminals.values()).find(terminal => terminal.terminalName === terminalName);
+  }
+
+  async getTerminalByShortCode(shortCode: string): Promise<Terminal | undefined> {
+    return Array.from(this.terminals.values()).find(terminal => terminal.shortCode === shortCode);
   }
 
   async createTerminal(terminalData: InsertTerminal): Promise<Terminal> {
@@ -2353,6 +2489,35 @@ export class MemStorage implements IStorage {
     return updatedMenu;
   }
 
+  // Role operations - stubs for MemStorage (not fully implemented in memory)
+  async getAllRoles(): Promise<Role[]> {
+    return [];
+  }
+
+  async getRoleById(id: number): Promise<Role | undefined> {
+    return undefined;
+  }
+
+  async getRoleByName(name: string): Promise<Role | undefined> {
+    return undefined;
+  }
+
+  async createRole(role: InsertRole): Promise<Role> {
+    throw new Error("Role management not supported in memory storage");
+  }
+
+  async updateRole(id: number, updates: UpdateRole): Promise<Role | undefined> {
+    return undefined;
+  }
+
+  async toggleRoleStatus(id: number): Promise<Role | undefined> {
+    return undefined;
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    // No-op
+  }
+
   // Customer management operations - stubs for MemStorage
   async getAllCustomers(): Promise<Customer[]> {
     return [];
@@ -2445,8 +2610,20 @@ export class MemStorage implements IStorage {
     return [];
   }
 
+  async getContractById(id: number): Promise<Contract | undefined> {
+    return undefined;
+  }
+
   async createContract(contractData: InsertContract): Promise<Contract> {
     throw new Error("Contract management not supported in memory storage");
+  }
+
+  async updateContract(id: number, updates: Partial<Contract>): Promise<Contract | undefined> {
+    return undefined;
+  }
+
+  async deleteContract(id: number): Promise<void> {
+    // No-op
   }
 
   // Contract tariffs - stubs
