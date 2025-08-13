@@ -70,16 +70,19 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     const systemConfigParent = allMenus.find(menu => menu.name === 'system-config');
     console.log('System config parent found:', systemConfigParent);
     
+    // For SystemAdmin users, show all system config menus regardless of permissions
+    const isSystemAdmin = user?.isSystemAdmin || user?.role === 'SystemAdmin';
     const systemConfigMenus = allMenus.filter(menu => 
       menu.parentId === systemConfigParent?.id &&
       menu.isActive &&
-      hasSystemConfigPermission(menu.name)
+      (isSystemAdmin || hasSystemConfigPermission(menu.name))
     ).sort((a, b) => a.sortOrder - b.sortOrder);
     
     console.log('System config menus found:', systemConfigMenus.length, systemConfigMenus);
-
-    // Don't show dropdown if no system config menus available
-    if (!systemConfigMenus.length && !isLoading) {
+    console.log('SystemConfigDropdown - isSystemAdmin:', isSystemAdmin, 'systemConfigMenus:', systemConfigMenus.length);
+    
+    // Show dropdown if user is system admin or has config menus
+    if (!isSystemAdmin && !systemConfigMenus.length && !isLoading) {
       return null;
     }
 
