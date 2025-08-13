@@ -52,6 +52,8 @@ export default function PermissionAssignmentPage() {
   // Get all roles
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ["/api/roles"],
+    staleTime: 0, // Force fresh data
+    gcTime: 0, // Don't cache (replaces cacheTime in v5)
   });
 
   // Get all menus
@@ -382,7 +384,7 @@ export default function PermissionAssignmentPage() {
                                                              user?.role === 'SystemAdmin' ||
                                                              user?.role === 'System Admin';
                             
-                            console.log('Permission Assignment Filter - User Data:', {
+                            console.log('=== Permission Assignment Filter - User Data ===', {
                               fullCurrentUser: currentUser,
                               extractedUser: user,
                               isSystemAdmin: user?.isSystemAdmin,
@@ -390,7 +392,8 @@ export default function PermissionAssignmentPage() {
                               isCurrentUserSystemAdmin,
                               allRoles: roles,
                               rolesCount: roles?.length,
-                              roleNames: roles?.map(r => r.name)
+                              roleNames: roles?.map(r => r.name),
+                              systemRoles: roles?.filter(r => r.isSystem || r.name === 'SystemAdmin')
                             });
                             
                             return (roles as Role[]).filter(role => {
@@ -399,11 +402,12 @@ export default function PermissionAssignmentPage() {
                                 return false;
                               }
                               
-                              console.log(`Processing role: ${role.name}, isSystem: ${role.isSystem}`);
+                              console.log(`=== Processing role: ${role.name}, isSystem: ${role.isSystem} ===`);
                               
                               // Show SystemAdmin roles only if current user has system admin privileges
                               if (role.isSystem || role.name === 'SystemAdmin' || role.name === 'System Admin') {
-                                console.log(`SystemAdmin role found: ${role.name}, user is system admin: ${isCurrentUserSystemAdmin}`);
+                                console.log(`=== SystemAdmin role found: ${role.name}, user is system admin: ${isCurrentUserSystemAdmin} ===`);
+                                console.log(`=== DECISION: ${isCurrentUserSystemAdmin ? 'SHOWING' : 'HIDING'} SystemAdmin role ===`);
                                 return isCurrentUserSystemAdmin;
                               }
                               
