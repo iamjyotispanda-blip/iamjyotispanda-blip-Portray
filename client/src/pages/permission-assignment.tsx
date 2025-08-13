@@ -371,7 +371,9 @@ export default function PermissionAssignmentPage() {
                           <SelectValue placeholder="Choose a role to manage permissions" />
                         </SelectTrigger>
                         <SelectContent>
-                          {(roles as Role[]).filter(role => role.isActive).map((role) => (
+                          {(roles as Role[])
+                            .filter(role => role.isActive && role.name !== 'SystemAdmin' && role.name !== 'System Admin')
+                            .map((role) => (
                             <SelectItem key={role.id} value={role.id.toString()}>
                               <div className="flex items-center">
                                 <Shield className="h-4 w-4 mr-2" />

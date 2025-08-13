@@ -216,10 +216,15 @@ export default function RolesPage() {
     deleteRoleMutation.mutate(roleId);
   };
 
-  const filteredRoles = (roles as Role[]).filter((role: Role) =>
-    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    role.displayName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRoles = (roles as Role[]).filter((role: Role) => {
+    // Hide System Administrator roles from the list
+    if (role.name === 'SystemAdmin' || role.name === 'System Admin') {
+      return false;
+    }
+    
+    return role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           role.displayName.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   if (!canRead("roles", "user-access")) {
     return (

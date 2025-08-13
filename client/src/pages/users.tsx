@@ -432,7 +432,9 @@ export function UsersContent() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
-                      {(roles as Role[]).map((role) => (
+                      {(roles as Role[])
+                        .filter(role => role.name !== 'SystemAdmin' && role.name !== 'System Admin')
+                        .map((role) => (
                         <SelectItem key={role.id} value={role.name}>
                           {role.displayName}
                         </SelectItem>
@@ -617,7 +619,9 @@ export function UsersContent() {
                               <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
                             <SelectContent>
-                              {(roles as Role[]).filter(role => role.isActive).map((role) => (
+                              {(roles as Role[])
+                                .filter(role => role.isActive && role.name !== 'SystemAdmin' && role.name !== 'System Admin')
+                                .map((role) => (
                                 <SelectItem key={role.id} value={role.id.toString()}>
                                   <div className="flex items-center">
                                     <Shield className="h-4 w-4 mr-2" />
