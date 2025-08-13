@@ -141,9 +141,17 @@ export function usePermissions() {
         });
       }
       
-      // Check nested permissions (e.g., "port-management:ports" or "port-onboard:ports")
+      // Check nested permissions (e.g., "port-onboarding:ports" or "user-access:users")
       if (permission.subsection === section) {
         console.log(`Nested permission found: "${permission.section}:${permission.subsection}"`);
+        return permission.levels.some(userLevel => {
+          return levelHierarchy[userLevel] >= requiredLevel;
+        });
+      }
+      
+      // Special handling for port-onboarding:ports pattern when checking "ports"
+      if (section === "ports" && permission.section === "port-onboarding" && permission.subsection === "ports") {
+        console.log(`Special port-onboarding:ports permission found for "ports" check`);
         return permission.levels.some(userLevel => {
           return levelHierarchy[userLevel] >= requiredLevel;
         });
