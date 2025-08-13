@@ -50,6 +50,8 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     });
 
     console.log('SystemConfigDropdown rendering - allMenus:', allMenus.length, 'isLoading:', isLoading, 'error:', error);
+    console.log('SystemConfigDropdown - user:', user);
+    console.log('SystemConfigDropdown - userRole:', userRole);
 
     // Helper function to check if user has permission for a menu item
     const hasSystemConfigPermission = (menuName: string): boolean => {
@@ -80,11 +82,20 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
     
     console.log('System config menus found:', systemConfigMenus.length, systemConfigMenus);
     console.log('SystemConfigDropdown - isSystemAdmin:', isSystemAdmin, 'systemConfigMenus:', systemConfigMenus.length);
+    console.log('SystemConfigDropdown - Return condition check:', {
+      isSystemAdmin,
+      systemConfigMenusLength: systemConfigMenus.length,
+      isLoading,
+      shouldReturn: !isSystemAdmin && !systemConfigMenus.length && !isLoading
+    });
     
     // Show dropdown if user is system admin or has config menus
     if (!isSystemAdmin && !systemConfigMenus.length && !isLoading) {
+      console.log('SystemConfigDropdown - Returning null (no permissions)');
       return null;
     }
+    
+    console.log('SystemConfigDropdown - Rendering dropdown with menus:', systemConfigMenus.length);
 
     const getIconComponent = (iconName: string | null) => {
       switch (iconName) {
