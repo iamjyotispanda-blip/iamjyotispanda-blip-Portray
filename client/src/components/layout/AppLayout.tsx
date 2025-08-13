@@ -366,7 +366,7 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
         {/* Top Header */}
         <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center space-x-4">
@@ -631,14 +631,18 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
           {/* Page Title Section */}
-          <div className="bg-transparent border-b border-gray-100 dark:border-gray-700 px-6 py-2">
-            <h1 className="text-lg font-medium text-gray-700 dark:text-gray-300" data-testid="page-title">
+          <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 shadow-sm">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white" data-testid="page-title">
               {title}
             </h1>
           </div>
-          {children}
+          
+          {/* Content Container */}
+          <div className="p-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>
