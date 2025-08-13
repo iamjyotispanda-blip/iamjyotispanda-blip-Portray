@@ -97,8 +97,9 @@ function CustomersContent() {
     queryKey: ['/api/customers'],
   });
 
+  // Load only active and subscribed terminals for customer forms
   const { data: terminals = [] } = useQuery<Terminal[]>({
-    queryKey: ['/api/terminals'],
+    queryKey: ['/api/terminals/active-subscribed'],
   });
 
   const { data: countries = [] } = useQuery<any[]>({

@@ -1,7 +1,7 @@
 import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot, type DatabaseBackup, type InsertDatabaseBackup, type RoleCreationPermission, type InsertRoleCreationPermission } from "@shared/schema";
 import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots, databaseBackups, roleCreationPermissions } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, desc, asc, isNotNull, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -648,6 +648,15 @@ export class DatabaseStorage implements IStorage {
   // Terminal operations
   async getAllTerminals(): Promise<Terminal[]> {
     return db.select().from(terminals);
+  }
+
+  async getActiveSubscribedTerminals(): Promise<Terminal[]> {
+    return db.select().from(terminals).where(
+      and(
+        eq(terminals.isActive, true),
+        eq(terminals.status, "Active")
+      )
+    );
   }
 
   async getTerminalsByPortId(portId: number): Promise<Terminal[]> {

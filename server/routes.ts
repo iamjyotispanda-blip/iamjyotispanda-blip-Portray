@@ -1782,6 +1782,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get only active and subscribed terminals for customer forms
+  app.get("/api/terminals/active-subscribed", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const terminals = await storage.getActiveSubscribedTerminals();
+      res.json(terminals);
+    } catch (error) {
+      console.error("Get active subscribed terminals error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/terminals/my-port", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Get port admin's assigned port
