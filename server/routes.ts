@@ -1484,9 +1484,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User management endpoints
   app.get("/api/users", authenticateToken, async (req: Request, res: Response) => {
     try {
-      // Only system admins can view all users
-      if (!isSystemAdmin(req.user)) {
-        return res.status(403).json({ message: "Access denied. Only System Administrators can view users." });
+      // System admins and Port admins can view users
+      const isPortAdmin = req.user?.role === "PortAdmin" || req.user?.userType === "PortUser";
+      if (!isSystemAdmin(req.user) && !isPortAdmin) {
+        return res.status(403).json({ message: "Access denied. Only System Administrators and Port Administrators can view users." });
       }
 
       const users = await storage.getAllUsers();
@@ -1524,9 +1525,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/users", authenticateToken, async (req: Request, res: Response) => {
     try {
-      // Only system admins can create users
-      if (!isSystemAdmin(req.user)) {
-        return res.status(403).json({ message: "Access denied. Only System Administrators can create users." });
+      // System admins and Port admins can create users
+      const isPortAdmin = req.user?.role === "PortAdmin" || req.user?.userType === "PortUser";
+      if (!isSystemAdmin(req.user) && !isPortAdmin) {
+        return res.status(403).json({ message: "Access denied. Only System Administrators and Port Administrators can create users." });
       }
 
       const userData = insertUserSchema.parse(req.body);
@@ -1586,9 +1588,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/users/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
-      // Only system admins can update users
-      if (!isSystemAdmin(req.user)) {
-        return res.status(403).json({ message: "Access denied. Only System Administrators can update users." });
+      // System admins and Port admins can update users
+      const isPortAdmin = req.user?.role === "PortAdmin" || req.user?.userType === "PortUser";
+      if (!isSystemAdmin(req.user) && !isPortAdmin) {
+        return res.status(403).json({ message: "Access denied. Only System Administrators and Port Administrators can update users." });
       }
 
       const id = req.params.id;
@@ -1657,9 +1660,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/users/:id/toggle-status", authenticateToken, async (req: Request, res: Response) => {
     try {
-      // Only system admins can toggle user status
-      if (!isSystemAdmin(req.user)) {
-        return res.status(403).json({ message: "Access denied. Only System Administrators can toggle user status." });
+      // System admins and Port admins can toggle user status
+      const isPortAdmin = req.user?.role === "PortAdmin" || req.user?.userType === "PortUser";
+      if (!isSystemAdmin(req.user) && !isPortAdmin) {
+        return res.status(403).json({ message: "Access denied. Only System Administrators and Port Administrators can toggle user status." });
       }
 
       const id = req.params.id;
