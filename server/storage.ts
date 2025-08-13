@@ -1407,6 +1407,85 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Upload and restore from backup file
+  async uploadAndRestoreBackup(fileBuffer: Buffer, filename: string, userId: string): Promise<{ success: boolean; message: string; }> {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const tempFilePath = `/tmp/upload_restore_${timestamp}.sql`;
+      
+      // Write uploaded file to temp location
+      const fs = await import('fs');
+      await fs.promises.writeFile(tempFilePath, fileBuffer);
+      
+      // Create backup record for tracking
+      const [backup] = await db
+        .insert(databaseBackups)
+        .values({
+          filename: `Uploaded: ${filename}`,
+          description: 'Uploaded backup for restore',
+          filePath: tempFilePath,
+          size: fileBuffer.length,
+          status: 'completed',
+          createdBy: userId,
+        })
+        .returning();
+
+      // Execute the restore using psql
+      try {
+        console.log('Executing database restore from uploaded file...');
+        const { execSync } = await import('child_process');
+        
+        // Use psql to restore the database
+        const restoreCommand = `psql "${(globalThis as any).process.env.DATABASE_URL}" -f "${tempFilePath}"`;
+        
+        const result = execSync(restoreCommand, { 
+          encoding: 'utf8', 
+          stdio: 'pipe',
+          maxBuffer: 50 * 1024 * 1024 // 50MB buffer
+        });
+        
+        console.log('Database restore from upload completed successfully');
+        
+        // Clean up temp file
+        try {
+          await fs.promises.unlink(tempFilePath);
+        } catch (error) {
+          console.warn('Could not delete temp file:', error);
+        }
+
+        return { 
+          success: true, 
+          message: `Database successfully restored from uploaded backup: ${filename}` 
+        };
+        
+      } catch (restoreError: any) {
+        console.error('Error during database restore:', restoreError);
+        
+        // Clean up temp file on error
+        try {
+          await fs.promises.unlink(tempFilePath);
+        } catch (cleanupError) {
+          console.warn('Could not delete temp file after error:', cleanupError);
+        }
+        
+        // Delete the backup record on restore failure
+        await db.delete(databaseBackups).where(eq(databaseBackups.id, backup.id));
+        
+        return { 
+          success: false, 
+          message: `Failed to restore database: ${restoreError.message || 'Unknown restore error'}` 
+        };
+      }
+      
+    } catch (error: any) {
+      console.error('Error uploading and restoring backup:', error);
+      return { 
+        success: false, 
+        message: `Failed to process uploaded backup: ${error.message || 'Unknown error'}` 
+      };
+    }
+  }
+
   async createDatabaseBackup(userId: string, description?: string): Promise<any> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `portray_backup_${timestamp}.sql`;
@@ -1576,15 +1655,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(databaseBackups.id, backupId));
     
     if (backup) {
-      // Delete the file
-      try {
-        const fs = await import('fs');
-        await fs.promises.unlink(backup.filePath);
-      } catch (error) {
-        console.warn('Could not delete backup file:', error);
+      // Delete the file (only if it exists and is not a failed/cancelled backup)
+      if (backup.status === 'completed') {
+        try {
+          const fs = await import('fs');
+          await fs.promises.unlink(backup.filePath);
+        } catch (error) {
+          console.warn('Could not delete backup file:', error);
+        }
       }
       
-      // Delete the database record
+      // Delete the database record regardless of file deletion status
       await db
         .delete(databaseBackups)
         .where(eq(databaseBackups.id, backupId));

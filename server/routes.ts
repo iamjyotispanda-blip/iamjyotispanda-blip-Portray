@@ -5,6 +5,7 @@ import { loginSchema, insertOrganizationSchema, insertPortSchema, insertPortAdmi
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
+import multer from "multer";
 // Object storage imports removed - using fallback system
 import { EmailService } from "./emailService";
 import { AuditService } from "./auditService";
@@ -23,6 +24,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Clean up any stuck backup processes on startup
   await storage.cleanupStuckBackups();
+  
+  // Configure multer for file uploads
+  const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+    fileFilter: (req: any, file: any, cb: any) => {
+      if (file.mimetype === 'application/sql' || file.originalname.endsWith('.sql')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only SQL files are allowed'), false);
+      }
+    }
+  });
   
   // Validation schemas for new endpoints
   const verifyEmailSchema = z.object({
@@ -3122,6 +3136,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error restoring database:", error);
       res.status(500).json({ message: "Failed to restore database from backup" });
+    }
+  });
+
+  // Upload and restore database backup
+  app.post("/api/database/upload-restore", authenticateToken, upload.single('backupFile'), async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No backup file uploaded" });
+      }
+
+      const result = await storage.uploadAndRestoreBackup(
+        req.file.buffer,
+        req.file.originalname,
+        req.user.id
+      );
+
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error("Error uploading and restoring backup:", error);
+      if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: "File too large. Maximum size is 100MB." });
+        }
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to upload and restore backup" });
     }
   });
 

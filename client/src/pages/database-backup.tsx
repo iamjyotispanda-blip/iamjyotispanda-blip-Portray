@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Download, Database, FileText, Calendar, Clock, CheckCircle, AlertCircle, Trash2, RotateCcw, Loader2, X } from "lucide-react";
+import { Download, Database, FileText, Calendar, Clock, CheckCircle, AlertCircle, Trash2, RotateCcw, Loader2, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ export default function DatabaseBackupPage() {
   const [createIfNotExists, setCreateIfNotExists] = useState(false);
   const [backupDescription, setBackupDescription] = useState("");
   const [downloadingBackupId, setDownloadingBackupId] = useState<string>("");
+  const [isUploadRestoreDialogOpen, setIsUploadRestoreDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Fetch backup history
   const { data: backups = [], isLoading, refetch } = useQuery({
@@ -166,6 +168,44 @@ export default function DatabaseBackupPage() {
     enabled: hasInProgressBackups,
   });
 
+  // Upload and restore mutation
+  const uploadRestoreMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('backupFile', file);
+
+      const response = await fetch('/api/database/upload-restore', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to upload and restore backup");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message || "Database restored successfully from uploaded backup",
+      });
+      setIsUploadRestoreDialogOpen(false);
+      setSelectedFile(null);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Upload Restore Failed",
+        description: error.message || "Failed to upload and restore backup",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDownloadBackup = async (backupId: string, filename: string) => {
     setDownloadingBackupId(backupId);
     try {
@@ -230,6 +270,28 @@ export default function DatabaseBackupPage() {
     }
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.name.endsWith('.sql')) {
+        setSelectedFile(file);
+      } else {
+        toast({
+          title: "Invalid File",
+          description: "Please select a SQL file (.sql)",
+          variant: "destructive",
+        });
+        event.target.value = '';
+      }
+    }
+  };
+
+  const handleUploadRestore = () => {
+    if (selectedFile) {
+      uploadRestoreMutation.mutate(selectedFile);
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -248,26 +310,104 @@ export default function DatabaseBackupPage() {
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Database Backup</h1>
               </div>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="h-8"
-                    disabled={hasInProgressBackups || createBackupMutation.isPending}
-                  >
-                    {hasInProgressBackups || createBackupMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {createBackupMutation.isPending ? "Initiating..." : "Backup In Progress..."}
-                      </>
-                    ) : (
-                      <>
-                        <Database className="w-4 h-4 mr-2" />
-                        Create Backup
-                      </>
-                    )}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-[95vw] sm:max-w-md">
+              <div className="flex gap-2">
+                <Dialog open={isUploadRestoreDialogOpen} onOpenChange={setIsUploadRestoreDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      className="h-8"
+                      disabled={uploadRestoreMutation.isPending}
+                    >
+                      {uploadRestoreMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload & Restore
+                        </>
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="w-[95vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Upload & Restore Backup</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label htmlFor="backup-file">Backup File (.sql)</Label>
+                        <Input
+                          id="backup-file"
+                          type="file"
+                          accept=".sql,application/sql"
+                          onChange={handleFileSelect}
+                          className="mt-1"
+                        />
+                        {selectedFile && (
+                          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                            Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                          </div>
+                        )}
+                      </div>
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                          <strong>Warning:</strong> This will replace all current data in the database. 
+                          Make sure to backup your current database before proceeding.
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setIsUploadRestoreDialogOpen(false);
+                          setSelectedFile(null);
+                        }}
+                        disabled={uploadRestoreMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleUploadRestore}
+                        disabled={!selectedFile || uploadRestoreMutation.isPending}
+                      >
+                        {uploadRestoreMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Restoring...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload & Restore
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="h-8"
+                      disabled={hasInProgressBackups || createBackupMutation.isPending}
+                    >
+                      {hasInProgressBackups || createBackupMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {createBackupMutation.isPending ? "Initiating..." : "Backup In Progress..."}
+                        </>
+                      ) : (
+                        <>
+                          <Database className="w-4 h-4 mr-2" />
+                          Create Backup
+                        </>
+                      )}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="w-[95vw] sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Create Database Backup</DialogTitle>
                   </DialogHeader>
@@ -310,7 +450,8 @@ export default function DatabaseBackupPage() {
                     </Button>
                   </DialogFooter>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </div>
 
             {/* Backup Statistics */}
