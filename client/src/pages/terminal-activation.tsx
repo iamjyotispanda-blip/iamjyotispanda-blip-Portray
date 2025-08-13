@@ -308,16 +308,16 @@ export default function TerminalActivationPage() {
           <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Terminal Activation</span>
         </div>
         
-        <main className="px-4 sm:px-6 lg:px-2 py-2 flex-1">
+        <main className="px-2 sm:px-4 lg:px-6 py-2 flex-1">
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <div className="relative w-80">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <div className="relative w-full sm:w-80">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search terminals..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-8 w-full"
                 />
               </div>
             </div>
@@ -341,122 +341,130 @@ export default function TerminalActivationPage() {
               <div className="grid gap-4">
                 {filteredTerminals.map((terminal: TerminalWithDetails) => (
                   <Card key={terminal.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-start space-x-4">
-                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                            <Ship className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="flex items-start space-x-3 sm:space-x-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Ship className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-3">
-                              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                          <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
                                 {terminal.terminalName}
                               </h3>
-                              <Badge variant="outline">
-                                {terminal.shortCode}
-                              </Badge>
-                              <div className="flex items-center space-x-3">
-                                {(() => {
-                                  const remainingDays = terminal.status === "Active" && terminal.activationEndDate 
-                                    ? Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))
-                                    : 0;
-                                  const isExpiringSoon = remainingDays <= 30 && remainingDays > 0;
-                                  
-                                  return (
-                                    <>
-                                      <Badge
-                                        variant={
-                                          terminal.status === "Active" ? "default" :
-                                          terminal.status === "Processing for activation" ? "secondary" :
-                                          "outline"
-                                        }
-                                        className={
-                                          terminal.status === "Active" 
-                                            ? (isExpiringSoon ? "bg-orange-600 text-white dark:bg-orange-700 dark:text-white" : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200")
-                                            : ""
-                                        }
-                                      >
-                                        {terminal.status}
-                                      </Badge>
-                                      
-                                      {/* Show remaining days alongside Active badge */}
-                                      {terminal.status === "Active" && terminal.activationEndDate && (
-                                        <h5 className={`text-lg font-bold ${isExpiringSoon ? "text-orange-600 dark:text-orange-400" : "text-green-700 dark:text-green-300"}`}>
-                                          {remainingDays} days remaining
-                                        </h5>
-                                      )}
-                                    </>
-                                  );
-                                })()}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className="text-xs">
+                                  {terminal.shortCode}
+                                </Badge>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <Building className="w-4 h-4" />
-                                <span>{terminal.organization?.organizationName}</span>
-                                <span className="text-gray-400">•</span>
-                                <span>{terminal.organization?.organizationCode}</span>
-                                {/* Show subscription details alongside organization info */}
-                                {terminal.status === "Active" && terminal.activationStartDate && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {(() => {
+                                const remainingDays = terminal.status === "Active" && terminal.activationEndDate 
+                                  ? Math.max(0, Math.ceil((new Date(terminal.activationEndDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))
+                                  : 0;
+                                const isExpiringSoon = remainingDays <= 30 && remainingDays > 0;
+                                
+                                return (
                                   <>
-                                    <span className="text-gray-400">•</span>
-                                    <div className="flex items-center space-x-1 text-green-700 dark:text-green-300">
-                                      <Calendar className="h-3 w-3" />
-                                      <span>
-                                        {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")} {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}{terminal.workOrderNo && ` WO: ${terminal.workOrderNo}`}
+                                    <Badge
+                                      variant={
+                                        terminal.status === "Active" ? "default" :
+                                        terminal.status === "Processing for activation" ? "secondary" :
+                                        terminal.status === "Suspended" ? "destructive" :
+                                        "outline"
+                                      }
+                                      className={
+                                        terminal.status === "Active" 
+                                          ? (isExpiringSoon ? "bg-orange-600 text-white dark:bg-orange-700 dark:text-white" : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200")
+                                          : terminal.status === "Suspended"
+                                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                          : ""
+                                      }
+                                    >
+                                      {terminal.status}
+                                    </Badge>
+                                    
+                                    {/* Show remaining days alongside Active badge */}
+                                    {terminal.status === "Active" && terminal.activationEndDate && (
+                                      <span className={`text-sm font-medium ${isExpiringSoon ? "text-orange-600 dark:text-orange-400" : "text-green-700 dark:text-green-300"}`}>
+                                        {remainingDays} days remaining
                                       </span>
-                                    </div>
+                                    )}
                                   </>
+                                );
+                              })()}
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                <div className="flex items-center space-x-2">
+                                  <Building className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  <span className="truncate">{terminal.organization?.organizationName}</span>
+                                  <span className="text-gray-400">•</span>
+                                  <span>{terminal.organization?.organizationCode}</span>
+                                </div>
+                                {/* Show subscription details */}
+                                {terminal.status === "Active" && terminal.activationStartDate && (
+                                  <div className="flex items-center space-x-1 text-green-700 dark:text-green-300">
+                                    <Calendar className="h-3 w-3" />
+                                    <span className="text-xs">
+                                      {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                      {terminal.workOrderNo && ` WO: ${terminal.workOrderNo}`}
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                               <div className="flex items-center space-x-2">
-                                <MapPin className="w-4 h-4" />
-                                <span>{terminal.port?.portName}</span>
+                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <span className="truncate">{terminal.port?.portName}</span>
                                 <span className="text-gray-400">•</span>
                                 <span>{terminal.port?.state}, {terminal.port?.country}</span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <Calendar className="w-4 h-4" />
-                                <span>Created {format(new Date(terminal.createdAt), "MMM d, yyyy")}</span>
+                                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <span className="text-xs">Created {format(new Date(terminal.createdAt), "MMM d, yyyy")}</span>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div className="flex flex-col space-y-2">
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-2 lg:flex-shrink-0">
                           <Button
                             variant="outline"
+                            size="sm"
                             onClick={() => setLocation(`/terminals/${terminal.id}`)}
-                            className="h-8"
+                            className="h-8 text-xs lg:text-sm"
                           >
-                            <Ship className="w-4 h-4 mr-2" />
-                            View Profile
+                            <Ship className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                            <span className="hidden sm:inline">View Profile</span>
+                            <span className="sm:hidden">View</span>
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => handleActivate(terminal)}
                             disabled={activateTerminalMutation.isPending}
-                            className="h-8"
+                            className="h-8 text-xs lg:text-sm"
                           >
-                            <CheckCircle className="w-4 h-4 mr-2" />
+                            <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
                             Activate
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setActivationLogDialog({ open: true, terminalId: terminal.id })}
-                            className="h-8 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            className="h-8 text-xs lg:text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                           >
-                            <FileText className="w-4 h-4 mr-2" />
-                            View Logs
+                            <FileText className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                            <span className="hidden sm:inline">View Logs</span>
+                            <span className="sm:hidden">Logs</span>
                           </Button>
                           {terminal.status === "Active" && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleSuspend(terminal)}
-                              className="h-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              className="h-8 text-xs lg:text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
-                              <Ban className="w-4 h-4 mr-2" />
+                              <Ban className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
                               Suspend
                             </Button>
                           )}
@@ -473,7 +481,7 @@ export default function TerminalActivationPage() {
 
       {/* Activation Dialog */}
       <Dialog open={activationDialog.open} onOpenChange={(open) => setActivationDialog({ open })}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Ship className="w-5 h-5 text-blue-600" />
@@ -486,7 +494,7 @@ export default function TerminalActivationPage() {
               {/* Terminal Details */}
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
                 <h3 className="font-semibold text-lg">{activationDialog.terminal.terminalName}</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">Applied On:</span>
                     <p className="font-medium">{format(new Date(activationDialog.terminal.createdAt), "MMM dd, yyyy")}</p>
@@ -510,7 +518,7 @@ export default function TerminalActivationPage() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onActivationSubmit)} className="space-y-4">
                   {/* Primary activation fields - side by side */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="activationStartDate"
@@ -566,7 +574,7 @@ export default function TerminalActivationPage() {
                       <div className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
                         Work Order Required for {getSelectedSubscriptionType()?.name} subscription
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="workOrderNo"
@@ -733,7 +741,7 @@ export default function TerminalActivationPage() {
 
       {/* Suspension Dialog */}
       <Dialog open={suspensionDialog.open} onOpenChange={(open) => setSuspensionDialog({ open })}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Ban className="w-5 h-5 text-red-600" />
