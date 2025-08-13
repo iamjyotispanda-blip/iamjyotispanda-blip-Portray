@@ -155,13 +155,17 @@ export function AppLayout({ children, title, activeSection }: AppLayoutProps) {
   }, [sidebarCollapsed, sidebarHovered]);
 
   // Get current user
-  const { data: user, isLoading: userLoading, error: userError } = useQuery({
+  const { data: userResponse, isLoading: userLoading, error: userError } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: AuthService.getCurrentUser,
   });
 
+  // Extract user from nested response structure
+  const user = userResponse?.user || userResponse;
+
   // Debug user data
-  console.log('AppLayout - User data:', user);
+  console.log('AppLayout - User data:', userResponse);
+  console.log('AppLayout - Extracted user:', user);
   console.log('AppLayout - User loading:', userLoading, 'error:', userError);
   console.log('AppLayout - User condition check:', !!user);
 
