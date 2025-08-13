@@ -32,9 +32,10 @@ export default function VerifyPage() {
             // Redirect to password setup page with user details
             setTimeout(() => {
               const params = new URLSearchParams({
+                token: data.passwordSetupToken,
                 userId: data.userId,
                 email: data.email,
-                contactName: data.contactName
+                contactName: data.firstName || data.contactName || ''
               });
               window.location.href = `/setup-password?${params.toString()}`;
             }, 2000);
