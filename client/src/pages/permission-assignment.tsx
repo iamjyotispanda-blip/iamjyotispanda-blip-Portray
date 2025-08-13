@@ -380,9 +380,22 @@ export default function PermissionAssignmentPage() {
                             .filter(role => {
                               if (!role.isActive) return false;
                               
+                              // Debug current user and role
+                              console.log('Permission Assignment - Current User:', currentUser);
+                              console.log('Permission Assignment - Checking role:', role.name, 'isSystem:', role.isSystem);
+                              
                               // Show SystemAdmin roles only if current user has system admin privileges
                               if (role.isSystem || role.name === 'SystemAdmin' || role.name === 'System Admin') {
-                                return currentUser?.user?.isSystemAdmin === true || currentUser?.user?.role === 'SystemAdmin';
+                                const isSystemAdmin = (currentUser as any)?.user?.isSystemAdmin === true || 
+                                                     (currentUser as any)?.user?.role === 'SystemAdmin';
+                                console.log('Permission Assignment - SystemAdmin role check:', {
+                                  roleName: role.name,
+                                  isSystem: role.isSystem,
+                                  userIsSystemAdmin: (currentUser as any)?.user?.isSystemAdmin,
+                                  userRole: (currentUser as any)?.user?.role,
+                                  showRole: isSystemAdmin
+                                });
+                                return isSystemAdmin;
                               }
                               
                               return true;
