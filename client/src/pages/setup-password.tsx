@@ -29,21 +29,44 @@ export default function SetupPasswordPage() {
     const userIdParam = url.searchParams.get('userId');
     const emailParam = url.searchParams.get('email');
     const contactNameParam = url.searchParams.get('contactName');
+    const tokenParam = url.searchParams.get('token');
     
     console.log("SetupPasswordPage: Full URL:", fullUrl);
     console.log("SetupPasswordPage: UserID from URL:", userIdParam);
+    console.log("SetupPasswordPage: Token from URL:", tokenParam);
     console.log("SetupPasswordPage: Email from URL:", emailParam);
     console.log("SetupPasswordPage: ContactName from URL:", contactNameParam);
 
-    if (!userIdParam) {
+    // If userId is provided directly, use it
+    if (userIdParam) {
+      setUserId(userIdParam);
+      setEmail(emailParam);
+      setContactName(contactNameParam);
+    } 
+    // If only token is provided, fetch user details from backend
+    else if (tokenParam) {
+      fetch(`/api/auth/setup-password/validate?token=${tokenParam}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.userId) {
+            setUserId(data.userId);
+            setEmail(data.email);
+            setContactName(data.firstName || data.contactName || '');
+          } else {
+            setStatus("error");
+            setMessage(data.message || "Invalid password setup token");
+          }
+        })
+        .catch(error => {
+          console.error("Error validating token:", error);
+          setStatus("error");
+          setMessage("Failed to validate password setup link");
+        });
+    } 
+    else {
       setStatus("error");
-      setMessage("Invalid password setup link - no user ID provided");
-      return;
+      setMessage("Invalid password setup link - no user ID or token provided");
     }
-
-    setUserId(userIdParam);
-    setEmail(emailParam);
-    setContactName(contactNameParam);
   }, [location]);
 
   const validatePassword = (password: string): string[] => {

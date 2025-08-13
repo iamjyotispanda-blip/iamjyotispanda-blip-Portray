@@ -844,6 +844,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Validate password setup token endpoint
+  app.get("/api/auth/setup-password/validate", async (req: Request, res: Response) => {
+    try {
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).json({ success: false, message: "Token required" });
+      }
+      
+      // Find user by password setup token
+      const user = await storage.getUserByPasswordSetupToken(token);
+      if (!user) {
+        return res.status(400).json({ success: false, message: "Invalid or expired password setup token" });
+      }
+      
+      // Check if token is expired
+      if (user.passwordSetupTokenExpires && new Date() > user.passwordSetupTokenExpires) {
+        return res.status(400).json({ success: false, message: "Password setup token has expired" });
+      }
+      
+      res.json({
+        success: true,
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      });
+    } catch (error) {
+      console.error("Validate password setup token error:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+
   app.post("/api/setup-password", async (req: Request, res: Response) => {
     try {
       const { userId, password } = req.body;
