@@ -3000,11 +3000,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/objects/upload", authenticateToken, async (req: Request, res: Response) => {
     try {
       const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      
+      // Generate a unique object ID for this upload
+      const objectId = `uploads/${Date.now()}-${Math.random().toString(36).substring(2)}`;
+      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || "";
+      
+      if (!privateObjectDir) {
+        return res.status(500).json({ error: "Object storage not configured" });
+      }
+      
+      // Create a direct upload URL that points to our server endpoint
+      const directUploadURL = `/api/objects/direct-upload/${objectId}`;
+      
+      res.json({ uploadURL: directUploadURL });
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Direct upload handler - accepts file uploads and stores them
+  app.put("/api/objects/direct-upload/:objectId", (req, res, next) => {
+    // Parse raw body for file upload
+    let data = Buffer.alloc(0);
+    req.on('data', chunk => {
+      data = Buffer.concat([data, chunk]);
+    });
+    req.on('end', () => {
+      req.body = data;
+      next();
+    });
+  }, async (req: Request, res: Response) => {
+    try {
+      const { objectId } = req.params;
+      const fileBuffer = req.body;
+      
+      if (!fileBuffer || fileBuffer.length === 0) {
+        return res.status(400).json({ error: "No file data provided" });
+      }
+      
+      const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || "";
+      const objectPath = `${privateObjectDir}/${objectId}`;
+      
+      // Parse the object path to get bucket and object name
+      const pathParts = objectPath.split("/");
+      if (pathParts.length < 3) {
+        return res.status(500).json({ error: "Invalid object path configuration" });
+      }
+      
+      const bucketName = pathParts[1];
+      const objectName = pathParts.slice(2).join("/");
+      
+      // Upload to Google Cloud Storage
+      const { objectStorageClient } = await import("./objectStorage");
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+      
+      // Upload the file
+      await file.save(fileBuffer, {
+        metadata: {
+          contentType: req.get('content-type') || 'application/octet-stream'
+        }
+      });
+      
+      // Return the object path for later access
+      const publicPath = `/objects/${objectId}`;
+      res.json({ 
+        success: true, 
+        objectPath: publicPath,
+        url: publicPath 
+      });
+      
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ error: "Failed to upload file" });
     }
   });
 

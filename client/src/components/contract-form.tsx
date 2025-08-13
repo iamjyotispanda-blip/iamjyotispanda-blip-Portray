@@ -226,15 +226,17 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
                               maxFileSize={10485760} // 10MB
                               onGetUploadParameters={async () => {
                                 const response = await apiRequest("POST", "/api/objects/upload", {});
+                                const data = await response.json();
                                 return {
                                   method: "PUT" as const,
-                                  url: response.uploadURL,
+                                  url: data.uploadURL,
                                 };
                               }}
                               onComplete={(result) => {
-                                if (result.successful.length > 0) {
+                                if (result.successful && result.successful.length > 0) {
                                   const uploadedFile = result.successful[0];
-                                  const fileUrl = uploadedFile.uploadURL;
+                                  // Try to get the object path from the upload response
+                                  const fileUrl = uploadedFile.response?.body?.objectPath || uploadedFile.uploadURL;
                                   
                                   // Update the form field with the uploaded file URL
                                   field.onChange(fileUrl);
@@ -242,6 +244,19 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
                                   toast({
                                     title: "Success",
                                     description: "Contract document uploaded successfully",
+                                  });
+                                } else if (result.failed && result.failed.length > 0) {
+                                  console.error("Upload failed:", result.failed);
+                                  toast({
+                                    title: "Upload Failed",
+                                    description: "Failed to upload contract document. Please try again.",
+                                    variant: "destructive",
+                                  });
+                                } else {
+                                  toast({
+                                    title: "Upload Failed",
+                                    description: "No files were uploaded successfully.",
+                                    variant: "destructive",
                                   });
                                 }
                               }}
