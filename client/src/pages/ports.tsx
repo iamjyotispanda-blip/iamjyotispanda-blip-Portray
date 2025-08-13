@@ -19,7 +19,7 @@ export function PortsContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { canCreate, canEdit, canManage, canRead } = usePermissions();
+  const { canCreate, canEdit, canManage, canRead, canWrite } = usePermissions();
 
   // Get all ports
   const { data: ports = [], isLoading: portsLoading } = useQuery({
@@ -97,8 +97,8 @@ export function PortsContent() {
                 data-testid="input-search-ports"
               />
             </div>
-            {/* Check both direct and nested permissions for ports */}
-            {(canCreate("ports") || canWrite("ports", "port-onboarding") || canManage("ports", "port-onboarding")) && (
+            {/* Check for port creation permissions */}
+            {canCreate("ports") && (
               <Button onClick={() => setLocation("/ports/new")} className="h-8" data-testid="button-add-port">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Port
