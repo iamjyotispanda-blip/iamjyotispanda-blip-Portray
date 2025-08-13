@@ -1416,9 +1416,10 @@ export class DatabaseStorage implements IStorage {
           // await execSync(backupCommand);
           
           // For demonstration, create a mock backup file
+          const fs = await import('fs');
           const mockBackupContent = `-- PortRay Database Backup\n-- Created: ${new Date().toISOString()}\n-- Description: ${description || 'No description'}\n\n-- Mock backup content\nSELECT 'Database backup completed successfully';`;
-          await require('fs').promises.writeFile(filePath, mockBackupContent);
-          const stats = await require('fs').promises.stat(filePath);
+          await fs.promises.writeFile(filePath, mockBackupContent);
+          const stats = await fs.promises.stat(filePath);
           
           // Update backup status to completed
           await db
@@ -1457,7 +1458,8 @@ export class DatabaseStorage implements IStorage {
 
     // Check if file exists
     try {
-      await require('fs').promises.access(backup.filePath);
+      const fs = await import('fs');
+      await fs.promises.access(backup.filePath);
       return backup.filePath;
     } catch {
       return null;
@@ -1473,7 +1475,8 @@ export class DatabaseStorage implements IStorage {
     if (backup) {
       // Delete the file
       try {
-        await require('fs').promises.unlink(backup.filePath);
+        const fs = await import('fs');
+        await fs.promises.unlink(backup.filePath);
       } catch (error) {
         console.warn('Could not delete backup file:', error);
       }

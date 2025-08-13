@@ -47,8 +47,8 @@ export default function DatabaseBackupPage() {
       setIsCreateDialogOpen(false);
       setBackupDescription("");
       toast({
-        title: "Success",
-        description: "Database backup created successfully",
+        title: "Backup Started",
+        description: "Database backup creation has been initiated. You'll see progress updates below.",
       });
     },
     onError: (error: any) => {
@@ -85,6 +85,22 @@ export default function DatabaseBackupPage() {
     createBackupMutation.mutate(backupDescription);
   };
 
+  // Poll for backup status updates every 3 seconds when there are in-progress backups
+  const hasInProgressBackups = backups.some((backup: DatabaseBackup) => backup.status === 'in_progress');
+  
+  // Refetch backups every 3 seconds if there are in-progress backups
+  useQuery({
+    queryKey: ["/api/database/backups", "polling"],
+    queryFn: async () => {
+      if (hasInProgressBackups) {
+        refetch();
+      }
+      return null;
+    },
+    refetchInterval: hasInProgressBackups ? 3000 : false,
+    enabled: hasInProgressBackups,
+  });
+
   const handleDownloadBackup = (backupId: string, filename: string) => {
     window.open(`/api/database/backups/${backupId}/download`, '_blank');
   };
@@ -118,9 +134,21 @@ export default function DatabaseBackupPage() {
               </div>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="h-8">
-                    <Database className="w-4 h-4 mr-2" />
-                    Create Backup
+                  <Button 
+                    className="h-8"
+                    disabled={hasInProgressBackups}
+                  >
+                    {hasInProgressBackups ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Backup In Progress...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="w-4 h-4 mr-2" />
+                        Create Backup
+                      </>
+                    )}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="w-[95vw] sm:max-w-md">
@@ -148,9 +176,21 @@ export default function DatabaseBackupPage() {
                     </Button>
                     <Button
                       onClick={handleCreateBackup}
-                      disabled={createBackupMutation.isPending}
+                      disabled={createBackupMutation.isPending || hasInProgressBackups}
                     >
-                      {createBackupMutation.isPending ? "Creating..." : "Create Backup"}
+                      {createBackupMutation.isPending ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Creating...</span>
+                        </div>
+                      ) : hasInProgressBackups ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Processing...</span>
+                        </div>
+                      ) : (
+                        "Create Backup"
+                      )}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -233,19 +273,27 @@ export default function DatabaseBackupPage() {
                                   <p className="text-sm text-gray-600 dark:text-gray-400">{backup.description}</p>
                                 )}
                               </div>
-                              <Badge 
-                                variant={backup.status === 'completed' ? 'default' : backup.status === 'in_progress' ? 'secondary' : 'destructive'}
-                                className={
-                                  backup.status === 'completed' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                    : backup.status === 'failed'
-                                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                    : ''
-                                }
-                              >
-                                {backup.status === 'completed' ? 'Completed' : 
-                                 backup.status === 'in_progress' ? 'In Progress' : 'Failed'}
-                              </Badge>
+                              <div className="flex items-center space-x-2">
+                                <Badge 
+                                  variant={backup.status === 'completed' ? 'default' : backup.status === 'in_progress' ? 'secondary' : 'destructive'}
+                                  className={
+                                    backup.status === 'completed' 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                      : backup.status === 'failed'
+                                      ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                  }
+                                >
+                                  {backup.status === 'completed' ? 'Completed' : 
+                                   backup.status === 'in_progress' ? 'In Progress' : 'Failed'}
+                                </Badge>
+                                {backup.status === 'in_progress' && (
+                                  <div className="flex items-center space-x-1">
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                                    <span className="text-xs text-blue-600 dark:text-blue-400">Processing...</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                             
                             <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
