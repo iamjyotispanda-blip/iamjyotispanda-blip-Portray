@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ContractForm } from "@/components/contract-form";
+import { AppLayout } from "@/components/layout/AppLayout";
 import type { Customer, Contract, CustomerContact, ContractTariff, ContractCargoDetail, ContractStorageCharge } from "@shared/schema";
 
 const CONTRACT_TABS = [
@@ -19,7 +20,7 @@ const CONTRACT_TABS = [
   { id: "storage", label: "STORAGE", icon: Warehouse }
 ];
 
-export default function ContractDetails() {
+function ContractDetailsContent() {
   const [, params] = useRoute("/customers/:customerId/contracts/:contractId?");
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("contract");
@@ -100,82 +101,76 @@ export default function ContractDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setLocation("/customers")}
-                data-testid="button-back-to-customers"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Customers
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                    {getInitials(customer.customerName)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h1 className="text-xl font-semibold" data-testid="customer-name">
-                    {customer.customerName}
-                  </h1>
-                  <p className="text-sm text-muted-foreground" data-testid="customer-display-name">
-                    {customer.displayName}
-                  </p>
-                </div>
+    <div className="space-y-6">
+      {/* Page Header with Customer Info */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setLocation("/customers")}
+              data-testid="button-back-to-customers"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Customers
+            </Button>
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  {getInitials(customer.customerName)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-xl font-semibold" data-testid="customer-name">
+                  {customer.customerName}
+                </h1>
+                <p className="text-sm text-muted-foreground" data-testid="customer-display-name">
+                  {customer.displayName}
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" data-testid="customer-status">
-                {customer.status}
-              </Badge>
-              <Badge variant="secondary" data-testid="customer-code">
-                {customer.customerCode}
-              </Badge>
-            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" data-testid="customer-status">
+              {customer.status}
+            </Badge>
+            <Badge variant="secondary" data-testid="customer-code">
+              {customer.customerCode}
+            </Badge>
           </div>
         </div>
-      </div>
-
-      {/* Customer Info Bar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="px-6 py-3">
-          <div className="flex items-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span data-testid="customer-email">{customer.email}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span data-testid="customer-location">{customer.state}, {customer.country}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span data-testid="customer-pan">PAN: {customer.pan}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span data-testid="customer-gst">GST: {customer.gst}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span data-testid="customer-created">
-                Created {new Date(customer.createdAt).toLocaleDateString()}
-              </span>
-            </div>
+        
+        {/* Customer Info */}
+        <div className="flex items-center space-x-6 text-sm pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-2">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span data-testid="customer-email">{customer.email}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <span data-testid="customer-location">{customer.state}, {customer.country}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <span data-testid="customer-pan">PAN: {customer.pan}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <span data-testid="customer-gst">GST: {customer.gst}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span data-testid="customer-created">
+              Created {new Date(customer.createdAt).toLocaleDateString()}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
+      <div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
             {CONTRACT_TABS.map((tab) => {
@@ -642,5 +637,13 @@ export default function ContractDetails() {
         />
       )}
     </div>
+  );
+}
+
+export default function ContractDetails() {
+  return (
+    <AppLayout title="Customer Contracts" activeSection="customers">
+      <ContractDetailsContent />
+    </AppLayout>
   );
 }
