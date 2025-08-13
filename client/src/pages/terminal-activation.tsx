@@ -448,10 +448,10 @@ export default function TerminalActivationPage() {
                             Activate
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => setActivationLogDialog({ open: true, terminalId: terminal.id })}
-                            className="h-8 text-xs lg:text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            className="h-8 text-xs lg:text-sm"
                           >
                             <FileText className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
                             <span className="hidden sm:inline">View Logs</span>
@@ -459,10 +459,10 @@ export default function TerminalActivationPage() {
                           </Button>
                           {terminal.status === "Active" && (
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
                               onClick={() => handleSuspend(terminal)}
-                              className="h-8 text-xs lg:text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              className="h-8 text-xs lg:text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border-red-300 hover:border-red-500"
                             >
                               <Ban className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
                               Suspend
