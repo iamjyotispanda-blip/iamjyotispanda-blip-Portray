@@ -626,7 +626,7 @@ export type InsertActivationLog = z.infer<typeof insertActivationLogSchema>;
 export const userAuditLogs = pgTable("user_audit_logs", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   targetUserId: varchar("target_user_id").notNull().references(() => users.id), // User being modified
-  performedBy: varchar("performed_by").notNull().references(() => users.id), // User performing the action
+  performedBy: varchar("performed_by").references(() => users.id), // User performing the action (nullable for deleted users)
   action: text("action").notNull(), // "created", "updated", "status_changed", "role_changed", "password_reset", "verified", "deleted"
   description: text("description").notNull(),
   oldValues: text("old_values"), // JSON string of previous values

@@ -624,6 +624,16 @@ export class DatabaseStorage implements IStorage {
     // First delete all sessions for this user to avoid foreign key constraint violation
     await db.delete(sessions).where(eq(sessions.userId, id));
     
+    // Update audit logs to remove references to this user
+    // Set performedBy to null for audit logs where this user performed the action
+    await db.update(userAuditLogs)
+      .set({ performedBy: null })
+      .where(eq(userAuditLogs.performedBy, id));
+    
+    // Delete audit logs where this user was the target (as these are specific to the user being deleted)
+    await db.delete(userAuditLogs)
+      .where(eq(userAuditLogs.targetUserId, id));
+    
     // Then delete the user
     await db.delete(users).where(eq(users.id, id));
   }
