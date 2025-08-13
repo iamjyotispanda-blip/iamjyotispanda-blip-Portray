@@ -393,6 +393,16 @@ export default function TerminalActivationPage() {
                               })()}
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                              {/* Show subscription details first */}
+                              {terminal.status === "Active" && terminal.activationStartDate && (
+                                <div className="flex items-center space-x-1 text-green-700 dark:text-green-300">
+                                  <Calendar className="h-3 w-3" />
+                                  <span className="text-xs">
+                                    {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
+                                    {terminal.workOrderNo && ` WO: ${terminal.workOrderNo}`}
+                                  </span>
+                                </div>
+                              )}
                               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                 <div className="flex items-center space-x-2">
                                   <Building className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -400,16 +410,6 @@ export default function TerminalActivationPage() {
                                   <span className="text-gray-400">•</span>
                                   <span>{terminal.organization?.organizationCode}</span>
                                 </div>
-                                {/* Show subscription details */}
-                                {terminal.status === "Active" && terminal.activationStartDate && (
-                                  <div className="flex items-center space-x-1 text-green-700 dark:text-green-300">
-                                    <Calendar className="h-3 w-3" />
-                                    <span className="text-xs">
-                                      {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")}
-                                      {terminal.workOrderNo && ` WO: ${terminal.workOrderNo}`}
-                                    </span>
-                                  </div>
-                                )}
                               </div>
                               <div className="flex items-center space-x-2">
                                 <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
