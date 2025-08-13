@@ -777,24 +777,21 @@ export function UsersContent() {
                             <TableCell className="text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`dropdown-trigger-user-${user.id}`}>
                                     <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {canEdit("users", "user-access") && (
-                                    <DropdownMenuItem onClick={() => handleEdit(user)} data-testid={`button-edit-user-${user.id}`}>
-                                      <Edit className="w-4 h-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                  )}
-                                  {canRead("users", "user-access") && (
-                                    <DropdownMenuItem onClick={() => handleViewAuditLog(user)} data-testid={`button-audit-log-user-${user.id}`}>
-                                      <History className="w-4 h-4 mr-2" />
-                                      View Activity Log
-                                    </DropdownMenuItem>
-                                  )}
-                                  {canManage("users", "user-access") && !user.isActive && (
+                                <DropdownMenuContent align="end" className="z-50 min-w-[160px]">
+                                  <DropdownMenuItem onClick={() => handleEdit(user)} data-testid={`button-edit-user-${user.id}`}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleViewAuditLog(user)} data-testid={`button-audit-log-user-${user.id}`}>
+                                    <History className="w-4 h-4 mr-2" />
+                                    View Activity Log
+                                  </DropdownMenuItem>
+                                  {!user.isActive && (
                                     <DropdownMenuItem 
                                       onClick={() => handleResendVerification(user.id)}
                                       disabled={resendVerificationMutation.isPending}
@@ -804,25 +801,23 @@ export function UsersContent() {
                                       Resend Verification
                                     </DropdownMenuItem>
                                   )}
-                                  {canManage("users", "user-access") && (
-                                    <DropdownMenuItem 
-                                      onClick={() => handleToggleUserStatus(user.id)}
-                                      disabled={toggleUserStatusMutation.isPending || user.id === "admin-001"}
-                                      data-testid={`button-toggle-user-${user.id}`}
-                                    >
-                                      {user.isActive ? (
-                                        <>
-                                          <ToggleLeft className="w-4 h-4 mr-2" />
-                                          Suspend
-                                        </>
-                                      ) : (
-                                        <>
-                                          <ToggleRight className="w-4 h-4 mr-2" />
-                                          Activate
-                                        </>
-                                      )}
-                                    </DropdownMenuItem>
-                                  )}
+                                  <DropdownMenuItem 
+                                    onClick={() => handleToggleUserStatus(user.id)}
+                                    disabled={toggleUserStatusMutation.isPending || user.id === "admin-001"}
+                                    data-testid={`button-toggle-user-${user.id}`}
+                                  >
+                                    {user.isActive ? (
+                                      <>
+                                        <ToggleLeft className="w-4 h-4 mr-2" />
+                                        Suspend
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ToggleRight className="w-4 h-4 mr-2" />
+                                        Activate
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
                                   {canManage("users", "user-access") && user.id !== "admin-001" && (
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
