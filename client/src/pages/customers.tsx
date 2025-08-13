@@ -122,7 +122,7 @@ function CustomersContent() {
       // Add portId and createdBy automatically
       const customerDataWithDefaults = {
         ...customerData,
-        portId: 5, // JSW Paradip Port
+        portId: 1, // Use the first available port
         createdBy: currentUser?.user?.id || currentUser?.id || 'system'
       };
       return apiRequest("POST", "/api/customers", customerDataWithDefaults);
