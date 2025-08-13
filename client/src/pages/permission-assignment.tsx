@@ -357,6 +357,8 @@ export default function PermissionAssignmentPage() {
 
   const treeData = buildTree();
 
+  console.log('Permission Assignment Page - Rendering, roles:', roles);
+
   return (
     <AppLayout title="Permission Assignment" activeSection="permission-assignment">
       <div className="w-full bg-gray-50 dark:bg-gray-900">
@@ -384,17 +386,13 @@ export default function PermissionAssignmentPage() {
                                                              user?.role === 'SystemAdmin' ||
                                                              user?.role === 'System Admin';
                             
-                            console.log('=== Permission Assignment Filter - User Data ===', {
-                              fullCurrentUser: currentUser,
-                              extractedUser: user,
-                              isSystemAdmin: user?.isSystemAdmin,
-                              role: user?.role,
-                              isCurrentUserSystemAdmin,
-                              allRoles: roles,
-                              rolesCount: roles?.length,
-                              roleNames: roles?.map(r => r.name),
-                              systemRoles: roles?.filter(r => r.isSystem || r.name === 'SystemAdmin')
-                            });
+                            console.log('=== Permission Assignment Filter - User Data ===');
+                            console.log('User:', user);
+                            console.log('isCurrentUserSystemAdmin:', isCurrentUserSystemAdmin);
+                            console.log('All roles:', roles);
+                            console.log('Roles count:', (roles as any)?.length);
+                            console.log('Role names:', (roles as any)?.map((r: any) => r.name));
+                            console.log('System roles:', (roles as any)?.filter((r: any) => r.isSystem || r.name === 'SystemAdmin'));
                             
                             return (roles as Role[]).filter(role => {
                               if (!role.isActive) {
