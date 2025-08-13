@@ -438,7 +438,14 @@ export function UsersContent() {
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
                       {(roles as Role[])
-                        .filter(role => !role.isSystem)
+                        .filter(role => {
+                          // System administrators can see all roles
+                          if (currentUser?.isSystemAdmin || currentUser?.role === 'SystemAdmin') {
+                            return true;
+                          }
+                          // Non-system administrators cannot see system roles
+                          return !role.isSystem;
+                        })
                         .map((role) => (
                         <SelectItem key={role.id} value={role.name}>
                           {role.displayName}
@@ -631,8 +638,8 @@ export function UsersContent() {
                             </SelectTrigger>
                             <SelectContent>
                               {(roles as Role[])
-                                .filter(role => role.isActive && !role.isSystem)
-                                .filter(role => canAssignRole(role.id))
+                                .filter(role => role.isActive)
+                                .filter(role => canAssignRole(role.id, role))
                                 .map((role) => (
                                 <SelectItem key={role.id} value={role.id.toString()}>
                                   <div className="flex items-center">

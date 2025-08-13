@@ -38,13 +38,18 @@ export function useRoleCreationPermissions() {
     return rolePermissions?.allowedUserTypes?.includes(userType) || false;
   };
 
-  const canAssignRole = (roleId: number): boolean => {
-    // System Admins can assign any role
+  const canAssignRole = (roleId: number, roleData?: any): boolean => {
+    // System Admins can assign any role including system roles
     if (currentUser?.isSystemAdmin || currentUser?.role === 'SystemAdmin') {
       return true;
     }
 
-    // If no permissions are configured yet, allow assigning non-system admin roles for Port Admins
+    // Non-system administrators cannot assign system roles
+    if (roleData?.isSystem) {
+      return false;
+    }
+
+    // If no permissions are configured yet, allow assigning non-system roles for Port Admins
     if (!rolePermissions && currentUser?.role === 'PortAdmin') {
       return true; // Allow for now until permissions are configured
     }
