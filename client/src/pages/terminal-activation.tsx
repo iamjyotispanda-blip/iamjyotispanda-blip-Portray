@@ -304,9 +304,6 @@ export default function TerminalActivationPage() {
   return (
     <AppLayout title="Terminal Activation" activeSection="terminal-activation">
       <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <span className="text-sm text-gray-600 dark:text-gray-400 pl-4">Terminal Activation</span>
-        </div>
         
         <main className="px-2 sm:px-4 lg:px-6 py-2 flex-1">
           <div className="space-y-2">
