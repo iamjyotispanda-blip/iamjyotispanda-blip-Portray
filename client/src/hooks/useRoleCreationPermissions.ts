@@ -63,7 +63,7 @@ export function useRoleCreationPermissions() {
     // If no permissions are configured yet, allow assigning non-system roles for Port Admins
     if (!rolePermissions && currentUser?.role === 'PortAdmin') {
       console.log('No permissions configured, allowing for PortAdmin');
-      return true;
+      return !roleData?.isSystem; // Only allow non-system roles when no permissions configured
     }
 
     // Check if current user's role has permission to assign this role
