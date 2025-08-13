@@ -78,7 +78,7 @@ export function UsersContent() {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { canCreate, canEdit, canManage, canRead } = usePermissions();
+  const { canCreate, canEdit, canManage, canRead, currentUser } = usePermissions();
   const { canCreateUserType, canAssignRole, getAvailableUserTypes, getAvailableRoleIds } = useRoleCreationPermissions();
 
   // Get all users
@@ -103,8 +103,8 @@ export function UsersContent() {
 
   // Filter users based on search term, role, and status - exclude System Administrators
   const filteredUsers = (users as UserType[]).filter((user: UserType) => {
-    // Hide System Administrator users from the list
-    if (user.role === 'SystemAdmin' || user.role === 'System Admin' || user.isSystemAdmin) {
+    // Hide System Administrator users from the list (only system admins can see other system admins)
+    if (user.isSystemAdmin && !(currentUser?.isSystemAdmin || currentUser?.role === 'SystemAdmin')) {
       return false;
     }
 
@@ -121,14 +121,17 @@ export function UsersContent() {
     return matchesSearch && matchesRole && matchesStatus;
   });
   
-  // Calculate statistics - exclude System Administrators from counts
-  const nonSystemAdminUsers = (users as UserType[]).filter((user: UserType) => 
-    !(user.role === 'SystemAdmin' || user.role === 'System Admin' || user.isSystemAdmin)
-  );
-  const totalUsers = nonSystemAdminUsers.length;
-  const activeUsers = nonSystemAdminUsers.filter(u => u.isActive).length;
+  // Calculate statistics - exclude System Administrators from counts for non-system admins
+  const visibleUsers = (users as UserType[]).filter((user: UserType) => {
+    if (user.isSystemAdmin && !(currentUser?.isSystemAdmin || currentUser?.role === 'SystemAdmin')) {
+      return false;
+    }
+    return true;
+  });
+  const totalUsers = visibleUsers.length;
+  const activeUsers = visibleUsers.filter(u => u.isActive).length;
   const inactiveUsers = totalUsers - activeUsers;
-  const recentUsers = nonSystemAdminUsers.filter(u => {
+  const recentUsers = visibleUsers.filter(u => {
     const createdDate = new Date(u.createdAt);
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -435,7 +438,7 @@ export function UsersContent() {
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
                       {(roles as Role[])
-                        .filter(role => role.name !== 'SystemAdmin' && role.name !== 'System Admin')
+                        .filter(role => !role.isSystem)
                         .map((role) => (
                         <SelectItem key={role.id} value={role.name}>
                           {role.displayName}
@@ -628,7 +631,7 @@ export function UsersContent() {
                             </SelectTrigger>
                             <SelectContent>
                               {(roles as Role[])
-                                .filter(role => role.isActive && role.name !== 'SystemAdmin' && role.name !== 'System Admin')
+                                .filter(role => role.isActive && !role.isSystem)
                                 .filter(role => canAssignRole(role.id))
                                 .map((role) => (
                                 <SelectItem key={role.id} value={role.id.toString()}>
