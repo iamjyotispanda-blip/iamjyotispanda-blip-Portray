@@ -1829,6 +1829,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/terminals/:id/suspend", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (req.user.role !== "SystemAdmin") {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid terminal ID" });
+      }
+
+      const { suspensionRemarks } = req.body;
+
+      if (!suspensionRemarks || suspensionRemarks.trim().length < 10) {
+        return res.status(400).json({ message: "Suspension remarks must be at least 10 characters long" });
+      }
+
+      // Update terminal status to suspended
+      const terminal = await storage.updateTerminalStatus(id, "Suspended");
+      if (!terminal) {
+        return res.status(404).json({ message: "Terminal not found" });
+      }
+
+      // Create activation log entry for suspension
+      await storage.createActivationLog({
+        terminalId: id,
+        action: "suspended",
+        description: `Terminal suspended. Reason: ${suspensionRemarks}`,
+        performedBy: req.user.id,
+        data: JSON.stringify({
+          suspensionRemarks,
+          suspendedAt: new Date().toISOString()
+        })
+      });
+
+      res.json(terminal);
+    } catch (error) {
+      console.error("Suspend terminal error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/terminals/:id", authenticateToken, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -2170,7 +2213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
 
       // Validate status
-      if (!["Active", "Rejected", "Processing for activation"].includes(status)) {
+      if (!["Active", "Rejected", "Processing for activation", "Suspended"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
 

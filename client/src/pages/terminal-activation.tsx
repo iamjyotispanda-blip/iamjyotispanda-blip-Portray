@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle, Clock, Search, Building, MapPin, Phone, Calendar, Ship, X, FileText } from "lucide-react";
+import { CheckCircle, Clock, Search, Building, MapPin, Phone, Calendar, Ship, X, FileText, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -54,11 +55,19 @@ const activationFormSchema = z.object({
 
 type ActivationFormData = z.infer<typeof activationFormSchema>;
 
+// Suspension form schema
+const suspensionFormSchema = z.object({
+  suspensionRemarks: z.string().min(10, "Suspension remarks must be at least 10 characters long"),
+});
+
+type SuspensionFormData = z.infer<typeof suspensionFormSchema>;
+
 export default function TerminalActivationPage() {
   const [location, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [activationDialog, setActivationDialog] = useState<{ open: boolean; terminal?: TerminalWithDetails }>({ open: false });
   const [activationLogDialog, setActivationLogDialog] = useState<{ open: boolean; terminalId?: number }>({ open: false });
+  const [suspensionDialog, setSuspensionDialog] = useState<{ open: boolean; terminal?: TerminalWithDetails }>({ open: false });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -75,6 +84,14 @@ export default function TerminalActivationPage() {
       subscriptionTypeId: "",
       workOrderNo: "",
       workOrderDate: "",
+    },
+  });
+
+  // Form for suspension
+  const suspensionForm = useForm<SuspensionFormData>({
+    resolver: zodResolver(suspensionFormSchema),
+    defaultValues: {
+      suspensionRemarks: "",
     },
   });
 
@@ -157,6 +174,31 @@ export default function TerminalActivationPage() {
     },
   });
 
+  // Suspend terminal mutation
+  const suspendTerminalMutation = useMutation({
+    mutationFn: async ({ terminalId, data }: { terminalId: number; data: SuspensionFormData }) => {
+      return apiRequest("PUT", `/api/terminals/${terminalId}/suspend`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/terminals/pending-activation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      setSuspensionDialog({ open: false });
+      suspensionForm.reset();
+      toast({
+        title: "Success",
+        description: "Terminal suspended successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to suspend terminal",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Reject terminal mutation - INACTIVE
   // const rejectTerminalMutation = useMutation({
   //   mutationFn: async (terminalId: number) => {
@@ -197,6 +239,13 @@ export default function TerminalActivationPage() {
     });
   };
 
+  const handleSuspend = (terminal: TerminalWithDetails) => {
+    setSuspensionDialog({ open: true, terminal });
+    suspensionForm.reset({
+      suspensionRemarks: "",
+    });
+  };
+
   // const handleReject = (terminalId: number) => {
   //   rejectTerminalMutation.mutate(terminalId);
   // };
@@ -206,6 +255,15 @@ export default function TerminalActivationPage() {
       activateTerminalMutation.mutate({ 
         terminalId: activationDialog.terminal.id, 
         data 
+      });
+    }
+  };
+
+  const onSuspensionSubmit = (data: SuspensionFormData) => {
+    if (suspensionDialog.terminal) {
+      suspendTerminalMutation.mutate({
+        terminalId: suspensionDialog.terminal.id,
+        data
       });
     }
   };
@@ -391,6 +449,17 @@ export default function TerminalActivationPage() {
                             <FileText className="w-4 h-4 mr-2" />
                             View Logs
                           </Button>
+                          {terminal.status === "Active" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSuspend(terminal)}
+                              className="h-8 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <Ban className="w-4 h-4 mr-2" />
+                              Suspend
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -659,6 +728,73 @@ export default function TerminalActivationPage() {
               Close
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspension Dialog */}
+      <Dialog open={suspensionDialog.open} onOpenChange={(open) => setSuspensionDialog({ open })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Ban className="w-5 h-5 text-red-600" />
+              <span>Suspend Terminal</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {suspensionDialog.terminal && (
+            <div className="space-y-4">
+              {/* Terminal Details */}
+              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                <h3 className="font-semibold text-lg text-red-800 dark:text-red-200">
+                  {suspensionDialog.terminal.terminalName}
+                </h3>
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  This action will suspend the terminal's operations.
+                </p>
+              </div>
+
+              {/* Suspension Form */}
+              <Form {...suspensionForm}>
+                <form onSubmit={suspensionForm.handleSubmit(onSuspensionSubmit)} className="space-y-4">
+                  <FormField
+                    control={suspensionForm.control}
+                    name="suspensionRemarks"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Suspension Remarks *</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Please provide detailed reasons for suspension..."
+                            rows={4}
+                            className="resize-none"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <DialogFooter className="space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSuspensionDialog({ open: false })}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      disabled={suspendTerminalMutation.isPending}
+                    >
+                      {suspendTerminalMutation.isPending ? "Suspending..." : "Suspend Terminal"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AppLayout>
