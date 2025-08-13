@@ -689,21 +689,20 @@ export default function DatabaseBackupPage() {
                               </>
                             )}
                             
-                            {(backup.status === 'completed' || backup.status === 'failed') && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteBackup(backup.id)}
-                                disabled={deleteBackupMutation.isPending}
-                                className="h-8 text-red-600 hover:text-red-700"
-                              >
-                                {deleteBackupMutation.isPending ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="w-4 h-4" />
-                                )}
-                              </Button>
-                            )}
+                            {/* Delete button for all backup statuses */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteBackup(backup.id)}
+                              disabled={deleteBackupMutation.isPending}
+                              className="h-8 text-red-600 hover:text-red-700"
+                            >
+                              {deleteBackupMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </div>
