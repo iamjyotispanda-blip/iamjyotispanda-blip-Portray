@@ -388,7 +388,9 @@ export default function PermissionAssignmentPage() {
                               isSystemAdmin: user?.isSystemAdmin,
                               role: user?.role,
                               isCurrentUserSystemAdmin,
-                              allRoles: roles
+                              allRoles: roles,
+                              rolesCount: roles?.length,
+                              roleNames: roles?.map(r => r.name)
                             });
                             
                             return (roles as Role[]).filter(role => {
