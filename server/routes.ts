@@ -2322,10 +2322,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Resend user verification email endpoint
   app.post("/api/users/:id/resend-verification", authenticateToken, async (req: Request, res: Response) => {
     try {
-      // Only system admins can resend user verification emails
-      if (req.user?.role !== "SystemAdmin") {
-        return res.status(403).json({ message: "Access denied. Only System Administrators can resend verification emails." });
-      }
+      // Allow users with proper permissions to resend verification emails
+      // Port Admins can resend verification for users in their port, System Admins can resend for any user
 
       const userId = req.params.id;
       const user = await storage.getUser(userId);
