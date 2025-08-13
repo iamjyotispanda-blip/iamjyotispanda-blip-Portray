@@ -97,6 +97,11 @@ function CustomersContent() {
     queryKey: ['/api/customers'],
   });
 
+  // Get current user for createdBy field
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ['/api/auth/me'],
+  });
+
   // Load only active and subscribed terminals for customer forms
   const { data: terminals = [] } = useQuery<Terminal[]>({
     queryKey: ['/api/terminals/active-subscribed'],
@@ -114,12 +119,13 @@ function CustomersContent() {
   const createCustomerMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
       const { confirmEmail, ...customerData } = data;
-      // Add portId automatically - for now using port 5 (JSW Paradip Port)
-      const customerDataWithPort = {
+      // Add portId and createdBy automatically
+      const customerDataWithDefaults = {
         ...customerData,
-        portId: 5
+        portId: 5, // JSW Paradip Port
+        createdBy: currentUser?.user?.id || currentUser?.id || 'system'
       };
-      return apiRequest("POST", "/api/customers", customerDataWithPort);
+      return apiRequest("POST", "/api/customers", customerDataWithDefaults);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
