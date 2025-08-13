@@ -163,14 +163,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/me", authenticateToken, async (req: Request, res: Response) => {
     try {
       const user = req.user;
-      console.log("API /api/auth/me - User from auth middleware:", {
-        id: user.id, 
-        email: user.email, 
-        firstName: user.firstName, 
-        lastName: user.lastName,
-        role: user.role
-      });
-      
       let userWithPermissions = { ...user };
 
       // If user has a role, fetch the role permissions
@@ -180,14 +172,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userWithPermissions.rolePermissions = role.permissions;
         }
       }
-
-      console.log("API /api/auth/me - Final user response:", {
-        id: userWithPermissions.id, 
-        email: userWithPermissions.email, 
-        firstName: userWithPermissions.firstName, 
-        lastName: userWithPermissions.lastName,
-        role: userWithPermissions.role
-      });
 
       res.json({ user: userWithPermissions });
     } catch (error) {

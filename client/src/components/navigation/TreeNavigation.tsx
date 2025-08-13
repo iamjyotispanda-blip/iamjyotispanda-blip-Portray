@@ -30,10 +30,13 @@ export function TreeNavigation({ activeSection, onNavigate, collapsed = false }:
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   // Get current user
-  const { data: user } = useQuery<User>({
+  const { data: userResponse } = useQuery<any>({
     queryKey: ["/api/auth/me"],
     queryFn: AuthService.getCurrentUser,
   });
+  
+  // Extract user from nested response structure
+  const user = userResponse?.user || userResponse;
 
   // Get user's role with permissions
   const { data: userRole } = useQuery<Role>({
