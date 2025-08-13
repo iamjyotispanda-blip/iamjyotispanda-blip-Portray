@@ -44,6 +44,11 @@ export default function PermissionAssignmentPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Get current user to check system admin privileges  
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/auth/me"],
+  });
+
   // Get all roles
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ["/api/roles"],
@@ -372,7 +377,16 @@ export default function PermissionAssignmentPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {(roles as Role[])
-                            .filter(role => role.isActive && role.name !== 'SystemAdmin' && role.name !== 'System Admin')
+                            .filter(role => {
+                              if (!role.isActive) return false;
+                              
+                              // Show SystemAdmin roles only if current user has system admin privileges
+                              if (role.isSystem || role.name === 'SystemAdmin' || role.name === 'System Admin') {
+                                return currentUser?.user?.isSystemAdmin === true || currentUser?.user?.role === 'SystemAdmin';
+                              }
+                              
+                              return true;
+                            })
                             .map((role) => (
                             <SelectItem key={role.id} value={role.id.toString()}>
                               <div className="flex items-center">
