@@ -381,7 +381,9 @@ export default function PermissionAssignmentPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {(() => {
-                            const user = (currentUser as any)?.user;
+                            const user = (currentUser as any)?.user || currentUser;
+                            console.log('Raw currentUser:', currentUser);
+                            console.log('Extracted user:', user);
                             const isCurrentUserSystemAdmin = user?.isSystemAdmin === true || 
                                                              user?.role === 'SystemAdmin' ||
                                                              user?.role === 'System Admin';
