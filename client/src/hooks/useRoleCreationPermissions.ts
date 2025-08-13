@@ -25,28 +25,48 @@ export function useRoleCreationPermissions() {
       return true;
     }
 
+    // Port Admins cannot create SuperAdmin users
+    if (userType === "SuperAdmin" && currentUser?.role === 'PortAdmin') {
+      return false;
+    }
+
+    // If no permissions are configured yet, allow basic user types for Port Admins
+    if (!rolePermissions && currentUser?.role === 'PortAdmin') {
+      return userType === "PortUser" || userType === "TerminalUser";
+    }
+
     // Check if current user's role has permission to create this user type
     return rolePermissions?.allowedUserTypes?.includes(userType) || false;
   };
 
   const canAssignRole = (roleId: number): boolean => {
-    // System Admins can assign any role (except System Admin itself)
+    // System Admins can assign any role
     if (currentUser?.isSystemAdmin || currentUser?.role === 'SystemAdmin') {
       return true;
     }
 
+    // If no permissions are configured yet, allow assigning non-system admin roles for Port Admins
+    if (!rolePermissions && currentUser?.role === 'PortAdmin') {
+      return true; // Allow for now until permissions are configured
+    }
+
     // Check if current user's role has permission to assign this role
-    return rolePermissions?.allowedRoleIds?.includes(roleId) || false;
+    return rolePermissions.allowedRoleIds?.includes(roleId) || false;
   };
 
   const getAvailableUserTypes = (): string[] => {
-    // System Admins can create any user type except SuperAdmin
+    // System Admins can create any user type
     if (currentUser?.isSystemAdmin || currentUser?.role === 'SystemAdmin') {
+      return ["SuperAdmin", "PortUser", "TerminalUser"];
+    }
+
+    // If no permissions are configured yet, allow basic user types for now
+    if (!rolePermissions) {
       return ["PortUser", "TerminalUser"];
     }
 
     // Return allowed user types based on permissions
-    return rolePermissions?.allowedUserTypes || [];
+    return rolePermissions.allowedUserTypes || [];
   };
 
   const getAvailableRoleIds = (): number[] => {
