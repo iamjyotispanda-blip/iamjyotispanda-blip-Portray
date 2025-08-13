@@ -198,11 +198,14 @@ export function usePermissions() {
                          userData?.role === "System Admin" || 
                          userData?.userType === "SystemAdmin" || 
                          userData?.userType === "SuperAdmin" ||
-                         userData?.userType === "PortAdmin" ||  // Also allow PortAdmin for testing
                          userData?.roleId === 1;  // Role ID 1 is SystemAdmin
     
-    if (isSystemAdmin) {
-      console.log(`canCreate("${section}", "${subsection}") = true (SystemAdmin override detected)`);
+    // Check for Port Admin specifically for user management
+    const isPortAdminForUsers = (userData?.role === "PortAdmin" || userData?.roleId === 3) && 
+                               section === "users" && subsection === "user-access";
+    
+    if (isSystemAdmin || isPortAdminForUsers) {
+      console.log(`canCreate("${section}", "${subsection}") = true (Admin override detected - SystemAdmin: ${isSystemAdmin}, PortAdmin: ${isPortAdminForUsers})`);
       return true;
     }
     
