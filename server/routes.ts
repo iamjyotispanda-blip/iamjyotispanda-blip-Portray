@@ -3178,6 +3178,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Role Creation Permissions routes
+  app.get("/api/role-creation-permissions", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins to view role creation permissions
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const permissions = await storage.getAllRoleCreationPermissions();
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching role creation permissions:", error);
+      res.status(500).json({ error: "Failed to fetch role creation permissions" });
+    }
+  });
+
+  app.get("/api/role-creation-permissions/creator/:roleId", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { roleId } = req.params;
+      const permission = await storage.getRoleCreationPermissionByCreatorRoleId(parseInt(roleId));
+      res.json(permission);
+    } catch (error) {
+      console.error("Error fetching role creation permission:", error);
+      res.status(500).json({ error: "Failed to fetch role creation permission" });
+    }
+  });
+
+  app.post("/api/role-creation-permissions", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins to create role creation permissions
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const permission = await storage.createRoleCreationPermission(req.body);
+      res.json(permission);
+    } catch (error) {
+      console.error("Error creating role creation permission:", error);
+      res.status(500).json({ error: "Failed to create role creation permission" });
+    }
+  });
+
+  app.put("/api/role-creation-permissions/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins to update role creation permissions
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const { id } = req.params;
+      const permission = await storage.updateRoleCreationPermission(parseInt(id), req.body);
+      res.json(permission);
+    } catch (error) {
+      console.error("Error updating role creation permission:", error);
+      res.status(500).json({ error: "Failed to update role creation permission" });
+    }
+  });
+
+  app.delete("/api/role-creation-permissions/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins to delete role creation permissions
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const { id } = req.params;
+      await storage.deleteRoleCreationPermission(parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting role creation permission:", error);
+      res.status(500).json({ error: "Failed to delete role creation permission" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

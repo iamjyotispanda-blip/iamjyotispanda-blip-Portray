@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot, type DatabaseBackup, type InsertDatabaseBackup } from "@shared/schema";
-import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots, databaseBackups } from "@shared/schema";
+import { type User, type InsertUser, type UpdateUser, type Session, type LoginCredentials, type Organization, type InsertOrganization, type Port, type InsertPort, type PortAdminContact, type InsertPortAdminContact, type UpdatePortAdminContact, type EmailConfiguration, type InsertEmailConfiguration, type Terminal, type InsertTerminal, type UpdateTerminal, type Notification, type InsertNotification, type SubscriptionType, type ActivationLog, type InsertActivationLog, type Menu, type InsertMenu, type UpdateMenu, type Role, type InsertRole, type UpdateRole, type EmailLog, type InsertEmailLog, type UserAuditLog, type InsertUserAuditLog, type Customer, type InsertCustomer, type CustomerContact, type InsertCustomerContact, type CustomerAddress, type InsertCustomerAddress, type Contract, type InsertContract, type ContractTariff, type InsertContractTariff, type ContractCargoDetail, type InsertContractCargoDetail, type ContractStorageCharge, type InsertContractStorageCharge, type ContractSpecialCondition, type InsertContractSpecialCondition, type Country, type State, type CargoType, type Plot, type DatabaseBackup, type InsertDatabaseBackup, type RoleCreationPermission, type InsertRoleCreationPermission } from "@shared/schema";
+import { users, sessions, organizations, ports, portAdminContacts, emailConfigurations, terminals, notifications, subscriptionTypes, activationLogs, menus, roles, emailLogs, userAuditLogs, customers, customerContacts, customerAddresses, contracts, contractTariffs, contractCargoDetails, contractStorageCharges, contractSpecialConditions, countries, states, cargoTypes, plots, databaseBackups, roleCreationPermissions } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -223,6 +223,13 @@ export interface IStorage {
   deleteDatabaseBackup(backupId: string): Promise<void>;
   restoreFromBackup(backupId: string, createIfNotExists?: boolean): Promise<{ success: boolean; message: string; }>;
   cancelBackup(backupId: string): Promise<{ success: boolean; message: string; }>;
+
+  // Role Creation Permission operations
+  getAllRoleCreationPermissions(): Promise<RoleCreationPermission[]>;
+  getRoleCreationPermissionByCreatorRoleId(creatorRoleId: number): Promise<RoleCreationPermission | undefined>;
+  createRoleCreationPermission(permission: InsertRoleCreationPermission): Promise<RoleCreationPermission>;
+  updateRoleCreationPermission(id: number, updates: Partial<RoleCreationPermission>): Promise<RoleCreationPermission | undefined>;
+  deleteRoleCreationPermission(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1816,6 +1823,42 @@ export class DatabaseStorage implements IStorage {
       return { success: false, message: "Failed to cancel backup" };
     }
   }
+
+  // Role Creation Permission operations
+  async getAllRoleCreationPermissions(): Promise<RoleCreationPermission[]> {
+    return await db.select().from(roleCreationPermissions);
+  }
+
+  async getRoleCreationPermissionByCreatorRoleId(creatorRoleId: number): Promise<RoleCreationPermission | undefined> {
+    const [permission] = await db
+      .select()
+      .from(roleCreationPermissions)
+      .where(eq(roleCreationPermissions.creatorRoleId, creatorRoleId));
+    return permission || undefined;
+  }
+
+  async createRoleCreationPermission(permission: InsertRoleCreationPermission): Promise<RoleCreationPermission> {
+    const [created] = await db
+      .insert(roleCreationPermissions)
+      .values(permission)
+      .returning();
+    return created;
+  }
+
+  async updateRoleCreationPermission(id: number, updates: Partial<RoleCreationPermission>): Promise<RoleCreationPermission | undefined> {
+    const [updated] = await db
+      .update(roleCreationPermissions)
+      .set(updates)
+      .where(eq(roleCreationPermissions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteRoleCreationPermission(id: number): Promise<void> {
+    await db
+      .delete(roleCreationPermissions)
+      .where(eq(roleCreationPermissions.id, id));
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -3100,6 +3143,27 @@ export class MemStorage implements IStorage {
       success: false, 
       message: "Database backup cancellation not supported in memory storage" 
     };
+  }
+
+  // Role Creation Permission operations - stubs for memory storage
+  async getAllRoleCreationPermissions(): Promise<RoleCreationPermission[]> {
+    return [];
+  }
+
+  async getRoleCreationPermissionByCreatorRoleId(creatorRoleId: number): Promise<RoleCreationPermission | undefined> {
+    return undefined;
+  }
+
+  async createRoleCreationPermission(permission: InsertRoleCreationPermission): Promise<RoleCreationPermission> {
+    throw new Error("Role creation permissions not supported in memory storage");
+  }
+
+  async updateRoleCreationPermission(id: number, updates: Partial<RoleCreationPermission>): Promise<RoleCreationPermission | undefined> {
+    return undefined;
+  }
+
+  async deleteRoleCreationPermission(id: number): Promise<void> {
+    // No-op
   }
 }
 

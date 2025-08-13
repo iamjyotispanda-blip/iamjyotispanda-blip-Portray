@@ -37,6 +37,7 @@ import CustomersPage from "@/pages/customers";
 import ContractsPage from "@/pages/contracts";
 import ContractDetails from "@/pages/contract-details";
 import DatabaseBackupPage from "@/pages/database-backup";
+import RoleCreationConfig from "@/pages/role-creation-config";
 import { AuthService } from "@/lib/auth";
 
 // Wrapper component for AppLayout
@@ -181,6 +182,9 @@ function Router() {
       </Route>
       <Route path="/configuration/database-backup">
         {() => <ProtectedRoute component={DatabaseBackupPage} />}
+      </Route>
+      <Route path="/configuration/role-creation">
+        {() => <ProtectedRoute component={RoleCreationConfig} />}
       </Route>
       <Route path="/profile">
         {() => <ProtectedRoute component={ProfilePage} />}

@@ -33,6 +33,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRoleCreationPermissions } from "@/hooks/useRoleCreationPermissions";
 import type { User as UserType, Role } from "@shared/schema";
 
 interface UserFormData {
@@ -78,6 +79,7 @@ export function UsersContent() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { canCreate, canEdit, canManage, canRead } = usePermissions();
+  const { canCreateUserType, canAssignRole, getAvailableUserTypes, getAvailableRoleIds } = useRoleCreationPermissions();
 
   // Get all users
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -481,24 +483,30 @@ export function UsersContent() {
                               <SelectValue placeholder="Select user type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="SuperAdmin">
-                                <div className="flex items-center">
-                                  <Shield className="h-4 w-4 mr-2" />
-                                  Super Admin
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="PortUser">
-                                <div className="flex items-center">
-                                  <User className="h-4 w-4 mr-2" />
-                                  Port User
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="TerminalUser">
-                                <div className="flex items-center">
-                                  <Users className="h-4 w-4 mr-2" />
-                                  Terminal User
-                                </div>
-                              </SelectItem>
+                              {canCreateUserType("SuperAdmin") && (
+                                <SelectItem value="SuperAdmin">
+                                  <div className="flex items-center">
+                                    <Shield className="h-4 w-4 mr-2" />
+                                    Super Admin
+                                  </div>
+                                </SelectItem>
+                              )}
+                              {canCreateUserType("PortUser") && (
+                                <SelectItem value="PortUser">
+                                  <div className="flex items-center">
+                                    <User className="h-4 w-4 mr-2" />
+                                    Port User
+                                  </div>
+                                </SelectItem>
+                              )}
+                              {canCreateUserType("TerminalUser") && (
+                                <SelectItem value="TerminalUser">
+                                  <div className="flex items-center">
+                                    <Users className="h-4 w-4 mr-2" />
+                                    Terminal User
+                                  </div>
+                                </SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
@@ -621,6 +629,7 @@ export function UsersContent() {
                             <SelectContent>
                               {(roles as Role[])
                                 .filter(role => role.isActive && role.name !== 'SystemAdmin' && role.name !== 'System Admin')
+                                .filter(role => canAssignRole(role.id))
                                 .map((role) => (
                                 <SelectItem key={role.id} value={role.id.toString()}>
                                   <div className="flex items-center">

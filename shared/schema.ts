@@ -347,7 +347,30 @@ export const insertEmailLogSchema = createInsertSchema(emailLogs).pick({
 export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
 
+// Role Creation Permissions table
+export const roleCreationPermissions = pgTable("role_creation_permissions", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  creatorRoleId: integer("creator_role_id").notNull().references(() => roles.id),
+  allowedUserTypes: text("allowed_user_types").array().notNull(), // Array of user types this role can create
+  allowedRoleIds: text("allowed_role_ids").array().notNull(), // Array of role IDs this role can assign
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 // Type definitions
+export const insertRoleCreationPermissionSchema = createInsertSchema(roleCreationPermissions).pick({
+  creatorRoleId: true,
+  allowedUserTypes: true,
+  allowedRoleIds: true,
+  isActive: true,
+});
+
+export const updateRoleCreationPermissionSchema = insertRoleCreationPermissionSchema.partial();
+
+export type RoleCreationPermission = typeof roleCreationPermissions.$inferSelect;
+export type InsertRoleCreationPermission = z.infer<typeof insertRoleCreationPermissionSchema>;
+
 export const insertTerminalSchema = createInsertSchema(terminals).pick({
   portId: true,
   terminalName: true,
