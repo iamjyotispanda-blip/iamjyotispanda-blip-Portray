@@ -5,7 +5,7 @@ This is a full-stack web application called "PortRay" - a Port Management System
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
-UI Header Styling: Remove navigation details in header sections, use smaller titles (text-xl instead of text-3xl) for page headers, remove descriptive subtitles like "Manage port operators and their facilities". Remove all page configuration details and breadcrumbs from the top header bar - keep headers completely clean without showing current page context. Remove card section headers and descriptions (like "Organizations (1)" and "Organization records and details") from all pages.
+UI Header Styling: Remove navigation details in header sections, use smaller titles (text-xl instead of text-3xl) for page headers, remove descriptive subtitles like "Manage port operators and their facilities". Remove all page configuration details and breadcrumbs from the top header bar - keep headers completely clean without showing current page context. Remove card section headers and descriptions (like "Organizations (1)" and "Organization records and details") from all pages. Remove "Customers" title text from customers page for cleaner UI.
 Form Handling: Port add and edit forms should be separate pages with navigation (not slider/sheet forms). Organization forms use slider/sheet forms.
 Button Heights: Login page buttons use h-10 height, all other buttons use h-8 height consistently.
 Search Functionality: Organization and port pages require search functionality with real-time filtering.
