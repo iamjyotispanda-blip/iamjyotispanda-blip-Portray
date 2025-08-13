@@ -389,7 +389,15 @@ export default function TerminalActivationPage() {
                             <CheckCircle className="w-4 h-4 mr-2" />
                             Activate
                           </Button>
-
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setActivationLogDialog({ open: true, terminalId: terminal.id })}
+                            className="h-8 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Logs
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
