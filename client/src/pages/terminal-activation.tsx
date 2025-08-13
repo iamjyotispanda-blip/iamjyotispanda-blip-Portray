@@ -384,7 +384,7 @@ export default function TerminalActivationPage() {
                                     
                                     {/* Show remaining days alongside Active badge */}
                                     {terminal.status === "Active" && terminal.activationEndDate && (
-                                      <span className={`text-sm font-medium ${isExpiringSoon ? "text-orange-600 dark:text-orange-400" : "text-green-700 dark:text-green-300"}`}>
+                                      <span className={`text-sm font-bold ${isExpiringSoon ? "text-orange-600 dark:text-orange-400" : "text-green-700 dark:text-green-300"}`}>
                                         {remainingDays} days remaining
                                       </span>
                                     )}
