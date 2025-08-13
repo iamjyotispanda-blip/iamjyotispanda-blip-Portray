@@ -308,10 +308,7 @@ export default function DatabaseBackupPage() {
         <main className="px-2 sm:px-4 lg:px-6 py-2 flex-1">
           <div className="space-y-4">
             {/* Header */}
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Database Backup</h1>
-              </div>
+            <div className="flex justify-end items-center">
               <div className="flex gap-2">
                 <Dialog open={isUploadRestoreDialogOpen} onOpenChange={setIsUploadRestoreDialogOpen}>
                   <DialogTrigger asChild>
