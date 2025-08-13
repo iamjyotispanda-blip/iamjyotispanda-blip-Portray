@@ -78,7 +78,7 @@ export function UsersContent() {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { canCreate, canEdit, canManage, canRead, currentUser } = usePermissions();
+  const { canCreate, canEdit, canManage, canRead, userData: currentUser } = usePermissions();
   const { canCreateUserType, canAssignRole, getAvailableUserTypes, getAvailableRoleIds } = useRoleCreationPermissions();
 
   // Get all users

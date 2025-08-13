@@ -279,6 +279,7 @@ export function usePermissions() {
     isSystemAdmin: getUserRole().isSystemAdmin,
     userRole: getUserRole().name,
     isAuthenticated: getUserRole().isAuthenticated,
+    userData: (user as any)?.user || user,
   };
 }
 

@@ -10,8 +10,7 @@ interface RoleCreationPermission {
 }
 
 export function useRoleCreationPermissions() {
-  const permissions = usePermissions();
-  const currentUser = permissions.currentUser;
+  const { userData: currentUser } = usePermissions();
 
   // Get current user's role creation permissions
   const { data: rolePermissions } = useQuery<RoleCreationPermission>({
@@ -51,7 +50,7 @@ export function useRoleCreationPermissions() {
     }
 
     // Check if current user's role has permission to assign this role
-    return rolePermissions.allowedRoleIds?.includes(roleId) || false;
+    return rolePermissions?.allowedRoleIds?.includes(roleId) || false;
   };
 
   const getAvailableUserTypes = (): string[] => {
