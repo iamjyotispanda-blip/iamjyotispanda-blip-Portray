@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiRequest } from "@/lib/queryClient";
+import { getActiveAndSubscribedTerminals, formatTerminalDisplayName } from "@/lib/terminal-utils";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRoleCreationPermissions } from "@/hooks/useRoleCreationPermissions";
@@ -550,7 +551,7 @@ export function UsersContent() {
                             <div className="space-y-2">
                               <div className="text-sm text-gray-600">Select one or more terminals:</div>
                               <div className="max-h-40 overflow-y-auto border rounded p-2 space-y-2">
-                                {(terminals as any[]).map((terminal: any) => (
+                                {getActiveAndSubscribedTerminals(terminals as any[]).map((terminal: any) => (
                                   <div key={terminal.id} className="flex items-center space-x-2">
                                     <input
                                       type="checkbox"
@@ -577,13 +578,13 @@ export function UsersContent() {
                                       htmlFor={`terminal-${terminal.id}`}
                                       className="text-sm cursor-pointer flex-1"
                                     >
-                                      {terminal.terminalName} ({terminal.shortCode})
+                                      {formatTerminalDisplayName(terminal)}
                                     </label>
                                   </div>
                                 ))}
-                                {(terminals as any[]).length === 0 && (
+                                {getActiveAndSubscribedTerminals(terminals as any[]).length === 0 && (
                                   <div className="text-sm text-gray-500 text-center py-4">
-                                    No terminals available
+                                    No active and subscribed terminals available
                                   </div>
                                 )}
                               </div>
@@ -947,7 +948,7 @@ export function UsersContent() {
                 <div className="space-y-2">
                   <div className="text-sm text-gray-600">Select one or more terminals:</div>
                   <div className="max-h-40 overflow-y-auto border rounded p-2 space-y-2">
-                    {(terminals as any[]).map((terminal: any) => (
+                    {getActiveAndSubscribedTerminals(terminals as any[]).map((terminal: any) => (
                       <div key={terminal.id} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -974,13 +975,13 @@ export function UsersContent() {
                           htmlFor={`edit-terminal-${terminal.id}`}
                           className="text-sm cursor-pointer flex-1"
                         >
-                          {terminal.terminalName} ({terminal.shortCode})
+                          {formatTerminalDisplayName(terminal)}
                         </label>
                       </div>
                     ))}
-                    {(terminals as any[]).length === 0 && (
+                    {getActiveAndSubscribedTerminals(terminals as any[]).length === 0 && (
                       <div className="text-sm text-gray-500 text-center py-4">
-                        No terminals available
+                        No active and subscribed terminals available
                       </div>
                     )}
                   </div>
