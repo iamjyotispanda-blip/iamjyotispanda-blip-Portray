@@ -376,33 +376,39 @@ export default function PermissionAssignmentPage() {
                           <SelectValue placeholder="Choose a role to manage permissions" />
                         </SelectTrigger>
                         <SelectContent>
-                          {(roles as Role[])
-                            .filter(role => {
-                              if (!role.isActive) return false;
+                          {(() => {
+                            const user = (currentUser as any)?.user;
+                            const isCurrentUserSystemAdmin = user?.isSystemAdmin === true || 
+                                                             user?.role === 'SystemAdmin' ||
+                                                             user?.role === 'System Admin';
+                            
+                            console.log('Permission Assignment Filter - User Data:', {
+                              fullCurrentUser: currentUser,
+                              extractedUser: user,
+                              isSystemAdmin: user?.isSystemAdmin,
+                              role: user?.role,
+                              isCurrentUserSystemAdmin,
+                              allRoles: roles
+                            });
+                            
+                            return (roles as Role[]).filter(role => {
+                              if (!role.isActive) {
+                                console.log(`Filtering out inactive role: ${role.name}`);
+                                return false;
+                              }
                               
-                              // Debug current user and role
-                              console.log('Permission Assignment - Current User:', currentUser);
-                              console.log('Permission Assignment - Checking role:', role.name, 'isSystem:', role.isSystem);
+                              console.log(`Processing role: ${role.name}, isSystem: ${role.isSystem}`);
                               
                               // Show SystemAdmin roles only if current user has system admin privileges
                               if (role.isSystem || role.name === 'SystemAdmin' || role.name === 'System Admin') {
-                                const user = (currentUser as any)?.user;
-                                const isSystemAdmin = user?.isSystemAdmin === true || 
-                                                     user?.role === 'SystemAdmin' ||
-                                                     user?.role === 'System Admin';
-                                console.log('Permission Assignment - SystemAdmin role check:', {
-                                  roleName: role.name,
-                                  isSystem: role.isSystem,
-                                  userData: user,
-                                  userIsSystemAdmin: user?.isSystemAdmin,
-                                  userRole: user?.role,
-                                  showRole: isSystemAdmin
-                                });
-                                return isSystemAdmin;
+                                console.log(`SystemAdmin role found: ${role.name}, user is system admin: ${isCurrentUserSystemAdmin}`);
+                                return isCurrentUserSystemAdmin;
                               }
                               
+                              console.log(`Non-system role: ${role.name} - showing`);
                               return true;
-                            })
+                            });
+                          })()
                             .map((role) => (
                             <SelectItem key={role.id} value={role.id.toString()}>
                               <div className="flex items-center">
