@@ -101,8 +101,38 @@ export default function DatabaseBackupPage() {
     enabled: hasInProgressBackups,
   });
 
-  const handleDownloadBackup = (backupId: string, filename: string) => {
-    window.open(`/api/database/backups/${backupId}/download`, '_blank');
+  const handleDownloadBackup = async (backupId: string, filename: string) => {
+    try {
+      const response = await apiRequest("GET", `/api/database/backups/${backupId}/download`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download backup');
+      }
+      
+      // Get the blob from response
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success",
+        description: `Backup "${filename}" downloaded successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download backup file",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteBackup = (backupId: string) => {
