@@ -3081,6 +3081,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/database/restore/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Only allow System Admins
+      if (!isSystemAdmin(req.user)) {
+        return res.status(403).json({ message: "Access denied. System Admin role required." });
+      }
+
+      const backupId = req.params.id;
+      const { createIfNotExists = false } = req.body;
+      
+      const result = await storage.restoreFromBackup(backupId, createIfNotExists);
+      res.json(result);
+    } catch (error) {
+      console.error("Error restoring database:", error);
+      res.status(500).json({ message: "Failed to restore database from backup" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

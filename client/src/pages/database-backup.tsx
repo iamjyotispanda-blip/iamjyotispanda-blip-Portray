@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Download, Database, FileText, Calendar, Clock, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import { Download, Database, FileText, Calendar, Clock, CheckCircle, AlertCircle, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,10 @@ interface DatabaseBackup {
 export default function DatabaseBackupPage() {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
+  const [selectedBackupId, setSelectedBackupId] = useState<string>("");
+  const [selectedBackupName, setSelectedBackupName] = useState<string>("");
+  const [createIfNotExists, setCreateIfNotExists] = useState(false);
   const [backupDescription, setBackupDescription] = useState("");
 
   // Fetch backup history
@@ -76,6 +81,39 @@ export default function DatabaseBackupPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete backup",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Restore backup mutation
+  const restoreBackupMutation = useMutation({
+    mutationFn: async ({ backupId, createIfNotExists }: { backupId: string; createIfNotExists: boolean }) => {
+      const response = await apiRequest("POST", `/api/database/restore/${backupId}`, { createIfNotExists });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setIsRestoreDialogOpen(false);
+      setSelectedBackupId("");
+      setSelectedBackupName("");
+      setCreateIfNotExists(false);
+      if (data.success) {
+        toast({
+          title: "Restore Successful",
+          description: data.message,
+        });
+      } else {
+        toast({
+          title: "Restore Failed",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Restore Error",
+        description: error.message || "Failed to restore database",
         variant: "destructive",
       });
     },
@@ -138,6 +176,21 @@ export default function DatabaseBackupPage() {
   const handleDeleteBackup = (backupId: string) => {
     if (confirm("Are you sure you want to delete this backup? This action cannot be undone.")) {
       deleteBackupMutation.mutate(backupId);
+    }
+  };
+
+  const handleRestoreBackup = (backupId: string, filename: string) => {
+    setSelectedBackupId(backupId);
+    setSelectedBackupName(filename);
+    setIsRestoreDialogOpen(true);
+  };
+
+  const handleConfirmRestore = () => {
+    if (selectedBackupId) {
+      restoreBackupMutation.mutate({ 
+        backupId: selectedBackupId, 
+        createIfNotExists 
+      });
     }
   };
 
@@ -345,15 +398,27 @@ export default function DatabaseBackupPage() {
                           {(backup.status === 'completed' || backup.status === 'failed') && (
                             <div className="flex space-x-2 ml-4">
                               {backup.status === 'completed' && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDownloadBackup(backup.id, backup.filename)}
-                                  className="h-8"
-                                >
-                                  <Download className="w-4 h-4 mr-1" />
-                                  Download
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownloadBackup(backup.id, backup.filename)}
+                                    className="h-8"
+                                  >
+                                    <Download className="w-4 h-4 mr-1" />
+                                    Download
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleRestoreBackup(backup.id, backup.filename)}
+                                    disabled={restoreBackupMutation.isPending}
+                                    className="h-8 text-blue-600 hover:text-blue-700"
+                                  >
+                                    <RotateCcw className="w-4 h-4 mr-1" />
+                                    Restore
+                                  </Button>
+                                </>
                               )}
                               <Button
                                 variant="outline"
@@ -374,6 +439,72 @@ export default function DatabaseBackupPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Restore Database Dialog */}
+          <Dialog open={isRestoreDialogOpen} onOpenChange={setIsRestoreDialogOpen}>
+            <DialogContent className="w-[95vw] sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-red-600">Restore Database</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                      <p className="font-semibold mb-1">Warning: This action will replace your current database!</p>
+                      <p>All existing data will be overwritten with the backup data from:</p>
+                      <p className="font-mono text-xs mt-1 bg-yellow-100 dark:bg-yellow-800/30 p-1 rounded">{selectedBackupName}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="createIfNotExists"
+                    checked={createIfNotExists}
+                    onCheckedChange={(checked) => setCreateIfNotExists(!!checked)}
+                  />
+                  <div className="space-y-1">
+                    <Label 
+                      htmlFor="createIfNotExists" 
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Create database if it doesn't exist
+                    </Label>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Check this option if you want to create a new database structure if it doesn't already exist.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsRestoreDialogOpen(false)}
+                  disabled={restoreBackupMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmRestore}
+                  disabled={restoreBackupMutation.isPending}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {restoreBackupMutation.isPending ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Restoring...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Restore Database
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </AppLayout>
