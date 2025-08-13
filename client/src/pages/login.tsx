@@ -39,8 +39,8 @@ export default function LoginPage() {
       icon: <Package className="h-16 w-16 text-white" />,
     },
     {
-      title: "Rail & Road Logistics",
-      description: "Plan and track road and rail movements in sync with vessel operations", 
+      title: "Cargo & Yard Management",
+      description: "Track dwell times, turnaround rates, and handling performance", 
       icon: <Truck className="h-16 w-16 text-white" />,
     },
     {
@@ -129,7 +129,6 @@ export default function LoginPage() {
       >
         {getThemeIcon()}
       </Button>
-
       {/* Left Side - Hero Section */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-shrink-0">
         {/* Background Image Overlay */}
@@ -152,7 +151,7 @@ export default function LoginPage() {
 
           {/* Feature Carousel - positioned below logo */}
           <div className="relative mb-6">
-            <div className="p-6 min-h-[200px]">
+            <div className="p-6 min-h-[200px] pl-[-5px] pr-[-5px] pt-[18px] pb-[18px]">
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0">
                   {features[currentFeature].icon}
@@ -185,7 +184,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
       {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
         <div className="w-full max-w-md">
