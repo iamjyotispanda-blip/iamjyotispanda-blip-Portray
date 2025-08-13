@@ -1291,58 +1291,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(contractTariffs).where(eq(contractTariffs.id, id));
   }
 
-  // Contract cargo details
-  async getContractCargoDetailsByContractId(contractId: number): Promise<ContractCargoDetail[]> {
-    return await db.select().from(contractCargoDetails).where(eq(contractCargoDetails.contractId, contractId));
-  }
-
-  async createContractCargoDetail(cargoDetail: InsertContractCargoDetail): Promise<ContractCargoDetail> {
-    const [created] = await db.insert(contractCargoDetails).values({
-      ...cargoDetail,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
-  }
-
-  async updateContractCargoDetail(id: number, updates: Partial<ContractCargoDetail>): Promise<ContractCargoDetail | undefined> {
-    const [updated] = await db.update(contractCargoDetails)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(contractCargoDetails.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async deleteContractCargoDetail(id: number): Promise<void> {
-    await db.delete(contractCargoDetails).where(eq(contractCargoDetails.id, id));
-  }
-
-  // Contract storage charges
-  async getContractStorageChargesByContractId(contractId: number): Promise<ContractStorageCharge[]> {
-    return await db.select().from(contractStorageCharges).where(eq(contractStorageCharges.contractId, contractId));
-  }
-
-  async createContractStorageCharge(storageCharge: InsertContractStorageCharge): Promise<ContractStorageCharge> {
-    const [created] = await db.insert(contractStorageCharges).values({
-      ...storageCharge,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
-    return created;
-  }
-
-  async updateContractStorageCharge(id: number, updates: Partial<ContractStorageCharge>): Promise<ContractStorageCharge | undefined> {
-    const [updated] = await db.update(contractStorageCharges)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(contractStorageCharges.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async deleteContractStorageCharge(id: number): Promise<void> {
-    await db.delete(contractStorageCharges).where(eq(contractStorageCharges.id, id));
-  }
-
   // Contract special conditions
   async getContractSpecialConditionsByContractId(contractId: number): Promise<ContractSpecialCondition[]> {
     return await db.select().from(contractSpecialConditions).where(eq(contractSpecialConditions.contractId, contractId));
@@ -1469,14 +1417,25 @@ export class MemStorage implements IStorage {
     const hashedPassword = await bcrypt.hash("Csmpl@123", 10);
     const adminUser: User = {
       id: "admin-001",
+      userType: "SuperAdmin",
       email: "superadmin@Portray.com",
       password: hashedPassword,
       firstName: "System",
       lastName: "Administrator",
       role: "SystemAdmin",
+      roleId: null,
+      portId: null,
+      terminalIds: null,
       isActive: true,
+      isVerified: true,
+      verificationToken: null,
+      verificationTokenExpires: null,
+      passwordSetupToken: null,
+      passwordSetupTokenExpires: null,
+      isSystemAdmin: true,
       lastLogin: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(adminUser.id, adminUser);
   }
@@ -1618,10 +1577,21 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
-      role: insertUser.role || "user",
-      isActive: true,
+      userType: insertUser.userType || "PortUser",
+      role: insertUser.role || "PortAdmin",
+      roleId: insertUser.roleId || null,
+      portId: insertUser.portId || null,
+      terminalIds: insertUser.terminalIds || null,
+      isActive: insertUser.isActive ?? false,
+      isVerified: insertUser.isVerified ?? false,
+      verificationToken: insertUser.verificationToken || null,
+      verificationTokenExpires: insertUser.verificationTokenExpires || null,
+      passwordSetupToken: insertUser.passwordSetupToken || null,
+      passwordSetupTokenExpires: insertUser.passwordSetupTokenExpires || null,
+      isSystemAdmin: insertUser.isSystemAdmin ?? false,
       lastLogin: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(id, user);
     return user;
@@ -1650,7 +1620,7 @@ export class MemStorage implements IStorage {
 
   async validateUserCredentials(email: string, password: string): Promise<User | null> {
     const user = await this.getUserByEmail(email);
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || !user.password) {
       return null;
     }
 

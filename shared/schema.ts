@@ -401,9 +401,7 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
 });
 
 // Type definitions
-export type User = typeof users.$inferSelect & {
-  role?: Role;
-};
+export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Port = typeof ports.$inferSelect;
