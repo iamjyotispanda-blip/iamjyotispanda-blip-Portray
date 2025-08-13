@@ -105,8 +105,9 @@ function CustomersContent() {
     queryKey: ['/api/countries'],
   });
 
+  // Load states for India (country ID = 1)
   const { data: states = [] } = useQuery<any[]>({
-    queryKey: ['/api/states'],
+    queryKey: ['/api/countries/1/states'],
   });
 
   const createCustomerMutation = useMutation({
@@ -452,7 +453,7 @@ function CustomersContent() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {states.filter((state: any) => state.countryId === 1).map((state: any) => (
+                            {states.map((state: any) => (
                               <SelectItem key={state.id} value={state.name}>
                                 {state.name}
                               </SelectItem>
