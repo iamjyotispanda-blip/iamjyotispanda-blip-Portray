@@ -39,23 +39,37 @@ export function useRoleCreationPermissions() {
   };
 
   const canAssignRole = (roleId: number, roleData?: any): boolean => {
+    console.log('canAssignRole debug:', {
+      roleId,
+      roleData,
+      currentUser: currentUser?.role,
+      isSystemAdmin: currentUser?.isSystemAdmin,
+      rolePermissions,
+      allowedRoleIds: rolePermissions?.allowedRoleIds
+    });
+
     // System Admins can assign any role including system roles
     if (currentUser?.isSystemAdmin || currentUser?.role === 'SystemAdmin') {
+      console.log('System admin can assign all roles');
       return true;
     }
 
     // Non-system administrators cannot assign system roles
     if (roleData?.isSystem) {
+      console.log('Non-system admin cannot assign system roles');
       return false;
     }
 
     // If no permissions are configured yet, allow assigning non-system roles for Port Admins
     if (!rolePermissions && currentUser?.role === 'PortAdmin') {
-      return true; // Allow for now until permissions are configured
+      console.log('No permissions configured, allowing for PortAdmin');
+      return true;
     }
 
     // Check if current user's role has permission to assign this role
-    return rolePermissions?.allowedRoleIds?.includes(roleId) || false;
+    const hasPermission = rolePermissions?.allowedRoleIds?.includes(roleId) || false;
+    console.log(`Permission check result: ${hasPermission}`);
+    return hasPermission;
   };
 
   const getAvailableUserTypes = (): string[] => {
