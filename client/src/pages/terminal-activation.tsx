@@ -347,13 +347,6 @@ export default function TerminalActivationPage() {
                                       <span>
                                         {format(new Date(terminal.activationStartDate), "MMM d yyyy")} - {terminal.activationEndDate && format(new Date(terminal.activationEndDate), "MMM d, yyyy")} {terminal.subscriptionTypeId === 1 ? "1Month" : terminal.subscriptionTypeId === 2 ? "12Month" : terminal.subscriptionTypeId === 3 ? "24Month" : terminal.subscriptionTypeId === 4 ? "48Month" : "Unknown"}{terminal.workOrderNo && ` WO: ${terminal.workOrderNo}`}
                                       </span>
-                                      <button
-                                        onClick={() => setActivationLogDialog({ open: true, terminalId: terminal.id })}
-                                        className="ml-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                        title="View Activation Log"
-                                      >
-                                        <FileText className="h-3 w-3" />
-                                      </button>
                                     </div>
                                   </>
                                 )}
