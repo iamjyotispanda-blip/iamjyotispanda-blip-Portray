@@ -24,13 +24,25 @@ export function getActiveAndSubscribedTerminals(terminals: TerminalFilter[]): Te
   const now = new Date();
   
   return terminals.filter(terminal => {
-    // Must be active
-    if (!terminal.isActive) {
-      return false;
-    }
+    // Console log for debugging
+    console.log('Terminal filtering debug:', {
+      name: terminal.terminalName,
+      isActive: terminal.isActive,
+      subscriptionTypeId: terminal.subscriptionTypeId,
+      status: terminal.status,
+      activationStartDate: terminal.activationStartDate,
+      activationEndDate: terminal.activationEndDate
+    });
     
     // Must have a subscription
     if (!terminal.subscriptionTypeId) {
+      console.log(`Terminal ${terminal.terminalName} filtered out: no subscription`);
+      return false;
+    }
+    
+    // Status should be "Active" for proper terminals
+    if (terminal.status !== "Active") {
+      console.log(`Terminal ${terminal.terminalName} filtered out: status is ${terminal.status}`);
       return false;
     }
     
@@ -41,15 +53,21 @@ export function getActiveAndSubscribedTerminals(terminals: TerminalFilter[]): Te
       
       // Must be within the subscription period
       if (now < startDate || now > endDate) {
+        console.log(`Terminal ${terminal.terminalName} filtered out: outside subscription period`);
         return false;
       }
     }
     
-    // Status should be "Active" for proper terminals
-    if (terminal.status !== "Active") {
+    // Check isActive OR if terminal has valid subscription and is "Active" status
+    const hasValidSubscription = terminal.subscriptionTypeId && terminal.status === "Active";
+    const isActiveOrSubscribed = terminal.isActive || hasValidSubscription;
+    
+    if (!isActiveOrSubscribed) {
+      console.log(`Terminal ${terminal.terminalName} filtered out: not active and no valid subscription`);
       return false;
     }
     
+    console.log(`Terminal ${terminal.terminalName} passed all filters`);
     return true;
   });
 }
