@@ -89,15 +89,18 @@ export default function AddMenu({ params }: AddMenuProps = {}) {
         return apiRequest('POST', '/api/menus', data);
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: 'Success',
         description: `Menu ${isEdit ? 'updated' : 'created'} successfully`,
       });
       // Invalidate and refetch the menus before navigation
-      queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
-      queryClient.refetchQueries({ queryKey: ['/api/menus'] });
-      setLocation('/configuration/menu');
+      await queryClient.invalidateQueries({ queryKey: ['/api/menus'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/menus'] });
+      // Small delay to ensure cache update completes
+      setTimeout(() => {
+        setLocation('/configuration/menu');
+      }, 100);
     },
     onError: (error: any) => {
       toast({

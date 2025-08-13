@@ -141,14 +141,16 @@ export default function MenuManagement() {
       const response = await apiRequest('GET', '/api/menus');
       return await response.json() as Menu[];
     },
+    staleTime: 0, // Always refetch to get latest data
+    gcTime: 0, // Don't cache data for long
   });
 
-  // Initialize menu order when data loads
+  // Initialize and update menu order when data loads or changes
   useEffect(() => {
-    if (menus.length > 0 && menuOrder.length === 0) {
+    if (menus.length > 0) {
       setMenuOrder([...menus].sort((a, b) => a.sortOrder - b.sortOrder));
     }
-  }, [menus, menuOrder.length]);
+  }, [menus]);
 
   // Removed form-related functions - now using separate page for add/edit
 
