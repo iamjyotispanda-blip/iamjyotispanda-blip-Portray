@@ -21,6 +21,9 @@ declare global {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Clean up any stuck backup processes on startup
+  await storage.cleanupStuckBackups();
+  
   // Validation schemas for new endpoints
   const verifyEmailSchema = z.object({
     token: z.string().min(1, "Token is required")

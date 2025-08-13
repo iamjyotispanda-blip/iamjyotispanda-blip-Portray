@@ -1393,6 +1393,20 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(databaseBackups);
   }
 
+  // Clean up stuck backups on startup
+  async cleanupStuckBackups(): Promise<void> {
+    try {
+      // Update any in_progress backups to failed status (these were interrupted by server restart)
+      await db
+        .update(databaseBackups)
+        .set({ status: 'failed' })
+        .where(eq(databaseBackups.status, 'in_progress'));
+      console.log('Cleaned up stuck backup processes');
+    } catch (error) {
+      console.error('Error cleaning up stuck backups:', error);
+    }
+  }
+
   async createDatabaseBackup(userId: string, description?: string): Promise<any> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `portray_backup_${timestamp}.sql`;
@@ -1693,28 +1707,26 @@ export class DatabaseStorage implements IStorage {
 
       // Get the running backup process
       const process = runningBackups.get(backupId);
-      if (!process) {
-        return { success: false, message: "Backup process not found or already completed" };
+      if (process) {
+        // Mark the process as cancelled
+        process.cancelled = true;
+
+        // Clear the timeout if it exists
+        if (process.timeoutId) {
+          clearTimeout(process.timeoutId);
+        }
+
+        // Remove from running backups
+        runningBackups.delete(backupId);
       }
 
-      // Mark the process as cancelled
-      process.cancelled = true;
-
-      // Clear the timeout if it exists
-      if (process.timeoutId) {
-        clearTimeout(process.timeoutId);
-      }
-
-      // Update database record to failed status
+      // Update database record to cancelled status (works even if process not in memory)
       await db
         .update(databaseBackups)
         .set({
-          status: 'failed',
+          status: 'cancelled',
         })
         .where(eq(databaseBackups.id, backupId));
-
-      // Remove from running backups
-      runningBackups.delete(backupId);
 
       console.log(`Backup ${backupId} has been cancelled`);
       return { success: true, message: "Backup cancelled successfully" };
