@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, User, Package, DollarSign, Warehouse, Plus } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Calendar, User, Package, DollarSign, Warehouse, Plus, FileText, ExternalLink, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +13,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import type { Customer, Contract, CustomerContact, ContractTariff, ContractCargoDetail, ContractStorageCharge } from "@shared/schema";
 
 const CONTRACT_TABS = [
-  { id: "contract", label: "CONTRACT", icon: Package },
+  { id: "contract", label: "CONTRACT", icon: FileText },
+  { id: "documents", label: "DOCUMENTS", icon: FileText },
   { id: "contacts", label: "CONTACTS", icon: User },
   { id: "cargo", label: "CARGO", icon: Package },
   { id: "tariffs", label: "TARIFFS", icon: DollarSign },
@@ -366,6 +367,96 @@ function ContractDetailsContent() {
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       Create First Contract
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Contract Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contract?.contractCopyUrl ? (
+                  <div className="space-y-4">
+                    <div className="border rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-8 w-8 text-blue-600" />
+                          <div>
+                            <h4 className="font-semibold text-blue-800 dark:text-blue-200" data-testid="contract-document-title">
+                              Contract Document
+                            </h4>
+                            <p className="text-sm text-blue-600 dark:text-blue-300">
+                              Main contract document for {contract.contractNumber}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {contract.contractCopyUrl.startsWith('http') ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(contract.contractCopyUrl, '_blank')}
+                              data-testid="button-view-external-document"
+                            >
+                              <ExternalLink className="mr-2 h-4 w-4" />
+                              Open Link
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(contract.contractCopyUrl, '_blank')}
+                              data-testid="button-download-document"
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Download
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3 text-xs text-blue-600 dark:text-blue-300">
+                        <p>Document URL: {contract.contractCopyUrl}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Package className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                          Document for Contract: {contract.contractNumber}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-600 dark:text-green-300 mt-1">
+                        This document is associated with the current contract and contains the complete terms and conditions.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Documents Available</h3>
+                    <p className="text-muted-foreground mb-4">
+                      This contract doesn't have any documents uploaded yet. You can add documents when editing the contract.
+                    </p>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setRenewContractId(contract?.id);
+                        setIsContractFormOpen(true);
+                      }}
+                      data-testid="button-edit-contract-to-add-documents"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Edit Contract to Add Documents
                     </Button>
                   </div>
                 )}

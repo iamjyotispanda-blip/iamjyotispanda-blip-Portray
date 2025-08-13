@@ -6,7 +6,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import multer from "multer";
-// Object storage imports removed - using fallback system
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { EmailService } from "./emailService";
 import { AuditService } from "./auditService";
 
@@ -2993,6 +2993,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching contract storage charges:", error);
       res.status(500).json({ message: "Failed to fetch contract storage charges" });
+    }
+  });
+
+  // Object Storage Routes for Contract Documents
+  app.post("/api/objects/upload", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/objects/:objectPath(*)", async (req: Request, res: Response) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  app.get("/public-objects/:filePath(*)", async (req: Request, res: Response) => {
+    try {
+      const filePath = req.params.filePath;
+      const objectStorageService = new ObjectStorageService();
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   });
 

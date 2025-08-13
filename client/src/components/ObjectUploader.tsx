@@ -1,468 +1,99 @@
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
+import type { ReactNode } from "react";
+import Uppy from "@uppy/core";
+import { DashboardModal } from "@uppy/react";
+import "@uppy/core/dist/style.min.css";
+import "@uppy/dashboard/dist/style.min.css";
+import AwsS3 from "@uppy/aws-s3";
+import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
-import { Crop as CropIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import ReactCrop, { Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
 
 interface ObjectUploaderProps {
-  value?: string;
-  onChange: (value: string) => void;
-  accept?: string;
-  maxSize?: number; // in MB
-  className?: string;
+  maxNumberOfFiles?: number;
+  maxFileSize?: number;
+  onGetUploadParameters: () => Promise<{
+    method: "PUT";
+    url: string;
+  }>;
+  onComplete?: (
+    result: UploadResult<Record<string, unknown>, Record<string, unknown>>
+  ) => void;
+  buttonClassName?: string;
+  children: ReactNode;
 }
 
+/**
+ * A file upload component that renders as a button and provides a modal interface for
+ * file management.
+ * 
+ * Features:
+ * - Renders as a customizable button that opens a file upload modal
+ * - Provides a modal interface for:
+ *   - File selection
+ *   - File preview
+ *   - Upload progress tracking
+ *   - Upload status display
+ * 
+ * The component uses Uppy under the hood to handle all file upload functionality.
+ * All file management features are automatically handled by the Uppy dashboard modal.
+ * 
+ * @param props - Component props
+ * @param props.maxNumberOfFiles - Maximum number of files allowed to be uploaded
+ *   (default: 1)
+ * @param props.maxFileSize - Maximum file size in bytes (default: 10MB)
+ * @param props.onGetUploadParameters - Function to get upload parameters (method and URL).
+ *   Typically used to fetch a presigned URL from the backend server for direct-to-S3
+ *   uploads.
+ * @param props.onComplete - Callback function called when upload is complete. Typically
+ *   used to make post-upload API calls to update server state and set object ACL
+ *   policies.
+ * @param props.buttonClassName - Optional CSS class name for the button
+ * @param props.children - Content to be rendered inside the button
+ */
 export function ObjectUploader({
-  value,
-  onChange,
-  accept = "image/*",
-  maxSize = 5,
-  className,
+  maxNumberOfFiles = 1,
+  maxFileSize = 10485760, // 10MB default
+  onGetUploadParameters,
+  onComplete,
+  buttonClassName,
+  children,
 }: ObjectUploaderProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [crop, setCrop] = useState<Crop>();
-  const [showCrop, setShowCrop] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-
-  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height } = e.currentTarget;
-    setCrop(centerCrop(
-      makeAspectCrop(
-        {
-          unit: '%',
-          width: 80,
-        },
-        80/50, // aspect ratio 80:50 for logo dimensions
-        width,
-        height,
-      ),
-      width,
-      height,
-    ));
-  }, []);
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Check file size
-    if (file.size > maxSize * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: `Please select a file smaller than ${maxSize}MB`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    setShowCrop(false); // Start with preview, then show crop
-    setIsDialogOpen(true);
-  };
-
-  const handleShowCrop = () => {
-    setShowCrop(true);
-  };
-
-  const getCroppedFile = async (): Promise<File | null> => {
-    if (!imgRef.current || !crop || !selectedFile) {
-      console.log('getCroppedFile: Missing required data', {
-        hasImgRef: !!imgRef.current,
-        hasCrop: !!crop,
-        hasSelectedFile: !!selectedFile
-      });
-      return null;
-    }
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.log('getCroppedFile: Failed to get canvas context');
-      return null;
-    }
-
-    const image = imgRef.current;
-    
-    // Validate image dimensions
-    if (!image.naturalWidth || !image.naturalHeight) {
-      console.log('getCroppedFile: Image not properly loaded', {
-        naturalWidth: image.naturalWidth,
-        naturalHeight: image.naturalHeight
-      });
-      return null;
-    }
-
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-
-    // Convert percentage crop to pixel coordinates
-    const cropX = (crop.x / 100) * image.naturalWidth;
-    const cropY = (crop.y / 100) * image.naturalHeight;
-    const cropWidth = (crop.width / 100) * image.naturalWidth;
-    const cropHeight = (crop.height / 100) * image.naturalHeight;
-
-    console.log('getCroppedFile: Crop dimensions', {
-      crop,
-      image: { width: image.width, height: image.height, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight },
-      scales: { scaleX, scaleY },
-      pixelCrop: { x: cropX, y: cropY, width: cropWidth, height: cropHeight }
-    });
-
-    // Validate crop dimensions
-    if (cropWidth <= 0 || cropHeight <= 0) {
-      console.log('getCroppedFile: Invalid crop dimensions', { cropWidth, cropHeight });
-      return null;
-    }
-
-    // Set canvas to exact logo dimensions: 80x50 pixels
-    canvas.width = 80;
-    canvas.height = 50;
-
-    // Clear canvas with white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 80, 50);
-
-    try {
-      ctx.drawImage(
-        image,
-        cropX,
-        cropY,
-        cropWidth,
-        cropHeight,
-        0,
-        0,
-        80, // Always resize to 80px width
-        50  // Always resize to 50px height
-      );
-      console.log('getCroppedFile: Successfully drew image to canvas');
-    } catch (error) {
-      console.error('getCroppedFile: Error drawing image to canvas', error);
-      return null;
-    }
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          console.log('getCroppedFile: Failed to create blob from canvas');
-          resolve(null);
-          return;
-        }
-        console.log('getCroppedFile: Successfully created blob', { size: blob.size, type: blob.type });
-        const croppedFile = new File([blob], selectedFile.name, {
-          type: selectedFile.type,
-        });
-        resolve(croppedFile);
-      }, selectedFile.type, 0.95);
-    });
-  };
-
-  const getResizedFile = async (): Promise<File | null> => {
-    if (!selectedFile) return null;
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-
-    // Create an image element to load the selected file
-    const image = new Image();
-    
-    return new Promise((resolve) => {
-      image.onload = () => {
-        // Set canvas to exact logo dimensions: 80x50 pixels
-        canvas.width = 80;
-        canvas.height = 50;
-
-        // Draw the entire image resized to 80x50
-        ctx.drawImage(image, 0, 0, 80, 50);
-
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            resolve(null);
-            return;
-          }
-          const resizedFile = new File([blob], selectedFile.name, {
-            type: selectedFile.type,
-          });
-          resolve(resizedFile);
-        }, selectedFile.type, 0.95);
-      };
-      
-      image.src = URL.createObjectURL(selectedFile);
-    });
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    setIsUploading(true);
-    try {
-      // Get cropped file if cropping was used, otherwise resize the original
-      let fileToUpload = selectedFile;
-      if (showCrop && crop) {
-        const croppedFile = await getCroppedFile();
-        if (croppedFile) {
-          fileToUpload = croppedFile;
-        }
-      } else {
-        // If no cropping, still resize to 80x50
-        const resizedFile = await getResizedFile();
-        if (resizedFile) {
-          fileToUpload = resizedFile;
-        }
-      }
-
-      // Get auth token from localStorage
-      const token = localStorage.getItem('portray_auth_token');
-      
-      // Convert file to base64 for simple storage
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(fileToUpload);
-      });
-
-      const base64Data = await base64Promise;
-      
-      // Get upload URL
-      const response = await fetch("/api/objects/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get upload URL");
-      }
-
-      const { uploadURL, uploadId } = await response.json();
-
-      // Upload file data
-      const uploadResponse = await fetch(uploadURL, {
-        method: "PUT",
-        body: JSON.stringify({
-          data: base64Data,
-          filename: fileToUpload.name,
-          contentType: fileToUpload.type
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file");
-      }
-
-      const uploadResult = await uploadResponse.json();
-      const objectPath = uploadResult.objectPath || base64Data; // Use base64 as fallback
-      
-      onChange(objectPath);
-      setIsDialogOpen(false);
-      setSelectedFile(null);
-      setPreviewUrl("");
-      setShowCrop(false);
-
-      toast({
-        title: "Upload successful",
-        description: "File has been uploaded successfully",
-      });
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload file. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleRemove = () => {
-    onChange("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const triggerFileSelect = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setSelectedFile(null);
-    setPreviewUrl("");
-    setShowCrop(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  const [showModal, setShowModal] = useState(false);
+  const [uppy] = useState(() =>
+    new Uppy({
+      restrictions: {
+        maxNumberOfFiles,
+        maxFileSize,
+        allowedFileTypes: ['.pdf', '.doc', '.docx', '.txt'], // Contract documents
+      },
+      autoProceed: false,
+    })
+      .use(AwsS3, {
+        shouldUseMultipart: false,
+        getUploadParameters: onGetUploadParameters,
+      })
+      .on("complete", (result) => {
+        onComplete?.(result);
+        setShowModal(false);
+      })
+  );
 
   return (
-    <div className={className}>
-      <div className="space-y-3">
-        {value && (
-          <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
-            <img 
-              src={value} 
-              alt="Uploaded file" 
-              className="w-12 h-12 object-cover rounded border"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                target.nextElementSibling?.setAttribute('style', 'display: flex;');
-              }}
-            />
-            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded border flex items-center justify-center" style={{ display: 'none' }}>
-              <ImageIcon className="w-5 h-5 text-gray-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">File uploaded</p>
-              <p className="text-xs text-gray-500">Click to change or upload a new file</p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRemove}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-        
-        <div className="flex items-center space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={triggerFileSelect}
-            className="flex-1"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            {value ? "Change File" : "Upload File"}
-          </Button>
-        </div>
-        
-        <p className="text-xs text-gray-500">
-          Upload an image file (PNG, JPG). Final logo size: 80x50 pixels. Maximum file size: {maxSize}MB
-        </p>
-      </div>
+    <div>
+      <Button 
+        onClick={() => setShowModal(true)} 
+        className={buttonClassName}
+        type="button"
+      >
+        {children}
+      </Button>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={accept}
-        onChange={handleFileSelect}
-        className="hidden"
+      <DashboardModal
+        uppy={uppy}
+        open={showModal}
+        onRequestClose={() => setShowModal(false)}
+        proudlyDisplayPoweredByUppy={false}
       />
-
-      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>{showCrop ? "Crop Image" : "Upload File"}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {previewUrl && !showCrop && (
-              <div className="flex justify-center">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-w-full object-contain rounded border"
-                  style={{ height: '300px' }}
-                />
-              </div>
-            )}
-
-            {previewUrl && showCrop && (
-              <div className="flex justify-center">
-                <ReactCrop
-                  crop={crop}
-                  onChange={(_, percentCrop) => setCrop(percentCrop)}
-                  aspect={80/50} // 80:50 aspect ratio for logo dimensions
-                  className="max-w-full"
-                >
-                  <img
-                    ref={imgRef}
-                    src={previewUrl}
-                    alt="Crop preview"
-                    onLoad={onImageLoad}
-                    className="max-w-full object-contain"
-                    style={{ height: '300px' }}
-                  />
-                </ReactCrop>
-              </div>
-            )}
-            
-            {selectedFile && (
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <p><strong>File:</strong> {selectedFile.name}</p>
-                <p><strong>Size:</strong> {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                <p><strong>Type:</strong> {selectedFile.type}</p>
-              </div>
-            )}
-            
-            <div className="flex justify-between">
-              <div className="flex space-x-2">
-                {!showCrop && selectedFile && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleShowCrop}
-                    disabled={isUploading}
-                  >
-                    <CropIcon className="w-4 h-4 mr-2" />
-                    Crop Image
-                  </Button>
-                )}
-                {showCrop && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowCrop(false)}
-                    disabled={isUploading}
-                  >
-                    Back to Preview
-                  </Button>
-                )}
-              </div>
-              
-              <div className="flex space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDialogClose}
-                  disabled={isUploading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleUpload}
-                  disabled={isUploading || !selectedFile}
-                >
-                  {isUploading ? "Uploading..." : "Upload"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

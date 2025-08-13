@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,13 +9,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, FileText } from "lucide-react";
+import { CalendarIcon, FileText, Upload, Link, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertContractSchema, type InsertContract } from "@shared/schema";
 import { z } from "zod";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 const contractFormSchema = insertContractSchema.extend({
   validFrom: z.date({ required_error: "Valid from date is required" }),
@@ -37,6 +39,12 @@ interface ContractFormProps {
 export function ContractForm({ customerId, isOpen, onClose, renewFromContractId }: ContractFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [documentUploadMode, setDocumentUploadMode] = useState<"url" | "upload">("url");
+
+  // Get current user for document uploads
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ['/api/auth/me'],
+  });
 
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
@@ -51,14 +59,11 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
 
   const createContractMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      return apiRequest(`/api/contracts`, {
-        method: "POST",
-        body: JSON.stringify({
-          ...data,
-          validFrom: data.validFrom.toISOString(),
-          validTo: data.validTo.toISOString(),
-          createdBy: "current-user-id", // This should come from auth context
-        }),
+      return apiRequest("POST", "/api/contracts", {
+        ...data,
+        validFrom: data.validFrom.toISOString(),
+        validTo: data.validTo.toISOString(),
+        createdBy: "current-user-id", // This should come from auth context
       });
     },
     onSuccess: () => {
@@ -121,23 +126,144 @@ export function ContractForm({ customerId, isOpen, onClose, renewFromContractId 
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="contractCopyUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contract Document URL</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://example.com/contract.pdf" 
-                        {...field} 
-                        data-testid="input-contract-url"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              {/* Contract Document Section */}
+              <div className="space-y-4">
+                <FormLabel>Contract Document</FormLabel>
+                
+                {/* Mode Toggle */}
+                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
+                  <Button
+                    type="button"
+                    variant={documentUploadMode === "url" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setDocumentUploadMode("url")}
+                    className="flex items-center"
+                    data-testid="button-url-mode"
+                  >
+                    <Link className="mr-2 h-4 w-4" />
+                    URL
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={documentUploadMode === "upload" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setDocumentUploadMode("upload")}
+                    className="flex items-center"
+                    data-testid="button-upload-mode"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload
+                  </Button>
+                </div>
+
+                {/* URL Input Mode */}
+                {documentUploadMode === "url" && (
+                  <FormField
+                    control={form.control}
+                    name="contractCopyUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document URL</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center space-x-2">
+                            <Input 
+                              placeholder="https://example.com/contract.pdf" 
+                              {...field}
+                              value={field.value || ""}
+                              data-testid="input-contract-url"
+                            />
+                            {field.value && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => field.onChange("")}
+                                data-testid="button-clear-url"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
+
+                {/* File Upload Mode */}
+                {documentUploadMode === "upload" && (
+                  <FormField
+                    control={form.control}
+                    name="contractCopyUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Upload Document</FormLabel>
+                        <FormControl>
+                          <div className="space-y-2">
+                            {field.value && (
+                              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                                <div className="flex items-center space-x-2">
+                                  <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                  <span className="text-sm text-green-700 dark:text-green-300">
+                                    Document uploaded successfully
+                                  </span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => field.onChange("")}
+                                  data-testid="button-remove-upload"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                            
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={10485760} // 10MB
+                              onGetUploadParameters={async () => {
+                                const response = await apiRequest("POST", "/api/objects/upload", {});
+                                return {
+                                  method: "PUT" as const,
+                                  url: response.uploadURL,
+                                };
+                              }}
+                              onComplete={(result) => {
+                                if (result.successful.length > 0) {
+                                  const uploadedFile = result.successful[0];
+                                  const fileUrl = uploadedFile.uploadURL;
+                                  
+                                  // Update the form field with the uploaded file URL
+                                  field.onChange(fileUrl);
+                                  
+                                  toast({
+                                    title: "Success",
+                                    description: "Contract document uploaded successfully",
+                                  });
+                                }
+                              }}
+                              buttonClassName="w-full"
+                            >
+                              <div className="flex items-center justify-center space-x-2">
+                                <Upload className="h-4 w-4" />
+                                <span>Upload Contract Document</span>
+                              </div>
+                            </ObjectUploader>
+                            
+                            <p className="text-xs text-muted-foreground">
+                              Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)
+                            </p>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
