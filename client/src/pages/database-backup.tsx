@@ -174,10 +174,12 @@ export default function DatabaseBackupPage() {
       const formData = new FormData();
       formData.append('backupFile', file);
 
+      // Use the same token approach as other API calls
+      const token = localStorage.getItem('portray_auth_token');
       const response = await fetch('/api/database/upload-restore', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
