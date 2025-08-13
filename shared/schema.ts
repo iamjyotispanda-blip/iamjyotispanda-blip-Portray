@@ -487,6 +487,15 @@ export const subscriptionTypes = pgTable("subscription_types", {
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
+// Add subscription type schemas
+export const insertSubscriptionTypeSchema = createInsertSchema(subscriptionTypes).pick({
+  name: true,
+  months: true,
+});
+
+export type InsertSubscriptionType = z.infer<typeof insertSubscriptionTypeSchema>;
+export type SubscriptionType = typeof subscriptionTypes.$inferSelect;
+
 // Roles table
 export const roles = pgTable("roles", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -500,9 +509,7 @@ export const roles = pgTable("roles", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
-export const insertSubscriptionTypeSchema = createInsertSchema(subscriptionTypes);
-export type InsertSubscriptionType = z.infer<typeof insertSubscriptionTypeSchema>;
-export type SubscriptionType = typeof subscriptionTypes.$inferSelect;
+
 
 // Roles schemas
 export const insertRoleSchema = createInsertSchema(roles).pick({
