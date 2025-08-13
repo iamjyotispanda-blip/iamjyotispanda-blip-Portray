@@ -342,17 +342,19 @@ export default function DatabaseBackupPage() {
                             </div>
                           </div>
                           
-                          {backup.status === 'completed' && (
+                          {(backup.status === 'completed' || backup.status === 'failed') && (
                             <div className="flex space-x-2 ml-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDownloadBackup(backup.id, backup.filename)}
-                                className="h-8"
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                Download
-                              </Button>
+                              {backup.status === 'completed' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownloadBackup(backup.id, backup.filename)}
+                                  className="h-8"
+                                >
+                                  <Download className="w-4 h-4 mr-1" />
+                                  Download
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
